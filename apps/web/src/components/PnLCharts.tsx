@@ -43,19 +43,19 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 1. Monthly Revenue vs Expense Comparative Bar Chart */}
-      <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 flex flex-col justify-between">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-brand-500" />
-            <h4 className="font-bold text-sm text-white">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
               मासिक उत्पन्न विरुद्ध खर्च आलेख (Trend Comparison)
             </h4>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">३ महिन्यांचा आढावा</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">३ महिन्यांचा आढावा</span>
         </div>
 
         {/* SVG Bars */}
-        <div className="h-48 flex items-end justify-around gap-4 pt-6 pb-2 border-b border-slate-800">
+        <div className="h-48 flex items-end justify-around gap-4 pt-6 pb-2 border-b border-slate-200 dark:border-slate-800">
           {monthlyTrends.map((item, idx) => {
             const revHeight = Math.max(10, Math.round((item.revenue / maxVal) * 150));
             const expHeight = Math.max(10, Math.round((item.expenses / maxVal) * 150));
@@ -82,7 +82,7 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
                   </div>
                 </div>
 
-                <span className="text-[10px] text-slate-400 text-center font-medium truncate w-full">
+                <span className="text-[10px] text-slate-600 dark:text-slate-400 text-center font-medium truncate w-full">
                   {item.month.split(' ')[0]}
                 </span>
               </div>
@@ -94,25 +94,25 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
         <div className="flex items-center justify-center gap-6 pt-4 text-xs font-semibold">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-emerald-500 rounded-sm" />
-            <span className="text-slate-300">एकूण जमा (Revenue)</span>
+            <span className="text-slate-700 dark:text-slate-300">एकूण जमा (Revenue)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-red-500 rounded-sm" />
-            <span className="text-slate-300">एकूण खर्च (Expenses)</span>
+            <span className="text-slate-700 dark:text-slate-300">एकूण खर्च (Expenses)</span>
           </div>
         </div>
       </div>
 
       {/* 2. Expense Category Proportional Distribution */}
-      <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 flex flex-col justify-between">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col justify-between">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <PieChart className="w-5 h-5 text-amber-500" />
-            <h4 className="font-bold text-sm text-white">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white">
               खर्चाचे वर्गीकरण व टक्केवारी (Expense Distribution)
             </h4>
           </div>
-          <span className="text-[11px] text-emerald-400 font-mono font-bold">
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
             एकूण: ₹{pnlData.totalExpenses.toLocaleString('en-IN')}
           </span>
         </div>
@@ -126,13 +126,13 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
             return (
               <div key={cat} className="space-y-1">
                 <div className="flex justify-between text-xs">
-                  <span className="font-bold text-slate-300 capitalize">{cat}</span>
-                  <span className="font-mono text-slate-400">
+                  <span className="font-bold text-slate-700 dark:text-slate-300 capitalize">{cat}</span>
+                  <span className="font-mono text-slate-500 dark:text-slate-400">
                     ₹{amount.toLocaleString('en-IN')}{' '}
-                    <strong className="text-white">({percentage}%)</strong>
+                    <strong className="text-slate-900 dark:text-white font-bold">({percentage}%)</strong>
                   </span>
                 </div>
-                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${percentage}%`, backgroundColor: color }}
                     className="h-full rounded-full transition-all duration-500"
@@ -143,7 +143,7 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
           })}
         </div>
 
-        <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-500 text-center">
+        <div className="pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 text-center">
           💡 टीप: भाजीपाला व किराणा खर्चावर नियंत्रण ठेवल्यास नफ्यात वाढ होते.
         </div>
       </div>

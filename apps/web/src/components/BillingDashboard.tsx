@@ -95,13 +95,13 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner & Month Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <IndianRupee className="w-5 h-5 text-emerald-500" />
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <IndianRupee className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
             <span>{t('monthlyBillingLedger')}</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             56 Meals/Month Fixed Formula • Approved Leave Deductions • WhatsApp Payment Reminders & Official Invoices
           </p>
         </div>
@@ -112,7 +112,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-3 py-2 text-xs bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
 
           {/* Generate Button */}
@@ -128,7 +128,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
           {/* CSV Export */}
           <button
             onClick={onExportCsv}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-300 dark:border-slate-700 transition"
             title={t('exportCsv')}
           >
             <Download className="w-4 h-4" />
@@ -139,34 +139,34 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800">
-          <span className="text-xs font-medium text-slate-400 block mb-1">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
             {t('amountDue')} ({selectedMonth})
           </span>
-          <div className="text-2xl font-black text-white font-mono">
+          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
             ₹{billingData.totalAmountDue.toLocaleString('en-IN')}
           </div>
-          <span className="text-[11px] text-slate-400">एकूण बिल आकारणी</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">एकूण बिल आकारणी</span>
         </div>
 
-        <div className="bg-slate-900 rounded-2xl p-5 border border-emerald-500/30">
-          <span className="text-xs font-medium text-emerald-400 block mb-1">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-emerald-300 dark:border-emerald-500/30 shadow-sm">
+          <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400 block mb-1">
             {t('totalCollected')} ({selectedMonth})
           </span>
-          <div className="text-2xl font-black text-emerald-400 font-mono">
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
             ₹{billingData.totalAmountPaid.toLocaleString('en-IN')}
           </div>
-          <span className="text-[11px] text-emerald-300/80">जमा झालेली रक्कम</span>
+          <span className="text-[11px] text-emerald-700/80 dark:text-emerald-300/80">जमा झालेली रक्कम</span>
         </div>
 
-        <div className="bg-slate-900 rounded-2xl p-5 border border-amber-500/30">
-          <span className="text-xs font-medium text-amber-400 block mb-1">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-amber-300 dark:border-amber-500/30 shadow-sm">
+          <span className="text-xs font-medium text-amber-700 dark:text-amber-400 block mb-1">
             {t('pendingDues')} ({selectedMonth})
           </span>
-          <div className="text-2xl font-black text-amber-400 font-mono">
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
             ₹{billingData.totalPendingDues.toLocaleString('en-IN')}
           </div>
-          <span className="text-[11px] text-amber-300/80">येणे बाकी</span>
+          <span className="text-[11px] text-amber-700/80 dark:text-amber-300/80">येणे बाकी</span>
         </div>
       </div>
 
@@ -241,10 +241,10 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     {/* View Invoice Receipt Slip */}
                     <button
                       onClick={() => setSelectedCycleForInvoice(cycle)}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-700 transition"
                       title="पावती पाहा / प्रिंट करा"
                     >
-                      <Receipt className="w-3.5 h-3.5 text-brand-400" />
+                      <Receipt className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                       <span className="hidden sm:inline">पावती</span>
                     </button>
 
@@ -268,9 +268,9 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         setSelectedCycleForPayment(cycle);
                         setPaymentAmount(outstanding);
                       }}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 transition"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-700 transition"
                     >
-                      <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                      <CreditCard className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>{t('recordPayment')}</span>
                     </button>
 
@@ -280,7 +280,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                         setSelectedCycleForAdjustment(cycle);
                         setAdjustmentAmount(0);
                       }}
-                      className="p-1.5 text-slate-400 hover:text-slate-200 bg-slate-800/60 hover:bg-slate-800 rounded-lg transition"
+                      className="p-1.5 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/60 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-transparent transition"
                       title={t('recordAdjustment')}
                     >
                       <Sliders className="w-4 h-4" />
@@ -296,15 +296,15 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
       {/* Record Payment Modal */}
       {selectedCycleForPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-brand-500" />
                 <span>{t('recordPayment')} — {selectedCycleForPayment.memberName}</span>
               </h3>
               <button
                 onClick={() => setSelectedCycleForPayment(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -335,8 +335,8 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     onClick={() => setPaymentMethod('upi_link')}
                     className={`py-2 px-3 rounded-lg border font-semibold transition ${
                       paymentMethod === 'upi_link'
-                        ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400'
+                        ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-bold'
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     UPI / Online
@@ -346,8 +346,8 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                     onClick={() => setPaymentMethod('cash')}
                     className={`py-2 px-3 rounded-lg border font-semibold transition ${
                       paymentMethod === 'cash'
-                        ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-400'
+                        ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-bold'
+                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     रोख (Cash)
@@ -372,7 +372,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedCycleForPayment(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                 >
                   {t('cancel')}
                 </button>
@@ -391,22 +391,22 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
       {/* Record Adjustment Modal */}
       {selectedCycleForAdjustment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-amber-500" />
                 <span>{t('recordAdjustment')} — {selectedCycleForAdjustment.memberName}</span>
               </h3>
               <button
                 onClick={() => setSelectedCycleForAdjustment(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleAdjustmentSubmit} className="p-6 space-y-4 text-xs">
-              <div className="p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl text-amber-200 text-[11px] leading-relaxed">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-500/30 rounded-xl text-amber-900 dark:text-amber-200 text-[11px] leading-relaxed">
                 हिशोबातील पारदर्शकता राखण्यासाठी दुरुस्ती कधीही छुपी केली जात नाही. स्वतंत्र ॲडजस्टमेंट पावती व कारण नोंदवणे बंधनकारक आहे.
               </div>
 
@@ -442,7 +442,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedCycleForAdjustment(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                 >
                   {t('cancel')}
                 </button>

@@ -103,14 +103,14 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-brand-500" />
             <span>{t('leaves')}</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {t('timestampAuditNote')} • Cutoff: <strong className="text-slate-200">{mess?.dailyCutoffTime || '09:00'} AM</strong>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {t('timestampAuditNote')} • Cutoff: <strong className="text-slate-800 dark:text-slate-200">{mess?.dailyCutoffTime || '18:00'} (06:00 PM)</strong>
           </p>
         </div>
 
@@ -125,42 +125,42 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
 
       {/* Owner Approval Queue (Late Submissions) */}
       {pendingLeaves.length > 0 && (
-        <div className="bg-amber-950/20 border border-amber-500/40 rounded-2xl p-5 space-y-3 animate-fadeIn">
+        <div className="bg-amber-50/80 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-500/40 rounded-2xl p-5 space-y-3 animate-fadeIn">
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
-            <h4 className="font-bold text-sm text-amber-200">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <h4 className="font-bold text-sm text-amber-900 dark:text-amber-200">
               {t('ownerApprovalQueue')} ({pendingLeaves.length})
             </h4>
           </div>
-          <p className="text-xs text-amber-300/80">
-            या सुट्ट्या रोजच्या कटऑफ वेळेनंतर ({mess?.dailyCutoffTime || '09:00'} AM) दाखल झाल्या आहेत. एका क्लिकवर मंजुरी द्या:
+          <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
+            या सुट्ट्या रोजच्या कटऑफ वेळेनंतर ({mess?.dailyCutoffTime || '18:00'} / 06:00 PM) दाखल झाल्या आहेत. एका क्लिकवर मंजुरी द्या:
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
             {pendingLeaves.map((leave) => (
               <div
                 key={leave.id}
-                className="bg-slate-900/90 rounded-xl p-4 border border-amber-500/30 flex flex-col justify-between gap-3"
+                className="bg-white dark:bg-slate-900/90 rounded-xl p-4 border border-amber-300 dark:border-amber-500/30 flex flex-col justify-between gap-3 shadow-sm"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-bold text-sm text-white">{leave.memberName}</span>
-                    <span className="text-[10px] text-amber-400 font-mono">
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">{leave.memberName}</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 font-mono">
                       दाखल वेळ: {new Date(leave.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <div className="text-xs text-slate-300 flex items-center gap-1.5 font-medium">
-                    <CalendarDays className="w-3.5 h-3.5 text-brand-400" />
+                  <div className="text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-medium">
+                    <CalendarDays className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                     <span>{leave.startDate} ते {leave.endDate}</span>
                   </div>
                   {leave.reason && (
-                    <p className="text-xs text-slate-400 italic mt-1.5 bg-slate-800/60 p-2 rounded-lg">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 italic mt-1.5 bg-slate-50 dark:bg-slate-800/60 p-2 rounded-lg">
                       "{leave.reason}"
                     </p>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button
                     onClick={() => onReviewLeave(leave.id, 'approved')}
                     className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-sm"
@@ -170,7 +170,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
                   </button>
                   <button
                     onClick={() => onReviewLeave(leave.id, 'rejected')}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-red-600/80 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-red-600/90 hover:bg-red-600 text-white rounded-lg text-xs font-bold transition"
                   >
                     <X className="w-4 h-4" />
                     <span>{t('rejectBtn')}</span>
@@ -241,15 +241,15 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
       {/* Submit Leave Modal */}
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-brand-500" />
                 <span>{t('submitLeave')}</span>
               </h3>
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>

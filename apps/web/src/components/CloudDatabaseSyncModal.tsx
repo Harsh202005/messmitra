@@ -117,7 +117,7 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* Toast */}
         {toast && (
@@ -127,20 +127,20 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
         )}
 
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 p-6 text-white border-b border-slate-800 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-brand-600 to-amber-600 p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/40">
+            <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center backdrop-blur">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-bold text-base">क्लाउड डेटाबेस व सिंक (Free Supabase Cloud)</h3>
-              <p className="text-xs text-slate-400">मोफत ऑनलाइन डेटाबेस जोडा किंवा लोकल ऑफलाइन मोड वापरा</p>
+              <p className="text-xs text-white/80">मोफत ऑनलाइन डेटाबेस जोडा किंवा लोकल ऑफलाइन मोड वापरा</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:text-white"
+            className="p-1 rounded-full text-white/80 hover:text-white hover:bg-white/20 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -149,45 +149,45 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
         {/* Modal Body */}
         <div className="p-6 space-y-5 text-xs">
           {/* Free Supabase Cloud Callout */}
-          <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60 space-y-2">
+          <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                <Cloud className="w-4 h-4 text-emerald-400" />
+              <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Cloud className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Free Supabase Database (500MB Free Forever)</span>
               </span>
               <a
                 href="https://supabase.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] text-brand-400 hover:underline flex items-center gap-1"
+                className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline flex items-center gap-1"
               >
                 <span>खाते उघडा (Sign Up)</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
-            <p className="text-slate-400 leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
               तुमचा डेटा सुरक्षित ठेवण्यासाठी मोफत Supabase प्रोजेक्ट तयार करून खालील कळा (Credentials) प्रविष्ट करा:
             </p>
 
             <div className="space-y-2 pt-2">
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Project URL</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Project URL</label>
                 <input
                   type="text"
                   placeholder="https://xyzcompany.supabase.co"
                   value={supabaseUrl}
                   onChange={(e) => setSupabaseUrl(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">Anon / Public Key</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Anon / Public Key</label>
                 <input
                   type="password"
                   placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                   value={supabaseAnonKey}
                   onChange={(e) => setSupabaseAnonKey(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white font-mono focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
@@ -197,7 +197,7 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
               <button
                 type="button"
                 onClick={handleTestConnection}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-lg transition"
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow transition cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${connectionStatus === 'testing' ? 'animate-spin' : ''}`} />
                 <span>कनेक्शन तपासा (Test Connection)</span>
@@ -205,13 +205,13 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
 
               <div>
                 {connectionStatus === 'success' && (
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>कनेक्ट झाले ✅</span>
                   </span>
                 )}
                 {connectionStatus === 'failed' && (
-                  <span className="text-amber-400 font-bold flex items-center gap-1">
+                  <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     <span>ऑफलाइन लोकल मोड सक्रिय</span>
                   </span>
@@ -224,34 +224,34 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <button
               onClick={copySqlSchema}
-              className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition text-left"
+              className="flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 transition text-left cursor-pointer"
             >
-              {copiedSql ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-brand-400" />}
+              {copiedSql ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
               <div>
-                <strong className="block text-slate-200">Supabase SQL कॉपी करा</strong>
-                <span className="text-[10px] text-slate-400">1-क्लिक RLS स्कीमा DDL</span>
+                <strong className="block text-slate-800 dark:text-slate-200">Supabase SQL कॉपी करा</strong>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">1-क्लिक RLS स्कीमा DDL</span>
               </div>
             </button>
 
             <button
               onClick={handleLoadDemoData}
               disabled={isSyncing}
-              className="flex items-center justify-center gap-2 p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition text-left"
+              className="flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 transition text-left cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
+              <Sparkles className="w-4 h-4 text-amber-500" />
               <div>
-                <strong className="block text-slate-200">डेमो डेटा रीलोड करा</strong>
-                <span className="text-[10px] text-slate-400">बाळाजी मेस, पुणे (12 सभासद)</span>
+                <strong className="block text-slate-800 dark:text-slate-200">डेमो डेटा रीलोड करा</strong>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">श्री बालाजी मेस (12 सभासद)</span>
               </div>
             </button>
           </div>
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition"
+            className="px-5 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-xs transition cursor-pointer"
           >
             बंद करा (Close)
           </button>

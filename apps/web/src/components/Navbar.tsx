@@ -1,6 +1,7 @@
 import React from 'react';
 import { useI18n } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
+import { useTheme } from '../lib/theme';
 import {
   Utensils,
   Settings,
@@ -16,6 +17,8 @@ import {
   ChefHat,
   User,
   LogIn,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
 
@@ -45,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { language, setLanguage, t } = useI18n();
   const { user, role, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md">
@@ -65,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-                {mess?.name ? `${mess.name} • ${mess.city}` : t('tagline')}
+                २१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख
               </p>
             </div>
           </div>
@@ -78,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                   activeTab === 'members'
                     ? 'bg-brand-600 text-white shadow-sm font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -90,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                   activeTab === 'leaves'
                     ? 'bg-brand-600 text-white shadow-sm font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <CalendarDays className="w-3.5 h-3.5" />
@@ -102,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                   activeTab === 'billing'
                     ? 'bg-brand-600 text-white shadow-sm font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <CreditCard className="w-3.5 h-3.5" />
@@ -114,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                   activeTab === 'expenses'
                     ? 'bg-brand-600 text-white shadow-sm font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <TrendingDown className="w-3.5 h-3.5" />
@@ -126,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                   activeTab === 'pnl'
                     ? 'bg-brand-600 text-white shadow-sm font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                 }`}
               >
                 <PieChart className="w-3.5 h-3.5" />
@@ -136,35 +140,54 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Right Action Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Light / Dark Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 sm:px-2 sm:py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1"
+              title={theme === 'light' ? 'डार्क थीम करा (Switch to Dark Theme)' : 'लाइट थीम करा (Switch to Light Theme)'}
+            >
+              {theme === 'light' ? (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="hidden lg:inline text-[11px]">Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden lg:inline text-[11px]">Light</span>
+                </>
+              )}
+            </button>
+
             {/* Database Cloud Sync Status Button */}
             <button
               onClick={onOpenCloudSync}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 transition"
+              className="flex items-center gap-1 px-2 py-1.5 text-xs font-semibold rounded-lg text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition"
               title="Cloud Database Sync & Settings"
             >
-              <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+              <Cloud className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden xl:inline">Cloud DB</span>
             </button>
 
             {/* Authenticated User Role Badge & Login Trigger */}
-            <div className="flex items-center gap-1.5 bg-slate-800/90 pl-2 pr-1.5 py-1 rounded-xl border border-slate-700/80">
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 pl-2 pr-1.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700/80">
               <div className="flex items-center gap-1.5">
-                {role === 'owner' && <Crown className="w-3.5 h-3.5 text-amber-400" />}
-                {role === 'member' && <User className="w-3.5 h-3.5 text-blue-400" />}
-                {role === 'staff' && <ChefHat className="w-3.5 h-3.5 text-emerald-400" />}
+                {role === 'owner' && <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />}
+                {role === 'member' && <User className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />}
+                {role === 'staff' && <ChefHat className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
 
-                <span className="text-[11px] font-bold text-slate-200 hidden sm:inline truncate max-w-[110px]">
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200 hidden sm:inline truncate max-w-[110px]">
                   {user?.name?.split(' ')[0] || (role === 'owner' ? 'Owner' : role === 'staff' ? 'Cook' : 'Member')}
                 </span>
 
                 <span
                   className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded-md border ${
                     role === 'owner'
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
                       : role === 'staff'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                      : 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
+                      : 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30'
                   }`}
                 >
                   {role === 'owner' ? 'OWNER' : role === 'staff' ? 'COOK' : 'MEMBER'}
@@ -231,11 +254,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Navigation Bar */}
         {viewRole === 'owner' && (
-          <nav className="flex md:hidden items-center justify-around py-2 border-t border-slate-800 text-[11px] font-bold">
+          <nav className="flex md:hidden items-center justify-around py-2 border-t border-slate-200 dark:border-slate-800 text-[11px] font-bold">
             <button
               onClick={() => onSelectTab('members')}
               className={`py-1 px-2 rounded-lg transition ${
-                activeTab === 'members' ? 'text-brand-400 font-extrabold' : 'text-slate-400'
+                activeTab === 'members' ? 'text-brand-600 dark:text-brand-400 font-extrabold' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               सभासद
@@ -243,7 +266,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => onSelectTab('leaves')}
               className={`py-1 px-2 rounded-lg transition ${
-                activeTab === 'leaves' ? 'text-brand-400 font-extrabold' : 'text-slate-400'
+                activeTab === 'leaves' ? 'text-brand-600 dark:text-brand-400 font-extrabold' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               सुट्ट्या
@@ -251,7 +274,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => onSelectTab('billing')}
               className={`py-1 px-2 rounded-lg transition ${
-                activeTab === 'billing' ? 'text-brand-400 font-extrabold' : 'text-slate-400'
+                activeTab === 'billing' ? 'text-brand-600 dark:text-brand-400 font-extrabold' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               बिलिंग
@@ -259,7 +282,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => onSelectTab('expenses')}
               className={`py-1 px-2 rounded-lg transition ${
-                activeTab === 'expenses' ? 'text-brand-400 font-extrabold' : 'text-slate-400'
+                activeTab === 'expenses' ? 'text-brand-600 dark:text-brand-400 font-extrabold' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               खर्च
@@ -267,7 +290,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => onSelectTab('pnl')}
               className={`py-1 px-2 rounded-lg transition ${
-                activeTab === 'pnl' ? 'text-brand-400 font-extrabold' : 'text-slate-400'
+                activeTab === 'pnl' ? 'text-brand-600 dark:text-brand-400 font-extrabold' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               P&L

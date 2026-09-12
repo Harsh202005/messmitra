@@ -140,13 +140,13 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 p-5 rounded-2xl border border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <TrendingDown className="w-5 h-5 text-red-400" />
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <TrendingDown className="w-5 h-5 text-red-500 dark:text-red-400" />
             <span>{t('expenses')}</span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             नियमित मासिक खर्च • दैनंदिन भाजीपाला/किराणा • कर्मचारी मानधन
           </p>
         </div>
@@ -184,7 +184,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
           <button
             onClick={onExportCsv}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-xl border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-300 dark:border-slate-700 transition"
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">CSV</span>
@@ -193,13 +193,13 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2 text-xs">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 text-xs">
         <button
           onClick={() => setActiveTab('recurring')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold transition ${
             activeTab === 'recurring'
-              ? 'bg-slate-800 text-brand-400 border border-slate-700'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-slate-200 dark:bg-slate-800 text-brand-700 dark:text-brand-400 border border-slate-300 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Repeat className="w-4 h-4" />
@@ -210,8 +210,8 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
           onClick={() => setActiveTab('oneoff')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold transition ${
             activeTab === 'oneoff'
-              ? 'bg-slate-800 text-brand-400 border border-slate-700'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-slate-200 dark:bg-slate-800 text-brand-700 dark:text-brand-400 border border-slate-300 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <ShoppingBag className="w-4 h-4" />
@@ -222,8 +222,8 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
           onClick={() => setActiveTab('staff')}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold transition ${
             activeTab === 'staff'
-              ? 'bg-slate-800 text-brand-400 border border-slate-700'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-slate-200 dark:bg-slate-800 text-brand-700 dark:text-brand-400 border border-slate-300 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -248,30 +248,30 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             {recurringExpenses.map((rec) => (
               <div
                 key={rec.id}
-                className="bg-slate-900 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between gap-4"
+                className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col justify-between gap-4 shadow-sm"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       {getCategoryIcon(rec.category)}
                       {rec.category}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30">
                       Active
                     </span>
                   </div>
-                  <h4 className="font-bold text-base text-white">{rec.payeeName}</h4>
-                  <div className="text-2xl font-black text-amber-400 mt-2">
+                  <h4 className="font-bold text-base text-slate-900 dark:text-white">{rec.payeeName}</h4>
+                  <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-2">
                     ₹{rec.amount.toLocaleString('en-IN')}
-                    <span className="text-xs text-slate-400 font-normal"> / दरमहा</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal"> / दरमहा</span>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">देय: {rec.nextDueDate}</span>
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 dark:text-slate-400">देय: {rec.nextDueDate}</span>
                   <button
                     onClick={() => onConfirmRecurring(rec.id, '2026-09')}
-                    className="flex items-center gap-1 px-3 py-1 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 rounded-lg font-bold transition"
+                    className="flex items-center gap-1 px-3 py-1 bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-300 dark:bg-brand-600/20 dark:hover:bg-brand-600/30 dark:text-brand-300 dark:border-brand-500/30 rounded-lg font-bold transition"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>निश्चित करा</span>
@@ -332,20 +332,20 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             {staffList.map((st) => (
               <div
                 key={st.id}
-                className="bg-slate-900 rounded-2xl p-5 border border-slate-800 flex items-center justify-between gap-3"
+                className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-sm"
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <ChefHat className="w-5 h-5 text-amber-500" />
-                    <h4 className="font-bold text-sm text-white">{st.name}</h4>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">{st.name}</h4>
                   </div>
-                  <p className="text-xs text-slate-400">{st.role}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{st.role}</p>
                   {st.phone && <p className="text-[11px] text-slate-500 font-mono">{st.phone}</p>}
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs text-slate-400 block">मासिक मानधन</span>
-                  <span className="text-lg font-black text-emerald-400 font-mono">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block">मासिक मानधन</span>
+                  <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     ₹{st.monthlySalary.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -358,15 +358,15 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
       {/* Add One-Off Expense Modal */}
       {isAddOneOffOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
-                <ShoppingBag className="w-4 h-4 text-red-400" />
+                <ShoppingBag className="w-4 h-4 text-red-500" />
                 <span>{t('addExpense')}</span>
               </h3>
               <button
                 onClick={() => setIsAddOneOffOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -437,7 +437,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddOneOffOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                 >
                   {t('cancel')}
                 </button>
@@ -456,15 +456,15 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
       {/* Add Staff Modal */}
       {isAddStaffOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <Users className="w-4 h-4 text-brand-500" />
                 <span>{t('addStaff')}</span>
               </h3>
               <button
                 onClick={() => setIsAddStaffOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -520,7 +520,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddStaffOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                 >
                   {t('cancel')}
                 </button>
@@ -539,15 +539,15 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
       {/* Add Recurring Expense Modal */}
       {isAddRecurringOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
-                <Repeat className="w-4 h-4 text-brand-400" />
+                <Repeat className="w-4 h-4 text-brand-500" />
                 <span>नियमित खर्च जोडा (Add Recurring Expense)</span>
               </h3>
               <button
                 onClick={() => setIsAddRecurringOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -621,7 +621,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsAddRecurringOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
+                  className="px-4 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
                 >
                   {t('cancel')}
                 </button>

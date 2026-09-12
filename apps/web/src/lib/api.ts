@@ -11,6 +11,7 @@ import {
   ExpenseOneOff,
   Staff,
   ProfitAndLossSummary,
+  PendingRegistration,
   calculateProratedMeals,
   calculateMonthlyBill,
   isLeaveSubmissionLate,
@@ -284,6 +285,32 @@ const DEFAULT_STAFF: Staff[] = [
   },
 ];
 
+const DEFAULT_REGISTRATIONS: PendingRegistration[] = [
+  {
+    id: 'reg-001',
+    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+    name: 'अनिकेत पवार (Aniket Pawar)',
+    phone: '+91 98901 99887',
+    role: 'member',
+    dietPreference: 'veg',
+    planType: 'both',
+    rate: 3000,
+    submittedAt: new Date(Date.now() - 3600000).toISOString(),
+    status: 'pending_approval',
+  },
+  {
+    id: 'reg-002',
+    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+    name: 'दत्तात्रय महाराज (Dattatray Maharaj)',
+    phone: '+91 98220 55443',
+    role: 'staff',
+    staffRole: 'सहाय्यक आचारी (Assistant Cook)',
+    salary: 12000,
+    submittedAt: new Date(Date.now() - 7200000).toISOString(),
+    status: 'pending_approval',
+  },
+];
+
 export const MessMitraApi = {
   // -------------------------------------------------------------
   // 1. MESS DETAILS
@@ -333,7 +360,25 @@ export const MessMitraApi = {
 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_mess');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.name !== 'श्री बालाजी मेस' || parsed.upiId !== '9822338975@upi' || parsed.ownerName !== 'शंकर गिरी') {
+            parsed.name = 'श्री बालाजी मेस';
+            parsed.ownerName = 'शंकर गिरी';
+            parsed.contactNumber = '+91 98223 38975';
+            parsed.upiId = '9822338975@upi';
+            parsed.defaultVegRate = 3000;
+            parsed.defaultNonVegRate = 3200;
+            parsed.dailyCutoffTime = '18:00';
+            parsed.dinnerCutoffTime = '18:00';
+            localStorage.setItem('messmitra_mess', JSON.stringify(parsed));
+          }
+          return parsed;
+        } catch {
+          // parse error fallback
+        }
+      }
     }
     return DEFAULT_MESS;
   },
@@ -1405,5 +1450,79 @@ export const MessMitraApi = {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+
+  // -------------------------------------------------------------
+  // 9. SELF-REGISTRATION & OWNER APPROVAL QUEUE
+  // -------------------------------------------------------------
+  async getPendingRegistrations(): Promise<PendingRegistration[]> {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_registrations');
+      if (saved) return JSON.parse(saved);
+      localStorage.setItem('messmitra_registrations', JSON.stringify(DEFAULT_REGISTRATIONS));
+      return DEFAULT_REGISTRATIONS;
+    }
+    return DEFAULT_REGISTRATIONS;
+  },
+
+  async submitRegistration(
+    data: Omit<PendingRegistration, 'id' | 'submittedAt' | 'status'>
+  ): Promise<PendingRegistration> {
+    const current = await this.getPendingRegistrations();
+    const newReg: PendingRegistration = {
+      ...data,
+      id: `reg-${Date.now()}`,
+      submittedAt: new Date().toISOString(),
+      status: 'pending_approval',
+    };
+    const updated = [newReg, ...current];
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_registrations', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newReg;
+  },
+
+  async reviewRegistration(
+    id: string,
+    status: 'approved' | 'rejected'
+  ): Promise<PendingRegistration | null> {
+    const current = await this.getPendingRegistrations();
+    const target = current.find((r) => r.id === id);
+    if (!target) return null;
+
+    target.status = status;
+    target.reviewedAt = new Date().toISOString();
+    target.reviewedBy = 'शंकर गिरी (Owner)';
+
+    if (status === 'approved') {
+      if (target.role === 'member') {
+        // Auto-create active Member
+        await this.createMember({
+          name: target.name,
+          phone: target.phone,
+          dietPreference: target.dietPreference || 'veg',
+          gender: 'male',
+          rate: target.rate || (target.dietPreference === 'veg' ? 3000 : 3200),
+          planType: target.planType || 'both',
+          joinDate: new Date().toISOString().split('T')[0],
+          status: 'active',
+        });
+      } else if (target.role === 'staff') {
+        // Auto-create active Staff
+        await this.createStaff({
+          name: target.name,
+          phone: target.phone,
+          role: target.staffRole || 'सहाय्यक आचारी (Cook)',
+          monthlySalary: target.salary || 12000,
+        });
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_registrations', JSON.stringify(current));
+    }
+    notifyDataChanged();
+    return target;
   },
 };

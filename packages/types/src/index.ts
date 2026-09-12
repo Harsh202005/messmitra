@@ -11,6 +11,25 @@ export type LeaveStatus = 'auto_valid' | 'pending_approval' | 'approved' | 'reje
 export type PaymentMethod = 'upi_link' | 'cash';
 export type BillingStatus = 'unpaid' | 'partially_paid' | 'paid';
 export type RecurringFrequency = 'monthly' | 'quarterly' | 'yearly';
+export type ApprovalStatus = 'pending_approval' | 'approved' | 'rejected';
+
+export interface PendingRegistration {
+  id: string;
+  messId: string;
+  name: string;
+  phone: string;
+  role: 'member' | 'staff';
+  dietPreference?: DietPreference;
+  planType?: PlanType;
+  rate?: number;
+  staffRole?: string;
+  salary?: number;
+  password?: string;
+  submittedAt: string;
+  status: ApprovalStatus;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
 
 export type ExpenseCategory = 
   | 'salary' 

@@ -15,14 +15,14 @@ interface Translations {
 export const translations: Translations = {
   // Brand & Nav
   appName: {
-    mr: 'मेस मित्र',
-    hi: 'मेस मित्र',
-    en: 'MessMitra',
+    mr: 'श्री बालाजी मेस',
+    hi: 'श्री बालाजी मेस',
+    en: 'श्री बालाजी मेस',
   },
   tagline: {
-    mr: 'स्मार्ट मेस व टिफिन हिशोब प्रणाली',
-    hi: 'स्मार्ट मेस और टिफिन हिसाब प्रणाली',
-    en: 'Smart Mess & Tiffin Accounting SaaS',
+    mr: '२१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख',
+    hi: '२१ वर्षों की अखंड परंपरा • स्वाद ही हमारी पहचान',
+    en: '21 Years of Tradition • Authentic Taste',
   },
   dashboard: {
     mr: 'डॅशबोर्ड',

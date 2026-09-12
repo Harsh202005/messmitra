@@ -55,7 +55,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
       {/* Modal Card */}
       <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col">
         {/* Modal Controls Header (Hidden on Print) */}
-        <div className="print:hidden bg-slate-900 px-6 py-4 text-white flex items-center justify-between border-b border-slate-800">
+        <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <Receipt className="w-5 h-5 text-brand-500" />
             <h3 className="font-bold text-base">
@@ -66,7 +66,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>प्रिंट / PDF डाउनलोड</span>
@@ -74,7 +74,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full text-slate-400 hover:text-white transition"
+              className="p-1.5 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

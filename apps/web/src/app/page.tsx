@@ -11,6 +11,7 @@ import {
   Staff,
   ProfitAndLossSummary,
   DailyCookForecast,
+  PendingRegistration,
 } from '@messmitra/types';
 import { MessMitraApi, notifyDataChanged } from '../lib/api';
 import { subscribeToMessRealtime } from '../lib/supabaseClient';
@@ -25,6 +26,7 @@ import { ExpensesManagement } from '../components/ExpensesManagement';
 import { PnLDashboard } from '../components/PnLDashboard';
 import { MemberPortalView } from '../components/MemberPortalView';
 import { KitchenDisplayView } from '../components/KitchenDisplayView';
+import { RegistrationApprovalsQueue } from '../components/RegistrationApprovalsQueue';
 import { LoginModal } from '../components/LoginModal';
 import { MessSetupWizardModal } from '../components/MessSetupWizardModal';
 import { AddEditMemberModal } from '../components/AddEditMemberModal';
@@ -60,6 +62,7 @@ function DashboardContent() {
   const [recurringExpenses, setRecurringExpenses] = useState<ExpenseRecurring[]>([]);
   const [oneOffExpenses, setOneOffExpenses] = useState<ExpenseOneOff[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [registrations, setRegistrations] = useState<PendingRegistration[]>([]);
   const [pnlData, setPnLData] = useState<ProfitAndLossSummary>({
     month: '2026-09',
     totalDuesCollected: 0,
@@ -115,6 +118,7 @@ function DashboardContent() {
         staffRes,
         pnlRes,
         forecastRes,
+        registrationsRes,
       ] = await Promise.all([
         MessMitraApi.getCurrentMess(),
         MessMitraApi.getMembers(),
@@ -125,6 +129,7 @@ function DashboardContent() {
         MessMitraApi.getStaff(),
         MessMitraApi.getPnLSummary(month),
         MessMitraApi.getCookForecast(),
+        MessMitraApi.getPendingRegistrations(),
       ]);
 
       setMess(messRes);
@@ -136,6 +141,7 @@ function DashboardContent() {
       setStaffList(staffRes);
       setPnLData(pnlRes);
       setForecast(forecastRes);
+      setRegistrations(registrationsRes);
     } catch (err) {
       console.error('Error loading data:', err);
     }
@@ -260,6 +266,17 @@ function DashboardContent() {
     loadAllData();
   };
 
+  // Handlers for Registration Approvals
+  const handleReviewRegistration = async (id: string, status: 'approved' | 'rejected') => {
+    await MessMitraApi.reviewRegistration(id, status);
+    showToast(
+      status === 'approved'
+        ? 'नोंदणी मंजूर झाली व खाते सक्रिय झाले! ✅'
+        : 'नोंदणी नामंजूर केली.'
+    );
+    loadAllData();
+  };
+
   // Export Handlers
   const handleExportBillingCsv = () => {
     MessMitraApi.downloadBillingCsv(billingData.cycles, selectedMonth);
@@ -302,7 +319,7 @@ function DashboardContent() {
   const activeMemberBilling = billingData.cycles.find((c) => c.memberId === activeMember.id) || null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-emerald-400/30 text-xs font-bold animate-bounce">
@@ -353,43 +370,43 @@ function DashboardContent() {
         {role === 'owner' && (
           <>
             {/* Owner Header / Quick Mess Info */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
               <div>
-                <div className="flex items-center gap-2 text-brand-400 font-semibold text-xs tracking-wider uppercase mb-1">
+                <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-semibold text-xs tracking-wider uppercase mb-1">
                   <Sparkles className="w-4 h-4" />
-                  <span>श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा</span>
+                  <span>२१ वर्षांची अखंड परंपरा</span>
                 </div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                  {mess?.name || 'श्री बालाजी मेस'} — {mess?.area || 'कर्वे नगर / कोथरूड'}
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                  श्री बालाजी मेस
                 </h1>
-                <p className="text-xs text-amber-300 font-semibold mt-1">
+                <p className="text-xs text-amber-800 dark:text-amber-300 font-bold mt-1">
                   चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong> • चव हीच आमची ओळख
                 </p>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  रात्रीचे जेवण कटऑफ: <strong className="text-slate-200">06:00 PM (18:00)</strong> • UPI ID:{' '}
-                  <span className="font-mono text-brand-300 font-bold">{mess?.upiId || '9822338975@upi'}</span>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                  रात्रीचे जेवण कटऑफ: <strong className="text-slate-800 dark:text-slate-200">06:00 PM (18:00)</strong> • UPI ID:{' '}
+                  <span className="font-mono text-brand-600 dark:text-brand-300 font-bold">{mess?.upiId || '9822338975@upi'}</span>
                 </p>
               </div>
 
               <div className="flex items-center gap-3 overflow-x-auto">
-                <div className="bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-700/60 min-w-[130px]">
-                  <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                    <IndianRupee className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[130px]">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <IndianRupee className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>जमा फी ({selectedMonth})</span>
                   </div>
-                  <div className="text-lg font-extrabold text-emerald-400 font-mono">
+                  <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                     ₹{pnlData.totalDuesCollected.toLocaleString('en-IN')}
                   </div>
                 </div>
 
-                <div className="bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-700/60 min-w-[120px]">
-                  <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
-                    <Users className="w-3.5 h-3.5 text-brand-400" />
+                <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[120px]">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
+                    <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                     <span>सक्रिय सभासद</span>
                   </div>
-                  <div className="text-lg font-extrabold text-white">
+                  <div className="text-lg font-extrabold text-slate-900 dark:text-white">
                     {members.filter((m) => m.status === 'active').length}{' '}
-                    <span className="text-xs font-normal text-slate-400">/ {members.length}</span>
+                    <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ {members.length}</span>
                   </div>
                 </div>
               </div>
@@ -403,6 +420,13 @@ function DashboardContent() {
                   cutoffTime={mess?.dailyCutoffTime}
                   onDateChange={handleForecastDateChange}
                 />
+
+                {/* New Member & Chef Registration Approvals Queue */}
+                <RegistrationApprovalsQueue
+                  registrations={registrations}
+                  onReview={handleReviewRegistration}
+                />
+
                 <MemberDirectory
                   members={members}
                   onAddMember={() => {
@@ -488,9 +512,9 @@ function DashboardContent() {
       <PwaInstallPrompt />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
+      <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950 py-6 text-center text-xs text-slate-600 dark:text-slate-500">
         <p>
-          MessMitra (मेस मित्र) — Industry-Grade Automated Mess & Tiffin Accounting SaaS • Pune, Maharashtra
+          श्री बालाजी मेस — २१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख • चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong>
         </p>
       </footer>
 
