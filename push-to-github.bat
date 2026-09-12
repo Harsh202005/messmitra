@@ -1,5 +1,5 @@
 @echo off
-set /p REPO_URL="Enter your GitHub Repository URL (e.g. https://github.com/username/messmitra.git): "
+set /p REPO_URL="https://github.com/Harsh202005/messmitra"
 
 if "%REPO_URL%"=="" (
     echo [ERROR] Repository URL cannot be empty.
