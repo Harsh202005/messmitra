@@ -957,7 +957,7 @@ export const MessMitraApi = {
 
   downloadBillingCsv(cycles: BillingCycle[], month: string) {
     const csvContent = generateBillingCsv(cycles);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -965,11 +965,12 @@ export const MessMitraApi = {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
 
   downloadExpensesCsv(recurring: ExpenseRecurring[], oneOff: ExpenseOneOff[], month: string) {
     const csvContent = generateExpensesCsv(recurring, oneOff);
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -977,5 +978,6 @@ export const MessMitraApi = {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
 };
