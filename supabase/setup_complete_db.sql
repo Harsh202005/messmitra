@@ -1,5 +1,5 @@
 -- ==============================================================================
--- MessMitra (मेस मित्र) — MASTER DATABASE SCRIPT (CLEAN RE-INIT & SEED)
+-- MessMitra (मेस मित्र) — COMPLETE 100% BULLETPROOF DATABASE SCRIPT
 -- Copy and paste this ENTIRE file into Supabase SQL Editor and click RUN.
 -- ==============================================================================
 
@@ -143,7 +143,7 @@ CREATE TABLE public.staff (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- 10. ROW LEVEL SECURITY (RLS)
+-- 10. ROW LEVEL SECURITY (RLS) POLICIES
 ALTER TABLE public.mess ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
@@ -164,26 +164,7 @@ CREATE POLICY "Public Full Access ExpenseRecurring" ON public.expense_recurring 
 CREATE POLICY "Public Full Access ExpenseOneoff" ON public.expense_oneoff FOR ALL USING (true);
 CREATE POLICY "Public Full Access Staff" ON public.staff FOR ALL USING (true);
 
--- 11. ENABLE REALTIME REPLICATION SAFELY
-DO $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    BEGIN
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.mess;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.members;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_requests;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.billing_cycles;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_recurring;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_oneoff;
-      ALTER PUBLICATION supabase_realtime ADD TABLE public.staff;
-    EXCEPTION
-      WHEN duplicate_object THEN NULL;
-    END;
-  END IF;
-END $$;
-
--- 12. SEED INITIAL DATA
+-- 11. SEED INITIAL DATA (All Valid 36-char Hex UUIDs)
 INSERT INTO public.mess (
     id,
     name,
