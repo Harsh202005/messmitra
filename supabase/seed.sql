@@ -2,6 +2,11 @@
 -- MessMitra Seed Data — Balaji Executive Mess (Pune)
 -- ==============================================================================
 
+-- 0. Ensure foreign key flexibility for demo data
+ALTER TABLE public.mess ALTER COLUMN owner_id DROP NOT NULL;
+ALTER TABLE public.mess DROP CONSTRAINT IF EXISTS mess_owner_id_fkey;
+ALTER TABLE public.mess ADD CONSTRAINT mess_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+
 -- 1. Demo Mess
 INSERT INTO public.mess (
     id,
@@ -9,7 +14,6 @@ INSERT INTO public.mess (
     area,
     city,
     daily_cutoff_time,
-    owner_id,
     upi_id,
     default_male_rate,
     default_female_rate
@@ -19,28 +23,16 @@ INSERT INTO public.mess (
     'Karve Nagar / Kothrud',
     'Pune',
     '09:00:00',
-    '00000000-0000-0000-0000-000000000001',
     'balajimess@okhdfcbank',
     3200.00,
     2800.00
-) ON CONFLICT (id) DO NOTHING;
+) ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    area = EXCLUDED.area,
+    city = EXCLUDED.city,
+    upi_id = EXCLUDED.upi_id;
 
--- 2. Owner Profile
-INSERT INTO public.profiles (
-    id,
-    mess_id,
-    role,
-    full_name,
-    phone
-) VALUES (
-    '00000000-0000-0000-0000-000000000001',
-    'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    'owner',
-    'Ganesh Balaji Patil',
-    '+91 98220 12345'
-) ON CONFLICT (id) DO NOTHING;
-
--- 3. Initial Active & Inactive Members
+-- 2. Initial Active & Inactive Members
 INSERT INTO public.members (id, mess_id, name, phone, gender, rate, plan_type, join_date, status) VALUES
 ('m1111111-1111-1111-1111-111111111111', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Rahul Deshmukh', '+91 98901 23456', 'male', 3200.00, 'both', '2026-06-01', 'active'),
 ('m2222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Priya Kulkarni', '+91 98902 34567', 'female', 2800.00, 'both', '2026-07-15', 'active'),
@@ -49,10 +41,16 @@ INSERT INTO public.members (id, mess_id, name, phone, gender, rate, plan_type, j
 ('m5555555-5555-5555-5555-555555555555', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Omkar Jadhav', '+91 98905 67890', 'male', 1800.00, 'lunch', '2026-09-01', 'active'),
 ('m6666666-6666-6666-6666-666666666666', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Tanvi Pawar', '+91 98906 78901', 'female', 1600.00, 'dinner', '2026-09-05', 'active'),
 ('m7777777-7777-7777-7777-777777777777', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Vikas Gaikwad', '+91 98907 89012', 'male', 3200.00, 'both', '2026-05-10', 'inactive')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, rate = EXCLUDED.rate;
 
--- 4. Sample Staff
+-- 3. Sample Staff
 INSERT INTO public.staff (id, mess_id, name, role, monthly_salary, phone) VALUES
 ('s1111111-1111-1111-1111-111111111111', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Mahadev Mama', 'Head Cook (महाराज)', 18000.00, '+91 97654 32101'),
 ('s2222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Santosh', 'Helper & Cleaning', 10000.00, '+91 97654 32102')
+ON CONFLICT (id) DO UPDATE SET monthly_salary = EXCLUDED.monthly_salary;
+
+-- 4. Sample Recurring Expenses
+INSERT INTO public.expense_recurring (id, mess_id, category, payee_name, amount, frequency, next_due_date, is_active) VALUES
+('er-1', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'rent', 'Balaji Heights Commercial Rent', 15000.00, 'monthly', '2026-10-01', true),
+('er-2', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'gas', 'HP Commercial Gas (2 Cylinders)', 3600.00, 'monthly', '2026-09-28', true)
 ON CONFLICT (id) DO NOTHING;
