@@ -62,6 +62,7 @@ export const CloudDatabaseSyncModal: React.FC<CloudDatabaseSyncModalProps> = ({
         setConnectionStatus('success');
         localStorage.setItem('messmitra_supabase_url', supabaseUrl);
         localStorage.setItem('messmitra_supabase_key', supabaseAnonKey);
+        await onReloadAllData();
       } else {
         setConnectionStatus('failed');
       }
@@ -103,6 +104,10 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
       localStorage.removeItem('messmitra_members');
       localStorage.removeItem('messmitra_leaves');
       localStorage.removeItem('messmitra_mess');
+      localStorage.removeItem('messmitra_expenses_recurring');
+      localStorage.removeItem('messmitra_expenses_oneoff');
+      localStorage.removeItem('messmitra_staff');
+      localStorage.removeItem('messmitra_payments');
       await onReloadAllData();
       setToast('पुणे मेसचा संपूर्ण डेमो डेटा लोड झाला! ✨');
       setTimeout(() => setToast(null), 3000);

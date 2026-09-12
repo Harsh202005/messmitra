@@ -12,7 +12,8 @@ import {
   ProfitAndLossSummary,
   DailyCookForecast,
 } from '@messmitra/types';
-import { MessMitraApi } from '../lib/api';
+import { MessMitraApi, notifyDataChanged } from '../lib/api';
+import { subscribeToMessRealtime } from '../lib/supabaseClient';
 import { useI18n } from '../lib/i18n';
 import { AuthProvider, useAuth } from '../lib/auth';
 import { Navbar, ActiveTab, UserViewRole } from '../components/Navbar';
@@ -139,8 +140,26 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    loadAllData();
-  }, []);
+    loadAllData(selectedMonth);
+
+    // 1. Listen for local and intra-app mutations
+    const handleDataMutation = () => {
+      loadAllData(selectedMonth);
+    };
+    window.addEventListener('messmitra_data_changed', handleDataMutation);
+    window.addEventListener('storage', handleDataMutation);
+
+    // 2. Subscribe to Supabase Postgres Realtime broadcast
+    const unsubscribe = subscribeToMessRealtime(mess?.id || 'all', () => {
+      loadAllData(selectedMonth);
+    });
+
+    return () => {
+      window.removeEventListener('messmitra_data_changed', handleDataMutation);
+      window.removeEventListener('storage', handleDataMutation);
+      unsubscribe();
+    };
+  }, [selectedMonth, mess?.id]);
 
   // Handlers for Mess & Member Actions
   const handleSaveMess = async (data: Partial<Mess>) => {
@@ -197,14 +216,19 @@ function DashboardContent() {
     loadAllData();
   };
 
-  const handleRecordPayment = async (data: any) => {
-    await MessMitraApi.recordPayment(data);
+  const handleRecordPayment = async (
+    cycleId: string,
+    amount: number,
+    method: 'upi_link' | 'cash',
+    ref?: string
+  ) => {
+    await MessMitraApi.recordPayment(cycleId, amount, method, ref);
     showToast('फी भरल्याची नोंद झाली! ✅');
     loadAllData();
   };
 
-  const handleRecordAdjustment = async (data: any) => {
-    await MessMitraApi.recordAdjustment(data);
+  const handleRecordAdjustment = async (cycleId: string, amount: number, note: string) => {
+    await MessMitraApi.recordAdjustment(cycleId, amount, note);
     showToast('अडजस्टमेंट नोंद यशस्वी! 📝');
     loadAllData();
   };

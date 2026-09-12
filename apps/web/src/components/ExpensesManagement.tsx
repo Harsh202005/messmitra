@@ -152,13 +152,35 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsAddOneOffOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 text-white font-bold text-xs rounded-xl shadow-md transition"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>{t('addExpense')}</span>
-          </button>
+          {activeTab === 'recurring' && (
+            <button
+              onClick={() => setIsAddRecurringOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>नियमित खर्च जोडा</span>
+            </button>
+          )}
+
+          {activeTab === 'oneoff' && (
+            <button
+              onClick={() => setIsAddOneOffOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 text-white font-bold text-xs rounded-xl shadow-md transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{t('addExpense')}</span>
+            </button>
+          )}
+
+          {activeTab === 'staff' && (
+            <button
+              onClick={() => setIsAddStaffOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{t('addStaff')}</span>
+            </button>
+          )}
 
           <button
             onClick={onExportCsv}

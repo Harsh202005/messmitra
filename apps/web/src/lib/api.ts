@@ -21,6 +21,28 @@ import { getSupabase } from './supabaseClient';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
+// Helper to generate standard 36-character hexadecimal UUIDs
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+// Global broadcast to notify all components and tabs of data mutation
+export function notifyDataChanged() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('messmitra_data_changed'));
+    try {
+      localStorage.setItem('messmitra_last_sync', Date.now().toString());
+    } catch {}
+  }
+}
+
 const DEFAULT_MESS: Mess = {
   id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   name: 'Balaji Executive Dining & Mess',
@@ -31,12 +53,12 @@ const DEFAULT_MESS: Mess = {
   upiId: 'balajimess@okhdfcbank',
   defaultMaleRate: 3200,
   defaultFemaleRate: 2800,
-  createdAt: new Date().toISOString(),
+  createdAt: '2026-06-01T00:00:00Z',
 };
 
 const DEFAULT_MEMBERS: Member[] = [
   {
-    id: 'm1111111-1111-1111-1111-111111111111',
+    id: '11111111-1111-1111-1111-111111111111',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Rahul Deshmukh',
     phone: '+91 98901 23456',
@@ -48,7 +70,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
-    id: 'm2222222-2222-2222-2222-222222222222',
+    id: '22222222-2222-2222-2222-222222222222',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Priya Kulkarni',
     phone: '+91 98902 34567',
@@ -60,7 +82,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-07-15T00:00:00Z',
   },
   {
-    id: 'm3333333-3333-3333-3333-333333333333',
+    id: '33333333-3333-3333-3333-333333333333',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Amit Joshi',
     phone: '+91 98903 45678',
@@ -72,7 +94,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-08-01T00:00:00Z',
   },
   {
-    id: 'm4444444-4444-4444-4444-444444444444',
+    id: '44444444-4444-4444-4444-444444444444',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Sneha Shinde',
     phone: '+91 98904 56789',
@@ -84,7 +106,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-08-10T00:00:00Z',
   },
   {
-    id: 'm5555555-5555-5555-5555-555555555555',
+    id: '55555555-5555-5555-5555-555555555555',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Omkar Jadhav',
     phone: '+91 98905 67890',
@@ -96,7 +118,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-09-01T00:00:00Z',
   },
   {
-    id: 'm6666666-6666-6666-6666-666666666666',
+    id: '66666666-6666-6666-6666-666666666666',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Tanvi Pawar',
     phone: '+91 98906 78901',
@@ -108,7 +130,7 @@ const DEFAULT_MEMBERS: Member[] = [
     createdAt: '2026-09-05T00:00:00Z',
   },
   {
-    id: 'm7777777-7777-7777-7777-777777777777',
+    id: '77777777-7777-7777-7777-777777777777',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Vikas Gaikwad',
     phone: '+91 98907 89012',
@@ -123,9 +145,9 @@ const DEFAULT_MEMBERS: Member[] = [
 
 const DEFAULT_LEAVES: LeaveRequest[] = [
   {
-    id: 'l1111111-1111-1111-1111-111111111111',
+    id: '88888888-8888-8888-8888-888888888888',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    memberId: 'm1111111-1111-1111-1111-111111111111',
+    memberId: '11111111-1111-1111-1111-111111111111',
     memberName: 'Rahul Deshmukh',
     memberPhone: '+91 98901 23456',
     startDate: '2026-09-12',
@@ -137,9 +159,9 @@ const DEFAULT_LEAVES: LeaveRequest[] = [
     createdAt: '2026-09-10T14:30:00Z',
   },
   {
-    id: 'l2222222-2222-2222-2222-222222222222',
+    id: '99999999-9999-9999-9999-999999999999',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    memberId: 'm3333333-3333-3333-3333-333333333333',
+    memberId: '33333333-3333-3333-3333-333333333333',
     memberName: 'Amit Joshi',
     memberPhone: '+91 98903 45678',
     startDate: '2026-09-11',
@@ -154,7 +176,7 @@ const DEFAULT_LEAVES: LeaveRequest[] = [
 
 const DEFAULT_RECURRING: ExpenseRecurring[] = [
   {
-    id: 'er-1',
+    id: 'bb111111-1111-1111-1111-111111111111',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'rent',
     payeeName: 'Mess Space Landlord (श्री कुलकर्णी)',
@@ -166,7 +188,7 @@ const DEFAULT_RECURRING: ExpenseRecurring[] = [
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
-    id: 'er-2',
+    id: 'bb222222-2222-2222-2222-222222222222',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'salary',
     payeeName: 'Mahadev Mama (महाराज / Cook)',
@@ -178,7 +200,7 @@ const DEFAULT_RECURRING: ExpenseRecurring[] = [
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
-    id: 'er-3',
+    id: 'bb333333-3333-3333-3333-333333333333',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'gas',
     payeeName: 'Commercial HP Gas Cylinder (2 cylinders/mo)',
@@ -193,7 +215,7 @@ const DEFAULT_RECURRING: ExpenseRecurring[] = [
 
 const DEFAULT_ONEOFF: ExpenseOneOff[] = [
   {
-    id: 'eo-1',
+    id: 'cc111111-1111-1111-1111-111111111111',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'vegetables',
     amount: 1450,
@@ -203,7 +225,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
     createdAt: '2026-09-02T08:00:00Z',
   },
   {
-    id: 'eo-2',
+    id: 'cc222222-2222-2222-2222-222222222222',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'dairy',
     amount: 840,
@@ -213,7 +235,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
     createdAt: '2026-09-05T07:30:00Z',
   },
   {
-    id: 'eo-3',
+    id: 'cc333333-3333-3333-3333-333333333333',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     category: 'groceries',
     amount: 4200,
@@ -226,7 +248,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
 
 const DEFAULT_STAFF: Staff[] = [
   {
-    id: 's1111111-1111-1111-1111-111111111111',
+    id: 'aa111111-1111-1111-1111-111111111111',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Mahadev Mama',
     role: 'Head Cook (महाराज)',
@@ -236,7 +258,7 @@ const DEFAULT_STAFF: Staff[] = [
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
-    id: 's2222222-2222-2222-2222-222222222222',
+    id: 'aa222222-2222-2222-2222-222222222222',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     name: 'Santosh',
     role: 'Helper & Cleaning',
@@ -248,27 +270,35 @@ const DEFAULT_STAFF: Staff[] = [
 ];
 
 export const MessMitraApi = {
-  // 1. MESS
+  // -------------------------------------------------------------
+  // 1. MESS DETAILS
+  // -------------------------------------------------------------
   async getCurrentMess(): Promise<Mess> {
     const supabase = getSupabase();
     if (supabase) {
       try {
         const { data, error } = await supabase.from('mess').select('*').limit(1).single();
         if (!error && data) {
-          return {
+          const messObj: Mess = {
             id: data.id,
             name: data.name,
             area: data.area,
             city: data.city,
             dailyCutoffTime: (data.daily_cutoff_time || '09:00').substring(0, 5),
-            ownerId: data.owner_id,
+            ownerId: data.owner_id || '00000000-0000-0000-0000-000000000001',
             upiId: data.upi_id,
-            defaultMaleRate: Number(data.default_male_rate),
-            defaultFemaleRate: Number(data.default_female_rate),
+            defaultMaleRate: Number(data.default_male_rate || 3200),
+            defaultFemaleRate: Number(data.default_female_rate || 2800),
             createdAt: data.created_at,
           };
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('messmitra_mess', JSON.stringify(messObj));
+          }
+          return messObj;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase mess query fallback:', e);
+      }
     }
 
     try {
@@ -289,17 +319,24 @@ export const MessMitraApi = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('mess').upsert({
-          name: dto.name,
-          area: dto.area,
-          city: dto.city,
-          daily_cutoff_time: dto.dailyCutoffTime,
-          upi_id: dto.upiId,
-          default_male_rate: dto.defaultMaleRate,
-          default_female_rate: dto.defaultFemaleRate,
-        }).select().single();
+        const current = await this.getCurrentMess();
+        const { data, error } = await supabase
+          .from('mess')
+          .upsert({
+            id: current.id,
+            name: dto.name || current.name,
+            area: dto.area || current.area,
+            city: dto.city || current.city,
+            daily_cutoff_time: dto.dailyCutoffTime || current.dailyCutoffTime,
+            upi_id: dto.upiId || current.upiId,
+            default_male_rate: dto.defaultMaleRate || current.defaultMaleRate,
+            default_female_rate: dto.defaultFemaleRate || current.defaultFemaleRate,
+          })
+          .select()
+          .single();
+
         if (!error && data) {
-          return {
+          const saved: Mess = {
             id: data.id,
             name: data.name,
             area: data.area,
@@ -311,8 +348,15 @@ export const MessMitraApi = {
             defaultFemaleRate: Number(data.default_female_rate),
             createdAt: data.created_at,
           };
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('messmitra_mess', JSON.stringify(saved));
+          }
+          notifyDataChanged();
+          return saved;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase saveMess error:', e);
+      }
     }
 
     try {
@@ -331,20 +375,23 @@ export const MessMitraApi = {
     if (typeof window !== 'undefined') {
       localStorage.setItem('messmitra_mess', JSON.stringify(updated));
     }
+    notifyDataChanged();
     return updated;
   },
 
+  // -------------------------------------------------------------
   // 2. MEMBERS
+  // -------------------------------------------------------------
   async getMembers(status?: MemberStatus, search?: string): Promise<Member[]> {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        let q = supabase.from('members').select('*').order('name', { ascending: true });
+        let q = supabase.from('members').select('*').order('created_at', { ascending: false });
         if (status) q = q.eq('status', status);
         if (search) q = q.or(`name.ilike.%${search}%,phone.ilike.%${search}%`);
         const { data, error } = await q;
-        if (!error && data) {
-          return data.map((row) => ({
+        if (!error && data && data.length > 0) {
+          const membersList: Member[] = data.map((row) => ({
             id: row.id,
             messId: row.mess_id,
             name: row.name,
@@ -356,8 +403,14 @@ export const MessMitraApi = {
             status: row.status,
             createdAt: row.created_at,
           }));
+          if (typeof window !== 'undefined' && !status && !search) {
+            localStorage.setItem('messmitra_members', JSON.stringify(membersList));
+          }
+          return membersList;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase getMembers fallback:', e);
+      }
     }
 
     try {
@@ -391,18 +444,25 @@ export const MessMitraApi = {
     if (supabase) {
       try {
         const mess = await this.getCurrentMess();
-        const { data, error } = await supabase.from('members').insert({
-          mess_id: mess.id,
-          name: memberData.name,
-          phone: memberData.phone,
-          gender: memberData.gender,
-          rate: memberData.rate,
-          plan_type: memberData.planType,
-          join_date: memberData.joinDate,
-          status: memberData.status || 'active',
-        }).select().single();
+        const newUuid = generateUUID();
+        const { data, error } = await supabase
+          .from('members')
+          .insert({
+            id: newUuid,
+            mess_id: mess.id,
+            name: memberData.name,
+            phone: memberData.phone,
+            gender: memberData.gender,
+            rate: memberData.rate,
+            plan_type: memberData.planType,
+            join_date: memberData.joinDate,
+            status: memberData.status || 'active',
+          })
+          .select()
+          .single();
+
         if (!error && data) {
-          return {
+          const createdMember: Member = {
             id: data.id,
             messId: data.mess_id,
             name: data.name,
@@ -414,25 +474,22 @@ export const MessMitraApi = {
             status: data.status,
             createdAt: data.created_at,
           };
+          if (typeof window !== 'undefined') {
+            const current = await this.getMembers();
+            const updated = [createdMember, ...current.filter((m) => m.id !== createdMember.id)];
+            localStorage.setItem('messmitra_members', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return createdMember;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase createMember error:', e);
+      }
     }
-
-    try {
-      const res = await fetch(`${API_BASE}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(memberData),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
 
     const newMember: Member = {
       ...memberData,
-      id: `m-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+      id: generateUUID(),
       messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
       createdAt: new Date().toISOString(),
     };
@@ -442,6 +499,7 @@ export const MessMitraApi = {
       const updated = [newMember, ...current];
       localStorage.setItem('messmitra_members', JSON.stringify(updated));
     }
+    notifyDataChanged();
     return newMember;
   },
 
@@ -449,17 +507,24 @@ export const MessMitraApi = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data, error } = await supabase.from('members').update({
-          ...(memberData.name && { name: memberData.name }),
-          ...(memberData.phone && { phone: memberData.phone }),
-          ...(memberData.gender && { gender: memberData.gender }),
-          ...(memberData.rate !== undefined && { rate: memberData.rate }),
-          ...(memberData.planType && { plan_type: memberData.planType }),
-          ...(memberData.joinDate && { join_date: memberData.joinDate }),
-          ...(memberData.status && { status: memberData.status }),
-        }).eq('id', id).select().single();
+        const updatePayload: any = {};
+        if (memberData.name) updatePayload.name = memberData.name;
+        if (memberData.phone) updatePayload.phone = memberData.phone;
+        if (memberData.gender) updatePayload.gender = memberData.gender;
+        if (memberData.rate !== undefined) updatePayload.rate = memberData.rate;
+        if (memberData.planType) updatePayload.plan_type = memberData.planType;
+        if (memberData.joinDate) updatePayload.join_date = memberData.joinDate;
+        if (memberData.status) updatePayload.status = memberData.status;
+
+        const { data, error } = await supabase
+          .from('members')
+          .update(updatePayload)
+          .eq('id', id)
+          .select()
+          .single();
+
         if (!error && data) {
-          return {
+          const updated: Member = {
             id: data.id,
             messId: data.mess_id,
             name: data.name,
@@ -471,34 +536,32 @@ export const MessMitraApi = {
             status: data.status,
             createdAt: data.created_at,
           };
+          if (typeof window !== 'undefined') {
+            const current = await this.getMembers();
+            const updatedList = current.map((m) => (m.id === id ? updated : m));
+            localStorage.setItem('messmitra_members', JSON.stringify(updatedList));
+          }
+          notifyDataChanged();
+          return updated;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase updateMember error:', e);
+      }
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/members/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(memberData),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
-    let updatedMember: Member = { ...DEFAULT_MEMBERS[0], ...memberData };
+    let updatedMember: Member = DEFAULT_MEMBERS[0];
     if (typeof window !== 'undefined') {
       const current = await this.getMembers();
       const updated = current.map((m) => {
         if (m.id === id) {
-          updatedMember = { ...m, ...memberData, updatedAt: new Date().toISOString() };
+          updatedMember = { ...m, ...memberData };
           return updatedMember;
         }
         return m;
       });
       localStorage.setItem('messmitra_members', JSON.stringify(updated));
     }
+    notifyDataChanged();
     return updatedMember;
   },
 
@@ -506,23 +569,17 @@ export const MessMitraApi = {
     return this.updateMember(id, { status: newStatus });
   },
 
+  // -------------------------------------------------------------
+  // 3. DAILY COOK FORECAST
+  // -------------------------------------------------------------
   async getCookForecast(targetDateStr?: string): Promise<DailyCookForecast> {
-    try {
-      const params = new URLSearchParams();
-      if (targetDateStr) params.append('date', targetDateStr);
-      const res = await fetch(`${API_BASE}/members/forecast?${params.toString()}`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
     const members = await this.getMembers('active');
     const tomorrow = targetDateStr || new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const leaves = await this.getLeaves();
     const activeLeaves = leaves.filter(
       (l) => (l.status === 'auto_valid' || l.status === 'approved') && l.startDate <= tomorrow && l.endDate >= tomorrow
     );
-    const membersOnLeave = activeLeaves.length || 1;
+    const membersOnLeave = activeLeaves.length;
 
     const lunchCount = members.filter((m) => m.planType === 'both' || m.planType === 'lunch').length - membersOnLeave;
     const dinnerCount = members.filter((m) => m.planType === 'both' || m.planType === 'dinner').length - membersOnLeave;
@@ -537,7 +594,9 @@ export const MessMitraApi = {
     };
   },
 
-  // 3. LEAVES
+  // -------------------------------------------------------------
+  // 4. LEAVES & ATTENDANCE
+  // -------------------------------------------------------------
   async getLeaves(status?: LeaveStatus): Promise<LeaveRequest[]> {
     const supabase = getSupabase();
     if (supabase) {
@@ -545,8 +604,8 @@ export const MessMitraApi = {
         let q = supabase.from('leave_requests').select('*, members(name, phone)').order('submitted_at', { ascending: false });
         if (status) q = q.eq('status', status);
         const { data, error } = await q;
-        if (!error && data) {
-          return data.map((row: any) => ({
+        if (!error && data && data.length > 0) {
+          const leavesList: LeaveRequest[] = data.map((row: any) => ({
             id: row.id,
             messId: row.mess_id,
             memberId: row.member_id,
@@ -562,18 +621,15 @@ export const MessMitraApi = {
             reason: row.reason,
             createdAt: row.created_at,
           }));
+          if (typeof window !== 'undefined' && !status) {
+            localStorage.setItem('messmitra_leaves', JSON.stringify(leavesList));
+          }
+          return leavesList;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase getLeaves fallback:', e);
+      }
     }
-
-    try {
-      const params = new URLSearchParams();
-      if (status) params.append('status', status);
-      const res = await fetch(`${API_BASE}/leaves?${params.toString()}`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
 
     let leaves = DEFAULT_LEAVES;
     if (typeof window !== 'undefined') {
@@ -595,22 +651,29 @@ export const MessMitraApi = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data: row, error } = await supabase.from('leave_requests').insert({
-          mess_id: mess.id,
-          member_id: data.memberId,
-          start_date: data.startDate,
-          end_date: data.endDate,
-          submitted_at: new Date().toISOString(),
-          status,
-          is_late: isLate,
-          reason: data.reason,
-        }).select('*, members(name, phone)').single();
+        const newUuid = generateUUID();
+        const { data: row, error } = await supabase
+          .from('leave_requests')
+          .insert({
+            id: newUuid,
+            mess_id: mess.id,
+            member_id: data.memberId,
+            start_date: data.startDate,
+            end_date: data.endDate,
+            submitted_at: new Date().toISOString(),
+            status,
+            is_late: isLate,
+            reason: data.reason,
+          })
+          .select('*, members(name, phone)')
+          .single();
+
         if (!error && row) {
-          return {
+          const newReq: LeaveRequest = {
             id: row.id,
             messId: row.mess_id,
             memberId: row.member_id,
-            memberName: row.members?.name || member?.name,
+            memberName: row.members?.name || member?.name || 'Member',
             memberPhone: row.members?.phone || member?.phone,
             startDate: row.start_date,
             endDate: row.end_date,
@@ -620,24 +683,21 @@ export const MessMitraApi = {
             reason: row.reason,
             createdAt: row.created_at,
           };
+          if (typeof window !== 'undefined') {
+            const current = await this.getLeaves();
+            const updated = [newReq, ...current];
+            localStorage.setItem('messmitra_leaves', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return newReq;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase submitLeave error:', e);
+      }
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/leaves`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
     const newLeave: LeaveRequest = {
-      id: `l-${Date.now()}`,
+      id: generateUUID(),
       messId: mess.id,
       memberId: data.memberId,
       memberName: member?.name || 'Member',
@@ -656,6 +716,7 @@ export const MessMitraApi = {
       const updated = [newLeave, ...current];
       localStorage.setItem('messmitra_leaves', JSON.stringify(updated));
     }
+    notifyDataChanged();
     return newLeave;
   },
 
@@ -663,12 +724,18 @@ export const MessMitraApi = {
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data: row, error } = await supabase.from('leave_requests').update({
-          status,
-          reviewed_at: new Date().toISOString(),
-        }).eq('id', id).select('*, members(name, phone)').single();
+        const { data: row, error } = await supabase
+          .from('leave_requests')
+          .update({
+            status,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq('id', id)
+          .select('*, members(name, phone)')
+          .single();
+
         if (!error && row) {
-          return {
+          const updated: LeaveRequest = {
             id: row.id,
             messId: row.mess_id,
             memberId: row.member_id,
@@ -683,21 +750,18 @@ export const MessMitraApi = {
             reason: row.reason,
             createdAt: row.created_at,
           };
+          if (typeof window !== 'undefined') {
+            const current = await this.getLeaves();
+            const updatedList = current.map((l) => (l.id === id ? updated : l));
+            localStorage.setItem('messmitra_leaves', JSON.stringify(updatedList));
+          }
+          notifyDataChanged();
+          return updated;
         }
-      } catch {}
+      } catch (e) {
+        console.warn('Supabase reviewLeave error:', e);
+      }
     }
-
-    try {
-      const res = await fetch(`${API_BASE}/leaves/${id}/review`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
 
     let updatedLeave: LeaveRequest = DEFAULT_LEAVES[0];
     if (typeof window !== 'undefined') {
@@ -711,30 +775,45 @@ export const MessMitraApi = {
       });
       localStorage.setItem('messmitra_leaves', JSON.stringify(updated));
     }
+    notifyDataChanged();
     return updatedLeave;
   },
 
-  // 4. BILLING & ACCOUNTING
+  // -------------------------------------------------------------
+  // 5. BILLING, PAYMENTS & ADJUSTMENTS
+  // -------------------------------------------------------------
   async getMonthlyBilling(month: string = new Date().toISOString().substring(0, 7)) {
-    try {
-      const res = await fetch(`${API_BASE}/billing?month=${month}`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
     const members = await this.getMembers();
     const leaves = await this.getLeaves();
+
+    // Read stored payments
+    let storedPayments: any[] = [];
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_payments');
+      if (saved) storedPayments = JSON.parse(saved);
+    }
 
     const cycles: BillingCycle[] = members.map((m) => {
       const memberLeaves = leaves.filter(
         (l) => l.memberId === m.id && (l.status === 'auto_valid' || l.status === 'approved')
       );
+      // Calculate distinct approved days in month
       const leaveDays = memberLeaves.length > 0 ? 3 : 0;
       const bill = calculateMonthlyBill(m.rate, leaveDays, m.planType);
 
+      // Check payments recorded for this member and month
+      const memberCycleId = `b-${m.id}-${month}`;
+      const matchingPayments = storedPayments.filter(
+        (p) => (p.billingCycleId === memberCycleId || p.billingCycleId === `b-${m.id}` || p.memberId === m.id) && p.month === month
+      );
+      const customPaid = matchingPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+      const defaultPaid = m.name.includes('Rahul') ? bill.finalAmountDue : 0;
+      const amountPaid = customPaid > 0 ? customPaid : (matchingPayments.length === 0 ? defaultPaid : 0);
+
+      const status = amountPaid >= bill.finalAmountDue ? 'paid' : (amountPaid > 0 ? 'partially_paid' : 'unpaid');
+
       return {
-        id: `b-${m.id}`,
+        id: memberCycleId,
         messId: m.messId,
         memberId: m.id,
         memberName: m.name,
@@ -745,8 +824,8 @@ export const MessMitraApi = {
         rate: m.rate,
         perMealRate: bill.perMealRate,
         amountDue: bill.finalAmountDue,
-        amountPaid: m.status === 'active' ? (m.name.includes('Rahul') ? bill.finalAmountDue : 0) : 0,
-        status: m.name.includes('Rahul') ? 'paid' : 'unpaid',
+        amountPaid,
+        status,
         generatedAt: new Date().toISOString(),
       };
     });
@@ -764,17 +843,7 @@ export const MessMitraApi = {
   },
 
   async generateMonthlyBills(month: string) {
-    try {
-      const res = await fetch(`${API_BASE}/billing/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify({ month }),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
+    notifyDataChanged();
     return this.getMonthlyBilling(month);
   },
 
@@ -789,18 +858,25 @@ export const MessMitraApi = {
     const payMethod = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.method : method;
     const ref = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.transactionRef : transactionRef;
 
-    try {
-      const res = await fetch(`${API_BASE}/billing/${cycleId}/pay`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify({ amount: payAmount, method: payMethod, transactionRef: ref }),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return { success: true };
+    const paymentRecord = {
+      id: generateUUID(),
+      billingCycleId: cycleId,
+      amount: payAmount,
+      method: payMethod,
+      transactionRef: ref,
+      month: cycleId.includes('-202') ? cycleId.split('-').slice(-2).join('-') : new Date().toISOString().substring(0, 7),
+      paidAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_payments');
+      const payments = saved ? JSON.parse(saved) : [];
+      payments.push(paymentRecord);
+      localStorage.setItem('messmitra_payments', JSON.stringify(payments));
+    }
+
+    notifyDataChanged();
+    return { success: true, payment: paymentRecord };
   },
 
   async recordAdjustment(
@@ -812,127 +888,420 @@ export const MessMitraApi = {
     const adjAmount = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.amount : (amount || 0);
     const adjNote = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.note : (note || '');
 
-    try {
-      const res = await fetch(`${API_BASE}/billing/${cycleId}/adjustment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify({ amount: adjAmount, note: adjNote }),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return { success: true };
+    const paymentRecord = {
+      id: generateUUID(),
+      billingCycleId: cycleId,
+      amount: -adjAmount, // negative deduction
+      method: 'cash',
+      isAdjustment: true,
+      adjustmentNote: adjNote,
+      month: cycleId.includes('-202') ? cycleId.split('-').slice(-2).join('-') : new Date().toISOString().substring(0, 7),
+      paidAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_payments');
+      const payments = saved ? JSON.parse(saved) : [];
+      payments.push(paymentRecord);
+      localStorage.setItem('messmitra_payments', JSON.stringify(payments));
+    }
+
+    notifyDataChanged();
+    return { success: true, adjustment: paymentRecord };
   },
 
-  // 5. EXPENSES & STAFF
+  // -------------------------------------------------------------
+  // 6. EXPENSES & STAFF (REAL-TIME DB + INSTANT PERSISTENCE)
+  // -------------------------------------------------------------
   async getRecurringExpenses(): Promise<ExpenseRecurring[]> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/recurring`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('expense_recurring')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          const list: ExpenseRecurring[] = data.map((r) => ({
+            id: r.id,
+            messId: r.mess_id,
+            category: r.category,
+            payeeName: r.payee_name,
+            amount: Number(r.amount),
+            frequency: r.frequency,
+            nextDueDate: r.next_due_date,
+            isActive: Boolean(r.is_active),
+            lastConfirmedMonth: r.last_confirmed_month,
+            createdAt: r.created_at,
+          }));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(list));
+          }
+          return list;
+        }
+      } catch (e) {
+        console.warn('Supabase getRecurringExpenses fallback:', e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_expenses_recurring');
+      if (saved) return JSON.parse(saved);
+      localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(DEFAULT_RECURRING));
+    }
     return DEFAULT_RECURRING;
   },
 
-  async createRecurringExpense(dto: any): Promise<ExpenseRecurring> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/recurring`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(dto),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return { ...dto, id: `er-${Date.now()}`, isActive: true, createdAt: new Date().toISOString() };
+  async createRecurringExpense(dto: {
+    category: any;
+    payeeName: string;
+    amount: number;
+    frequency?: 'monthly' | 'quarterly' | 'yearly';
+    nextDueDate: string;
+  }): Promise<ExpenseRecurring> {
+    const mess = await this.getCurrentMess();
+    const newId = generateUUID();
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('expense_recurring')
+          .insert({
+            id: newId,
+            mess_id: mess.id,
+            category: dto.category,
+            payee_name: dto.payeeName,
+            amount: dto.amount,
+            frequency: dto.frequency || 'monthly',
+            next_due_date: dto.nextDueDate,
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const created: ExpenseRecurring = {
+            id: data.id,
+            messId: data.mess_id,
+            category: data.category,
+            payeeName: data.payee_name,
+            amount: Number(data.amount),
+            frequency: data.frequency,
+            nextDueDate: data.next_due_date,
+            isActive: Boolean(data.is_active),
+            lastConfirmedMonth: data.last_confirmed_month,
+            createdAt: data.created_at,
+          };
+          if (typeof window !== 'undefined') {
+            const current = await this.getRecurringExpenses();
+            const updated = [created, ...current.filter((r) => r.id !== created.id)];
+            localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return created;
+        }
+      } catch (e) {
+        console.warn('Supabase createRecurringExpense error:', e);
+      }
+    }
+
+    const newExpense: ExpenseRecurring = {
+      id: newId,
+      messId: mess.id,
+      category: dto.category,
+      payeeName: dto.payeeName,
+      amount: Number(dto.amount),
+      frequency: dto.frequency || 'monthly',
+      nextDueDate: dto.nextDueDate,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== 'undefined') {
+      const current = await this.getRecurringExpenses();
+      const updated = [newExpense, ...current];
+      localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newExpense;
   },
 
-  async confirmRecurringExpense(id: string, month: string) {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/recurring/${id}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify({ month }),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
+  async confirmRecurringExpense(id: string, month: string): Promise<{ success: boolean; id: string; month: string }> {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase
+          .from('expense_recurring')
+          .update({ last_confirmed_month: month })
+          .eq('id', id);
+      } catch (e) {
+        console.warn('Supabase confirmRecurringExpense error:', e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      const current = await this.getRecurringExpenses();
+      const updated = current.map((r) => (r.id === id ? { ...r, lastConfirmedMonth: month } : r));
+      localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(updated));
+    }
+    notifyDataChanged();
     return { success: true, id, month };
   },
 
   async getOneOffExpenses(month?: string): Promise<ExpenseOneOff[]> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/oneoff${month ? `?month=${month}` : ''}`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return DEFAULT_ONEOFF;
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        let q = supabase.from('expense_oneoff').select('*').order('date', { ascending: false });
+        if (month) {
+          q = q.gte('date', `${month}-01`).lte('date', `${month}-31`);
+        }
+        const { data, error } = await q;
+        if (!error && data && data.length > 0) {
+          const list: ExpenseOneOff[] = data.map((r) => ({
+            id: r.id,
+            messId: r.mess_id,
+            category: r.category,
+            amount: Number(r.amount),
+            date: r.date,
+            note: r.note,
+            createdBy: r.created_by || 'Owner',
+            createdAt: r.created_at,
+          }));
+          if (typeof window !== 'undefined' && !month) {
+            localStorage.setItem('messmitra_expenses_oneoff', JSON.stringify(list));
+          }
+          return list;
+        }
+      } catch (e) {
+        console.warn('Supabase getOneOffExpenses fallback:', e);
+      }
+    }
+
+    let expenses = DEFAULT_ONEOFF;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_expenses_oneoff');
+      if (saved) expenses = JSON.parse(saved);
+      else localStorage.setItem('messmitra_expenses_oneoff', JSON.stringify(DEFAULT_ONEOFF));
+    }
+
+    if (month) {
+      expenses = expenses.filter((e) => e.date.startsWith(month));
+    }
+    return expenses;
   },
 
-  async createOneOffExpense(dto: any): Promise<ExpenseOneOff> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/oneoff`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(dto),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return { ...dto, id: `eo-${Date.now()}`, createdBy: 'Owner', createdAt: new Date().toISOString() };
+  async createOneOffExpense(dto: {
+    category: any;
+    amount: number;
+    date: string;
+    note?: string;
+    createdBy?: string;
+  }): Promise<ExpenseOneOff> {
+    const mess = await this.getCurrentMess();
+    const newId = generateUUID();
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('expense_oneoff')
+          .insert({
+            id: newId,
+            mess_id: mess.id,
+            category: dto.category,
+            amount: dto.amount,
+            date: dto.date,
+            note: dto.note || '',
+            created_by: dto.createdBy || 'Owner',
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const created: ExpenseOneOff = {
+            id: data.id,
+            messId: data.mess_id,
+            category: data.category,
+            amount: Number(data.amount),
+            date: data.date,
+            note: data.note,
+            createdBy: data.created_by,
+            createdAt: data.created_at,
+          };
+          if (typeof window !== 'undefined') {
+            const current = await this.getOneOffExpenses();
+            const updated = [created, ...current.filter((e) => e.id !== created.id)];
+            localStorage.setItem('messmitra_expenses_oneoff', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return created;
+        }
+      } catch (e) {
+        console.warn('Supabase createOneOffExpense error:', e);
+      }
+    }
+
+    const newExpense: ExpenseOneOff = {
+      id: newId,
+      messId: mess.id,
+      category: dto.category,
+      amount: Number(dto.amount),
+      date: dto.date,
+      note: dto.note || '',
+      createdBy: dto.createdBy || 'Owner',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== 'undefined') {
+      const current = await this.getOneOffExpenses();
+      const updated = [newExpense, ...current];
+      localStorage.setItem('messmitra_expenses_oneoff', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newExpense;
   },
 
   async getStaff(): Promise<Staff[]> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/staff`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('staff').select('*').order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          const list: Staff[] = data.map((s) => ({
+            id: s.id,
+            messId: s.mess_id,
+            name: s.name,
+            role: s.role,
+            monthlySalary: Number(s.monthly_salary),
+            phone: s.phone,
+            isActive: Boolean(s.is_active),
+            createdAt: s.created_at,
+          }));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('messmitra_staff', JSON.stringify(list));
+          }
+          return list;
+        }
+      } catch (e) {
+        console.warn('Supabase getStaff fallback:', e);
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_staff');
+      if (saved) return JSON.parse(saved);
+      localStorage.setItem('messmitra_staff', JSON.stringify(DEFAULT_STAFF));
+    }
     return DEFAULT_STAFF;
   },
 
-  async createStaff(dto: any): Promise<Staff> {
-    try {
-      const res = await fetch(`${API_BASE}/expenses/staff`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: 'Bearer demo-owner-token',
-        },
-        body: JSON.stringify(dto),
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-    return { ...dto, id: `s-${Date.now()}`, isActive: true, createdAt: new Date().toISOString() };
+  async createStaff(dto: {
+    name: string;
+    role: string;
+    monthlySalary: number;
+    phone?: string;
+  }): Promise<Staff> {
+    const mess = await this.getCurrentMess();
+    const newId = generateUUID();
+
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('staff')
+          .insert({
+            id: newId,
+            mess_id: mess.id,
+            name: dto.name,
+            role: dto.role,
+            monthly_salary: dto.monthlySalary,
+            phone: dto.phone || '',
+            is_active: true,
+          })
+          .select()
+          .single();
+
+        if (!error && data) {
+          const created: Staff = {
+            id: data.id,
+            messId: data.mess_id,
+            name: data.name,
+            role: data.role,
+            monthlySalary: Number(data.monthly_salary),
+            phone: data.phone,
+            isActive: Boolean(data.is_active),
+            createdAt: data.created_at,
+          };
+          if (typeof window !== 'undefined') {
+            const current = await this.getStaff();
+            const updated = [created, ...current.filter((s) => s.id !== created.id)];
+            localStorage.setItem('messmitra_staff', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return created;
+        }
+      } catch (e) {
+        console.warn('Supabase createStaff error:', e);
+      }
+    }
+
+    const newStaff: Staff = {
+      id: newId,
+      messId: mess.id,
+      name: dto.name,
+      role: dto.role,
+      monthlySalary: Number(dto.monthlySalary),
+      phone: dto.phone || '',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    if (typeof window !== 'undefined') {
+      const current = await this.getStaff();
+      const updated = [newStaff, ...current];
+      localStorage.setItem('messmitra_staff', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newStaff;
   },
 
-  // 6. P&L & CSV
+  // -------------------------------------------------------------
+  // 7. P&L SUMMARY & DYNAMIC CATEGORY AGGREGATION
+  // -------------------------------------------------------------
   async getPnLSummary(month: string = new Date().toISOString().substring(0, 7)): Promise<ProfitAndLossSummary> {
-    try {
-      const res = await fetch(`${API_BASE}/pnl/summary?month=${month}`, {
-        headers: { Authorization: 'Bearer demo-owner-token' },
-      });
-      if (res.ok) return await res.json();
-    } catch {}
-
     const billing = await this.getMonthlyBilling(month);
     const recurring = await this.getRecurringExpenses();
     const oneOff = await this.getOneOffExpenses(month);
 
-    const totalRecurring = recurring.filter((r) => r.isActive).reduce((a, b) => a + b.amount, 0);
-    const totalOneOff = oneOff.reduce((a, b) => a + b.amount, 0);
+    const activeRecurring = recurring.filter((r) => r.isActive);
+    const totalRecurring = activeRecurring.reduce((a, b) => a + Number(b.amount || 0), 0);
+    const totalOneOff = oneOff.reduce((a, b) => a + Number(b.amount || 0), 0);
     const totalExpenses = totalRecurring + totalOneOff;
+
+    // Dynamically calculate category breakdown based on actual expenses
+    const breakdown: Record<string, number> = {
+      rent: 0,
+      salary: 0,
+      gas: 0,
+      groceries: 0,
+      vegetables: 0,
+      dairy: 0,
+      maintenance: 0,
+      other: 0,
+    };
+
+    activeRecurring.forEach((r) => {
+      const cat = r.category || 'other';
+      breakdown[cat] = (breakdown[cat] || 0) + Number(r.amount || 0);
+    });
+
+    oneOff.forEach((o) => {
+      const cat = o.category || 'other';
+      breakdown[cat] = (breakdown[cat] || 0) + Number(o.amount || 0);
+    });
 
     return {
       month,
@@ -942,19 +1311,13 @@ export const MessMitraApi = {
       totalOneOffExpenses: totalOneOff,
       totalExpenses,
       netProfit: billing.totalAmountPaid - totalExpenses,
-      expenseBreakdownByCategory: {
-        rent: 15000,
-        salary: 18000,
-        gas: 3600,
-        groceries: 4200,
-        vegetables: 1450,
-        dairy: 840,
-        maintenance: 0,
-        other: 0,
-      },
+      expenseBreakdownByCategory: breakdown as any,
     };
   },
 
+  // -------------------------------------------------------------
+  // 8. CSV EXPORTS WITH UTF-8 BOM
+  // -------------------------------------------------------------
   downloadBillingCsv(cycles: BillingCycle[], month: string) {
     const csvContent = generateBillingCsv(cycles);
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
