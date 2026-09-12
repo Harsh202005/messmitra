@@ -363,7 +363,12 @@ export const MessMitraApi = {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed.name !== 'श्री बालाजी मेस' || parsed.upiId !== '9822338975@upi' || parsed.ownerName !== 'शंकर गिरी') {
+          if (
+            parsed.name !== 'श्री बालाजी मेस' ||
+            parsed.upiId !== '9822338975@upi' ||
+            parsed.ownerName !== 'शंकर गिरी' ||
+            !parsed.lunchCutoffTime
+          ) {
             parsed.name = 'श्री बालाजी मेस';
             parsed.ownerName = 'शंकर गिरी';
             parsed.contactNumber = '+91 98223 38975';
@@ -371,6 +376,7 @@ export const MessMitraApi = {
             parsed.defaultVegRate = 3000;
             parsed.defaultNonVegRate = 3200;
             parsed.dailyCutoffTime = '18:00';
+            parsed.lunchCutoffTime = '09:00';
             parsed.dinnerCutoffTime = '18:00';
             localStorage.setItem('messmitra_mess', JSON.stringify(parsed));
           }
@@ -738,7 +744,14 @@ export const MessMitraApi = {
     const mess = await this.getCurrentMess();
     const members = await this.getMembers();
     const member = members.find((m) => m.id === data.memberId);
-    const isLate = isLeaveSubmissionLate(new Date(), data.startDate, mess.dailyCutoffTime || '09:00');
+    const isLate = isLeaveSubmissionLate(
+      new Date(),
+      data.startDate,
+      mess.dailyCutoffTime || '18:00',
+      member?.planType,
+      mess.lunchCutoffTime || '09:00',
+      mess.dinnerCutoffTime || '18:00'
+    );
     const status: LeaveStatus = isLate ? 'pending_approval' : 'auto_valid';
 
     const supabase = getSupabase();

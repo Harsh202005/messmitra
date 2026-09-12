@@ -40,8 +40,15 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Compute live preview of whether current selection is considered late
-  const isLatePreview = isLeaveSubmissionLate(new Date(), startDate, mess?.dailyCutoffTime || '09:00');
+  const selectedMember = members.find((m) => m.id === selectedMemberId);
+  const isLatePreview = isLeaveSubmissionLate(
+    new Date(),
+    startDate,
+    mess?.dailyCutoffTime || '18:00',
+    selectedMember?.planType,
+    mess?.lunchCutoffTime || '09:00',
+    mess?.dinnerCutoffTime || '18:00'
+  );
 
   const pendingLeaves = leaves.filter((l) => l.status === 'pending_approval');
   const validOrApprovedLeaves = leaves.filter((l) => l.status !== 'pending_approval');
@@ -315,7 +322,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
                     <Clock className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
                     <div>
                       <strong className="block text-amber-300">उशिरा दाखल (Late Submission):</strong>
-                      आजच्या कटऑफ वेळेनंतर ({mess?.dailyCutoffTime || '09:00'} AM) दाखल होत असल्यामुळे ही सुट्टी मालकाच्या मंजुरीसाठी प्रलंबित राहील.
+                      कटऑफ वेळेनंतर (दुपार ०९:०० AM / रात्र ०६:०० PM) दाखल होत असल्यामुळे ही सुट्टी मालकाच्या मंजुरीसाठी प्रलंबित राहील.
                     </div>
                   </div>
                 ) : (

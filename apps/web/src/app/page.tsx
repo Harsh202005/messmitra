@@ -383,7 +383,7 @@ function DashboardContent() {
                   चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong> • चव हीच आमची ओळख
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  रात्रीचे जेवण कटऑफ: <strong className="text-slate-800 dark:text-slate-200">06:00 PM (18:00)</strong> • UPI ID:{' '}
+                  दुपार कटऑफ: <strong className="text-slate-800 dark:text-slate-200">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-slate-800 dark:text-slate-200">06:00 PM</strong> • UPI:{' '}
                   <span className="font-mono text-brand-600 dark:text-brand-300 font-bold">{mess?.upiId || '9822338975@upi'}</span>
                 </p>
               </div>

@@ -39,6 +39,8 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
     area: currentMess?.area || 'कर्वे नगर / कोथरूड',
     city: currentMess?.city || 'पुणे',
     dailyCutoffTime: currentMess?.dailyCutoffTime || '18:00',
+    lunchCutoffTime: currentMess?.lunchCutoffTime || '09:00',
+    dinnerCutoffTime: currentMess?.dinnerCutoffTime || '18:00',
     defaultVegRate: currentMess?.defaultVegRate || 3000,
     defaultNonVegRate: currentMess?.defaultNonVegRate || 3200,
     upiId: currentMess?.upiId || '9822338975@upi',
@@ -164,23 +166,50 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
           {/* STEP 2: Cutoff Time & Veg/Non-Veg Rates */}
           {step === 2 && (
             <div className="space-y-4 animate-fadeIn">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  रात्रीचे जेवण कटऑफ वेळ (Dinner Cutoff Time - 06:00 PM) *
-                </label>
-                <div className="relative">
-                  <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="time"
-                    required
-                    value={formData.dailyCutoffTime}
-                    onChange={(e) => setFormData({ ...formData, dailyCutoffTime: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    दुपार कटऑफ वेळ (Lunch - 09:00 AM) *
+                  </label>
+                  <div className="relative">
+                    <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="time"
+                      required
+                      value={formData.lunchCutoffTime}
+                      onChange={(e) => setFormData({ ...formData, lunchCutoffTime: e.target.value })}
+                      className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    सकाळी ०९:०० वाजेपर्यंत दुपारची सुट्टी
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  संध्याकाळी ०६:०० (06:00 PM) नंतर आलेल्या सुट्ट्या मंजुरीसाठी मालकाकडे प्रलंबित राहतील.
-                </p>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    रात्र कटऑफ वेळ (Dinner - 06:00 PM) *
+                  </label>
+                  <div className="relative">
+                    <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="time"
+                      required
+                      value={formData.dailyCutoffTime}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          dailyCutoffTime: e.target.value,
+                          dinnerCutoffTime: e.target.value,
+                        })
+                      }
+                      className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                    संध्याकाळी ०६:०० वाजेपर्यंत रात्रीची सुट्टी
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">

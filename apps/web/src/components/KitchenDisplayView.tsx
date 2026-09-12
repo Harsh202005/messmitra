@@ -79,7 +79,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
                 दैनिक स्वयंपाक अंदाज (Daily Cooking Headcount)
               </h1>
               <p className="text-xs text-slate-200 mt-1">
-                सुट्टी वजा करून महाराजांसाठी जेवणाची अचूक संख्या • रात्रीचे कटऑफ: <strong className="text-amber-300 font-bold">06:00 PM (18:00)</strong>
+                सुट्टी वजा करून महाराजांसाठी जेवणाची अचूक संख्या • दुपार कटऑफ: <strong className="text-amber-300 font-bold">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-amber-300 font-bold">06:00 PM</strong>
               </p>
             </div>
           </div>

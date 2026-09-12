@@ -44,7 +44,14 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  const isLatePreview = isLeaveSubmissionLate(new Date(), startDate, mess?.dailyCutoffTime || '09:00');
+  const isLatePreview = isLeaveSubmissionLate(
+    new Date(),
+    startDate,
+    mess?.dailyCutoffTime || '18:00',
+    member.planType,
+    mess?.lunchCutoffTime || '09:00',
+    mess?.dinnerCutoffTime || '18:00'
+  );
   const myLeaves = leaves.filter((l) => l.memberId === member.id);
   const amountDue = billingCycle ? Math.max(0, billingCycle.amountDue - billingCycle.amountPaid) : member.rate;
 
@@ -224,10 +231,13 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
                     : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200'
                 }`}
               >
+                <div className="font-semibold mb-1 flex items-center gap-1.5">
+                  <span>⏰ कटऑफ वेळ: दुपार ०९:०० AM • रात्र ०६:०० PM</span>
+                </div>
                 {isLatePreview ? (
-                  <span>⚠️ रात्रीचे जेवण कटऑफ वेळेनंतर (06:00 PM / 18:00) दाखल होत असल्यामुळे मालकाची मंजुरी लागेल.</span>
+                  <span>⚠️ कटऑफ वेळेनंतर (दुपार ०९:०० AM / रात्र ०६:०० PM) दाखल होत असल्यामुळे मालकाची (शंकर गिरी) मंजुरी लागेल.</span>
                 ) : (
-                  <span>✅ वेळेत असल्यामुळे ही सुट्टी आपोआप मंजूर होईल.</span>
+                  <span>✅ कटऑफ वेळेच्या आत असल्यामुळे ही सुट्टी आपोआप मंजूर होईल.</span>
                 )}
               </div>
 

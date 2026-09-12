@@ -39,7 +39,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
               </span>
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              तारीख: <strong className="text-slate-800 dark:text-slate-200">{forecast.date}</strong> • रात्रीचे जेवण कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">06:00 PM (18:00)</strong>
+              तारीख: <strong className="text-slate-800 dark:text-slate-200">{forecast.date}</strong> • दुपार कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">06:00 PM</strong>
             </p>
           </div>
         </div>

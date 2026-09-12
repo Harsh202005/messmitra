@@ -220,15 +220,17 @@ export interface ProfitAndLossSummary {
 export const STANDARD_BASE_MEALS = 56;
 
 /**
- * Checks if a leave submission is late relative to the daily cutoff time for the start date.
+ * Checks if a leave submission is late relative to the daily cutoff times for the start date.
+ * Default cutoffs: Lunch = 09:00 AM, Dinner = 18:00 (06:00 PM).
  */
 export function isLeaveSubmissionLate(
   submissionDate: Date,
   startDateStr: string,
-  cutoffTimeStr: string = '09:00'
+  cutoffTimeStr: string = '09:00',
+  mealPlanType?: PlanType | 'lunch' | 'dinner' | 'both',
+  lunchCutoffStr: string = '09:00',
+  dinnerCutoffStr: string = '18:00'
 ): boolean {
-  const [cutoffHour, cutoffMin] = cutoffTimeStr.split(':').map(Number);
-  
   const subYear = submissionDate.getFullYear();
   const subMonth = String(submissionDate.getMonth() + 1).padStart(2, '0');
   const subDay = String(submissionDate.getDate()).padStart(2, '0');
@@ -244,9 +246,17 @@ export function isLeaveSubmissionLate(
     return true;
   }
 
-  // If leave starts TODAY, check current time vs cutoff
+  // If leave starts TODAY, evaluate cutoff based on meal type or effective cutoff
+  let effectiveCutoff = cutoffTimeStr;
+  if (mealPlanType === 'dinner') {
+    effectiveCutoff = dinnerCutoffStr || '18:00';
+  } else if (mealPlanType === 'lunch') {
+    effectiveCutoff = lunchCutoffStr || '09:00';
+  }
+
+  const [cutoffHour, cutoffMin] = effectiveCutoff.split(':').map(Number);
   const currentMinutes = submissionDate.getHours() * 60 + submissionDate.getMinutes();
-  const cutoffMinutes = cutoffHour * 60 + cutoffMin;
+  const cutoffMinutes = (cutoffHour || 0) * 60 + (cutoffMin || 0);
 
   return currentMinutes > cutoffMinutes;
 }
