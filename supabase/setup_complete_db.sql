@@ -1,12 +1,23 @@
 -- ==============================================================================
--- MessMitra (मेस मित्र) — COMPLETE DATABASE SETUP (SCHEMA + RLS + SEED DATA)
+-- MessMitra (मेस मित्र) — MASTER DATABASE SCRIPT (CLEAN RE-INIT & SEED)
 -- Copy and paste this ENTIRE file into Supabase SQL Editor and click RUN.
 -- ==============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- 0. CLEAN RESET (Ensures zero duplicate or constraint conflicts)
+DROP TABLE IF EXISTS public.payments CASCADE;
+DROP TABLE IF EXISTS public.billing_cycles CASCADE;
+DROP TABLE IF EXISTS public.leave_requests CASCADE;
+DROP TABLE IF EXISTS public.members CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+DROP TABLE IF EXISTS public.expense_recurring CASCADE;
+DROP TABLE IF EXISTS public.expense_oneoff CASCADE;
+DROP TABLE IF EXISTS public.staff CASCADE;
+DROP TABLE IF EXISTS public.mess CASCADE;
+
 -- 1. MESS TABLE (Tenant Table)
-CREATE TABLE IF NOT EXISTS public.mess (
+CREATE TABLE public.mess (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     area VARCHAR(255) NOT NULL,
@@ -21,8 +32,8 @@ CREATE TABLE IF NOT EXISTS public.mess (
 );
 
 -- 2. USER PROFILES
-CREATE TABLE IF NOT EXISTS public.profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID REFERENCES public.mess(id) ON DELETE CASCADE,
     role VARCHAR(50) NOT NULL CHECK (role IN ('owner', 'member', 'staff')),
     full_name VARCHAR(255) NOT NULL,
@@ -32,7 +43,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- 3. MEMBERS TABLE
-CREATE TABLE IF NOT EXISTS public.members (
+CREATE TABLE public.members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -48,7 +59,7 @@ CREATE TABLE IF NOT EXISTS public.members (
 );
 
 -- 4. LEAVE REQUESTS TABLE
-CREATE TABLE IF NOT EXISTS public.leave_requests (
+CREATE TABLE public.leave_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     member_id UUID NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
@@ -65,11 +76,11 @@ CREATE TABLE IF NOT EXISTS public.leave_requests (
 );
 
 -- 5. BILLING CYCLES TABLE
-CREATE TABLE IF NOT EXISTS public.billing_cycles (
+CREATE TABLE public.billing_cycles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     member_id UUID NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
-    month VARCHAR(7) NOT NULL, -- 'YYYY-MM'
+    month VARCHAR(7) NOT NULL,
     base_meals INT NOT NULL DEFAULT 56,
     approved_leave_days NUMERIC(5, 1) NOT NULL DEFAULT 0,
     rate NUMERIC(10, 2) NOT NULL,
@@ -81,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.billing_cycles (
 );
 
 -- 6. PAYMENTS TABLE
-CREATE TABLE IF NOT EXISTS public.payments (
+CREATE TABLE public.payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     billing_cycle_id UUID NOT NULL REFERENCES public.billing_cycles(id) ON DELETE CASCADE,
@@ -95,7 +106,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
 );
 
 -- 7. RECURRING EXPENSES TABLE
-CREATE TABLE IF NOT EXISTS public.expense_recurring (
+CREATE TABLE public.expense_recurring (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     category VARCHAR(50) NOT NULL CHECK (category IN ('salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other')),
@@ -109,19 +120,19 @@ CREATE TABLE IF NOT EXISTS public.expense_recurring (
 );
 
 -- 8. ONE-OFF DAILY EXPENSES TABLE
-CREATE TABLE IF NOT EXISTS public.expense_oneoff (
+CREATE TABLE public.expense_oneoff (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     category VARCHAR(50) NOT NULL CHECK (category IN ('salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other')),
     amount NUMERIC(10, 2) NOT NULL,
     date DATE NOT NULL DEFAULT CURRENT_DATE,
     note TEXT,
-    created_by VARCHAR(255) NOT NULL,
+    created_by VARCHAR(255) NOT NULL DEFAULT 'Owner',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- 9. STAFF TABLE
-CREATE TABLE IF NOT EXISTS public.staff (
+CREATE TABLE public.staff (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -143,50 +154,36 @@ ALTER TABLE public.expense_recurring ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expense_oneoff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.staff ENABLE ROW LEVEL SECURITY;
 
--- Allow public access for multi-tenant SaaS frontend & service role
-DROP POLICY IF EXISTS "Public Full Access Mess" ON public.mess;
 CREATE POLICY "Public Full Access Mess" ON public.mess FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access Profiles" ON public.profiles;
 CREATE POLICY "Public Full Access Profiles" ON public.profiles FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access Members" ON public.members;
 CREATE POLICY "Public Full Access Members" ON public.members FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access LeaveRequests" ON public.leave_requests;
 CREATE POLICY "Public Full Access LeaveRequests" ON public.leave_requests FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access BillingCycles" ON public.billing_cycles;
 CREATE POLICY "Public Full Access BillingCycles" ON public.billing_cycles FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access Payments" ON public.payments;
 CREATE POLICY "Public Full Access Payments" ON public.payments FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access ExpenseRecurring" ON public.expense_recurring;
 CREATE POLICY "Public Full Access ExpenseRecurring" ON public.expense_recurring FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access ExpenseOneoff" ON public.expense_oneoff;
 CREATE POLICY "Public Full Access ExpenseOneoff" ON public.expense_oneoff FOR ALL USING (true);
-
-DROP POLICY IF EXISTS "Public Full Access Staff" ON public.staff;
 CREATE POLICY "Public Full Access Staff" ON public.staff FOR ALL USING (true);
 
--- 11. ENABLE REALTIME REPLICATION
+-- 11. ENABLE REALTIME REPLICATION SAFELY
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.mess;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.members;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_requests;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.billing_cycles;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_recurring;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_oneoff;
-    ALTER PUBLICATION supabase_realtime ADD TABLE public.staff;
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.mess;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.members;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.leave_requests;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.billing_cycles;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.payments;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_recurring;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.expense_oneoff;
+      ALTER PUBLICATION supabase_realtime ADD TABLE public.staff;
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+    END;
   END IF;
 END $$;
 
--- 12. DEMO SEED DATA (Valid Hex UUIDs)
+-- 12. SEED INITIAL DATA
 INSERT INTO public.mess (
     id,
     name,
@@ -205,11 +202,7 @@ INSERT INTO public.mess (
     'balajimess@okhdfcbank',
     3200.00,
     2800.00
-) ON CONFLICT (id) DO UPDATE SET
-    name = EXCLUDED.name,
-    area = EXCLUDED.area,
-    city = EXCLUDED.city,
-    upi_id = EXCLUDED.upi_id;
+);
 
 INSERT INTO public.members (id, mess_id, name, phone, gender, rate, plan_type, join_date, status) VALUES
 ('11111111-1111-1111-1111-111111111111', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Rahul Deshmukh', '+91 98901 23456', 'male', 3200.00, 'both', '2026-06-01', 'active'),
@@ -218,15 +211,12 @@ INSERT INTO public.members (id, mess_id, name, phone, gender, rate, plan_type, j
 ('44444444-4444-4444-4444-444444444444', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Sneha Shinde', '+91 98904 56789', 'female', 2800.00, 'both', '2026-08-10', 'active'),
 ('55555555-5555-5555-5555-555555555555', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Omkar Jadhav', '+91 98905 67890', 'male', 1800.00, 'lunch', '2026-09-01', 'active'),
 ('66666666-6666-6666-6666-666666666666', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Tanvi Pawar', '+91 98906 78901', 'female', 1600.00, 'dinner', '2026-09-05', 'active'),
-('77777777-7777-7777-7777-777777777777', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Vikas Gaikwad', '+91 98907 89012', 'male', 3200.00, 'both', '2026-05-10', 'inactive')
-ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, rate = EXCLUDED.rate;
+('77777777-7777-7777-7777-777777777777', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Vikas Gaikwad', '+91 98907 89012', 'male', 3200.00, 'both', '2026-05-10', 'inactive');
 
 INSERT INTO public.staff (id, mess_id, name, role, monthly_salary, phone) VALUES
 ('aa111111-1111-1111-1111-111111111111', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Mahadev Mama', 'Head Cook (महाराज)', 18000.00, '+91 97654 32101'),
-('aa222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Santosh', 'Helper & Cleaning', 10000.00, '+91 97654 32102')
-ON CONFLICT (id) DO UPDATE SET monthly_salary = EXCLUDED.monthly_salary;
+('aa222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Santosh', 'Helper & Cleaning', 10000.00, '+91 97654 32102');
 
 INSERT INTO public.expense_recurring (id, mess_id, category, payee_name, amount, frequency, next_due_date, is_active) VALUES
 ('ee111111-1111-1111-1111-111111111111', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'rent', 'Balaji Heights Commercial Rent', 15000.00, 'monthly', '2026-10-01', true),
-('ee222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'gas', 'HP Commercial Gas (2 Cylinders)', 3600.00, 'monthly', '2026-09-28', true)
-ON CONFLICT (id) DO NOTHING;
+('ee222222-2222-2222-2222-222222222222', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'gas', 'HP Commercial Gas (2 Cylinders)', 3600.00, 'monthly', '2026-09-28', true);
