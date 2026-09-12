@@ -4,6 +4,7 @@
 
 export type UserRole = 'owner' | 'member' | 'staff';
 export type Gender = 'male' | 'female' | 'other';
+export type DietPreference = 'veg' | 'nonveg';
 export type PlanType = 'lunch' | 'dinner' | 'both';
 export type MemberStatus = 'active' | 'inactive';
 export type LeaveStatus = 'auto_valid' | 'pending_approval' | 'approved' | 'rejected';
@@ -26,11 +27,19 @@ export interface Mess {
   name: string;
   area: string;
   city: string;
-  dailyCutoffTime: string; // "09:00" in 24h HH:mm format
+  dailyCutoffTime: string; // "18:00" (6:00 PM dinner cutoff)
+  lunchCutoffTime?: string; // "09:00"
+  dinnerCutoffTime?: string; // "18:00"
   ownerId: string;
+  ownerName?: string;
+  contactNumber?: string;
   upiId: string;
-  defaultMaleRate: number;
-  defaultFemaleRate: number;
+  defaultMaleRate?: number; // legacy fallback
+  defaultFemaleRate?: number; // legacy fallback
+  defaultVegRate: number; // ₹3000 for 56 veg meals
+  defaultNonVegRate: number; // ₹3200 for 56 non-veg meals
+  tagline?: string;
+  establishedYears?: number; // 21 years
   createdAt: string;
   updatedAt?: string;
 }
@@ -71,8 +80,9 @@ export interface Member {
   userId?: string | null;
   name: string;
   phone: string;
-  gender: Gender;
-  rate: number; // Monthly rate (e.g. ₹3200 for male, ₹2800 for female)
+  gender?: Gender;
+  dietPreference: DietPreference; // 'veg' | 'nonveg'
+  rate: number; // Monthly rate: ₹3000 for veg, ₹3200 for non-veg
   planType: PlanType;
   joinDate: string; // ISO string "YYYY-MM-DD"
   status: MemberStatus;
@@ -169,6 +179,8 @@ export interface DailyCookForecast {
   cookForCount: number;
   lunchCount: number;
   dinnerCount: number;
+  vegCount: number;
+  nonVegCount: number;
 }
 
 export interface ProfitAndLossSummary {

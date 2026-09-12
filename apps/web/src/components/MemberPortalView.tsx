@@ -89,12 +89,16 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-white">{member.name}</h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                {member.status}
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                (member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg')) === 'veg'
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+              }`}>
+                {(member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg')) === 'veg' ? '🟢 शाकाहारी (Veg)' : '🔴 मांसाहारी (Non-Veg)'}
               </span>
             </div>
             <p className="text-xs text-slate-400">
-              {mess?.name} • {member.planType === 'both' ? 'दुपार + रात्र' : member.planType} • दर: ₹{member.rate}/महिना
+              {mess?.name || 'श्री बालाजी मेस'} • {member.planType === 'both' ? 'दुपार + रात्र' : member.planType} • दर: ₹{member.rate}/महिना (५६ जेवण)
             </p>
           </div>
         </div>
@@ -111,11 +115,14 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
               }}
               className="px-3 py-1.5 text-xs bg-slate-800 border border-slate-700 rounded-xl text-white font-semibold focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
-              {allMembers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} ({m.gender === 'male' ? 'M' : 'F'}, ₹{m.rate})
-                </option>
-              ))}
+              {allMembers.map((m) => {
+                const isVeg = (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+                return (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({isVeg ? '🟢 व्हेज' : '🔴 नॉन-व्हेज'}, ₹{m.rate})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
@@ -169,8 +176,8 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
           {/* Dynamic UPI QR inside Member Portal */}
           <div className="pt-2 flex justify-center">
             <UpiQrCode
-              upiId={mess?.upiId || 'balajimess@okhdfcbank'}
-              name={mess?.name || 'Mess'}
+              upiId={mess?.upiId || '9822338975@upi'}
+              name={mess?.name || 'श्री बालाजी मेस'}
               amount={amountDue > 0 ? amountDue : (billingCycle?.amountDue || member.rate)}
               size={130}
             />
@@ -218,7 +225,7 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
                 }`}
               >
                 {isLatePreview ? (
-                  <span>⚠️ कटऑफ वेळेनंतर ({mess?.dailyCutoffTime || '09:00'} AM) दाखल होत असल्यामुळे मालकाची मंजुरी लागेल.</span>
+                  <span>⚠️ रात्रीचे जेवण कटऑफ वेळेनंतर (06:00 PM / 18:00) दाखल होत असल्यामुळे मालकाची मंजुरी लागेल.</span>
                 ) : (
                   <span>✅ वेळेत असल्यामुळे ही सुट्टी आपोआप मंजूर होईल.</span>
                 )}

@@ -86,6 +86,8 @@ function DashboardContent() {
     cookForCount: 0,
     lunchCount: 0,
     dinnerCount: 0,
+    vegCount: 0,
+    nonVegCount: 0,
   });
 
   // Modal State
@@ -355,14 +357,17 @@ function DashboardContent() {
               <div>
                 <div className="flex items-center gap-2 text-brand-400 font-semibold text-xs tracking-wider uppercase mb-1">
                   <Sparkles className="w-4 h-4" />
-                  <span>{mess?.name || 'मेस व्यवस्थापन'}</span>
+                  <span>श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा</span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                  {mess?.name ? `${mess.name} — ${mess.area}` : t('tagline')}
+                  {mess?.name || 'श्री बालाजी मेस'} — {mess?.area || 'कर्वे नगर / कोथरूड'}
                 </h1>
-                <p className="text-xs text-slate-400 mt-1">
-                  {t('cutoffTime')}: <strong className="text-slate-200">{mess?.dailyCutoffTime || '09:00'} AM</strong> • UPI ID:{' '}
-                  <span className="font-mono text-brand-300 font-bold">{mess?.upiId || 'Not Set'}</span>
+                <p className="text-xs text-amber-300 font-semibold mt-1">
+                  चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong> • चव हीच आमची ओळख
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  रात्रीचे जेवण कटऑफ: <strong className="text-slate-200">06:00 PM (18:00)</strong> • UPI ID:{' '}
+                  <span className="font-mono text-brand-300 font-bold">{mess?.upiId || '9822338975@upi'}</span>
                 </p>
               </div>
 

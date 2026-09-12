@@ -11,7 +11,7 @@ interface DailyForecastCardProps {
   onDateChange?: (date: string) => void;
 }
 
-export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, cutoffTime = '09:00', onDateChange }) => {
+export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, cutoffTime = '18:00', onDateChange }) => {
   const { t } = useI18n();
   const todayStr = new Date().toISOString().split('T')[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -32,14 +32,14 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
             <ChefHat className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base sm:text-lg text-slate-100 flex items-center gap-2">
+            <h3 className="font-bold text-base sm:text-lg text-slate-100 flex items-center gap-2 flex-wrap">
               {isTomorrow ? t('tomorrowForecast') : `जेवण अंदाज (${forecast.date})`}
-              <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                <Sparkles className="w-3 h-3" /> Auto-computed
+              <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                ✨ २१ वर्षांची परंपरा • चव हीच आमची ओळख
               </span>
             </h3>
-            <p className="text-xs text-slate-400">
-              तारीख: <strong className="text-slate-200">{forecast.date}</strong> • {t('cutoffTime')}: <strong className="text-slate-200">{cutoffTime} AM</strong>
+            <p className="text-xs text-slate-400 mt-0.5">
+              तारीख: <strong className="text-slate-200">{forecast.date}</strong> • रात्रीचे जेवण कटऑफ: <strong className="text-amber-300 font-bold">06:00 PM (18:00)</strong>
             </p>
           </div>
         </div>
@@ -129,7 +129,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
         </div>
       </div>
 
-      {/* Meal breakdown pills */}
+      {/* Meal breakdown pills & Veg/Non-Veg split */}
       <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-800/80 text-xs">
         <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
           <Sun className="w-4 h-4 text-amber-400" />
@@ -140,6 +140,14 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
           <Moon className="w-4 h-4 text-indigo-400" />
           <span className="text-slate-300">{t('dinnerCount')}:</span>
           <strong className="text-white font-bold text-sm">{forecast.dinnerCount}</strong>
+        </div>
+        <div className="flex items-center gap-2 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-500/40 text-emerald-300 font-semibold">
+          <span>🟢 शाकाहारी (Veg):</span>
+          <strong className="text-white font-bold text-sm">{forecast.vegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+        </div>
+        <div className="flex items-center gap-2 bg-rose-950/40 px-3 py-1.5 rounded-lg border border-rose-500/40 text-rose-300 font-semibold">
+          <span>🔴 मांसाहारी (Non-Veg):</span>
+          <strong className="text-white font-bold text-sm">{forecast.nonVegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
         </div>
       </div>
     </div>

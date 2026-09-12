@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
-import { Member, Gender, PlanType, MemberStatus, Mess } from '@messmitra/types';
+import { Member, Gender, DietPreference, PlanType, MemberStatus, Mess } from '@messmitra/types';
 import { X, User, Phone, DollarSign, Calendar, UtensilsCrossed, CheckCircle2 } from 'lucide-react';
 
 interface AddEditMemberModalProps {
@@ -23,14 +23,15 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   const { t } = useI18n();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const defaultMaleRate = mess?.defaultMaleRate || 3200;
-  const defaultFemaleRate = mess?.defaultFemaleRate || 2800;
+  const defaultVegRate = mess?.defaultVegRate || 3000;
+  const defaultNonVegRate = mess?.defaultNonVegRate || 3200;
 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    dietPreference: 'veg' as DietPreference,
     gender: 'male' as Gender,
-    rate: defaultMaleRate,
+    rate: defaultVegRate,
     planType: 'both' as PlanType,
     joinDate: new Date().toISOString().split('T')[0],
     status: 'active' as MemberStatus,
@@ -41,7 +42,8 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
       setFormData({
         name: member.name,
         phone: member.phone,
-        gender: member.gender,
+        dietPreference: member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg'),
+        gender: member.gender || 'male',
         rate: member.rate,
         planType: member.planType,
         joinDate: member.joinDate,
@@ -51,33 +53,34 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
       setFormData({
         name: '',
         phone: '',
+        dietPreference: 'veg',
         gender: 'male',
-        rate: defaultMaleRate,
+        rate: defaultVegRate,
         planType: 'both',
         joinDate: new Date().toISOString().split('T')[0],
         status: 'active',
       });
     }
-  }, [member, isOpen, defaultMaleRate]);
+  }, [member, isOpen, defaultVegRate]);
 
   if (!isOpen) return null;
 
-  const handleGenderChange = (gender: Gender) => {
+  const handleDietChange = (dietPreference: DietPreference) => {
     let rate = formData.rate;
-    // Auto-update rate to default if user hasn't customized it heavily
+    // Auto-update rate to default based on diet choice
     if (!member) {
-      rate = gender === 'female' ? defaultFemaleRate : defaultMaleRate;
+      rate = dietPreference === 'veg' ? defaultVegRate : defaultNonVegRate;
       if (formData.planType !== 'both') {
         rate = Math.round(rate / 2);
       }
     }
-    setFormData({ ...formData, gender, rate });
+    setFormData({ ...formData, dietPreference, rate });
   };
 
   const handlePlanChange = (planType: PlanType) => {
     let rate = formData.rate;
     if (!member) {
-      const base = formData.gender === 'female' ? defaultFemaleRate : defaultMaleRate;
+      const base = formData.dietPreference === 'veg' ? defaultVegRate : defaultNonVegRate;
       rate = planType === 'both' ? base : Math.round(base / 2);
     }
     setFormData({ ...formData, planType, rate });
@@ -155,35 +158,35 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
             </div>
           </div>
 
-          {/* Gender & Plan Type in 2 columns */}
+          {/* Diet Preference & Plan Type in 2 columns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Gender */}
+            {/* Diet Preference */}
             <div>
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t('gender')} *
+                {t('dietPreference')} *
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => handleGenderChange('male')}
+                  onClick={() => handleDietChange('veg')}
                   className={`py-2 px-2 text-xs font-semibold rounded-lg border transition text-center ${
-                    formData.gender === 'male'
-                      ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300'
+                    formData.dietPreference === 'veg'
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold'
                       : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                   }`}
                 >
-                  {t('male')}
+                  🟢 व्हेज (₹३०००)
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleGenderChange('female')}
+                  onClick={() => handleDietChange('nonveg')}
                   className={`py-2 px-2 text-xs font-semibold rounded-lg border transition text-center ${
-                    formData.gender === 'female'
-                      ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300'
+                    formData.dietPreference === 'nonveg'
+                      ? 'bg-rose-50 border-rose-500 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
                       : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                   }`}
                 >
-                  {t('female')}
+                  🔴 नॉन-व्हेज (₹३२००)
                 </button>
               </div>
             </div>

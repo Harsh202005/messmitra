@@ -32,7 +32,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
   leaves,
   members,
   onDateChange,
-  cutoffTime = '09:00',
+  cutoffTime = '18:00',
 }) => {
   const { t } = useI18n();
 
@@ -56,6 +56,9 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
   const estimatedChapatiCount = forecast.cookForCount * 4; // 4 chapatis per head
   const estimatedVegetablesKg = (forecast.cookForCount * 0.15).toFixed(1); // 150g sabzi per person
 
+  const vegCookCount = forecast.vegCount ?? Math.round(forecast.cookForCount / 2);
+  const nonVegCookCount = forecast.nonVegCount ?? Math.round(forecast.cookForCount / 2);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-fadeIn text-slate-100">
       {/* Top Banner for Kitchen Staff */}
@@ -70,13 +73,13 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             <div>
               <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
                 <Sparkles className="w-4 h-4" />
-                <span>किचन लाइव्ह डिस्प्ले • आचारी महाराज पोर्टल</span>
+                <span>श्री बालाजी मेस • २१ वर्षांची परंपरा (Since 2005)</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 दैनिक स्वयंपाक अंदाज (Daily Cooking Headcount)
               </h1>
               <p className="text-xs text-slate-300 mt-1">
-                सुट्टी वजा करून महाराजांसाठी जेवणाची अचूक संख्या • कटऑफ वेळ: <strong className="text-white">{cutoffTime} AM</strong>
+                सुट्टी वजा करून महाराजांसाठी जेवणाची अचूक संख्या • रात्रीचे कटऑफ: <strong className="text-amber-300 font-bold">06:00 PM (18:00)</strong>
               </p>
             </div>
           </div>
@@ -117,68 +120,100 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
       </div>
 
       {/* Main Big Counters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Lunch Count */}
-        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-6 border border-amber-500/40 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-amber-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">दुपारचे जेवण (Lunch)</span>
-            <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Sun className="w-6 h-6 animate-spin-slow" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {/* Total Net Heads Cook For */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 to-slate-900 rounded-3xl p-5 border border-emerald-500/60 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between text-emerald-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider">एकूण जेवण</span>
+            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <ChefHat className="w-5 h-5 animate-pulse" />
             </div>
           </div>
           <div>
-            <div className="text-4xl sm:text-5xl font-black text-amber-300 tracking-tight font-mono">
+            <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-tight font-mono">
+              {forecast.cookForCount}
+            </div>
+            <span className="text-[11px] text-emerald-200/80 mt-1 block">निव्वळ ताटे</span>
+          </div>
+        </div>
+
+        {/* 🟢 Veg Count */}
+        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-5 border border-emerald-500/40 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between text-emerald-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider">🟢 शाकाहारी (Veg)</span>
+            <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-xs">
+              व्हेज
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-4xl font-black text-emerald-300 tracking-tight font-mono">
+              {vegCookCount}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">शाकाहारी ताटे</span>
+          </div>
+        </div>
+
+        {/* 🔴 Non-Veg Count */}
+        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-5 border border-rose-500/40 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between text-rose-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider">🔴 मांसाहारी (Non-Veg)</span>
+            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-xs">
+              नॉनव्हेज
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-4xl font-black text-rose-300 tracking-tight font-mono">
+              {nonVegCookCount}
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">मांसाहारी ताटे</span>
+          </div>
+        </div>
+
+        {/* Lunch Count */}
+        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-5 border border-amber-500/40 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between text-amber-400 mb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider">दुपारचे (Lunch)</span>
+            <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <Sun className="w-5 h-5 animate-spin-slow" />
+            </div>
+          </div>
+          <div>
+            <div className="text-3xl sm:text-4xl font-black text-amber-300 tracking-tight font-mono">
               {forecast.lunchCount}
             </div>
-            <span className="text-xs text-slate-400 mt-1 block">जण (Heads) दुपारच्या ताटासाठी</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">दुपारची ताटे</span>
           </div>
         </div>
 
         {/* Dinner Count */}
-        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-6 border border-indigo-500/40 shadow-xl flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-5 border border-indigo-500/40 shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between text-indigo-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">रात्रीचे जेवण (Dinner)</span>
-            <div className="p-2.5 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              <Moon className="w-6 h-6" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">रात्रीचे (Dinner)</span>
+            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              <Moon className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-4xl sm:text-5xl font-black text-indigo-300 tracking-tight font-mono">
+            <div className="text-3xl sm:text-4xl font-black text-indigo-300 tracking-tight font-mono">
               {forecast.dinnerCount}
             </div>
-            <span className="text-xs text-slate-400 mt-1 block">जण (Heads) रात्रीच्या ताटासाठी</span>
-          </div>
-        </div>
-
-        {/* Net Heads Cook For */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-950 to-slate-900 rounded-3xl p-6 border border-emerald-500/60 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between text-emerald-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">एकूण जेवणारी संख्या</span>
-            <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              <ChefHat className="w-6 h-6 animate-pulse" />
-            </div>
-          </div>
-          <div>
-            <div className="text-4xl sm:text-5xl font-black text-emerald-400 tracking-tight font-mono">
-              {forecast.cookForCount}
-            </div>
-            <span className="text-xs text-emerald-200/80 mt-1 block">स्वयंपाकासाठी निव्वळ संख्या</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">रात्रीची ताटे</span>
           </div>
         </div>
 
         {/* Members on Leave */}
-        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-6 border border-rose-500/30 shadow-xl flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-slate-900/90 rounded-3xl p-5 border border-rose-500/30 shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between text-rose-400 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">सुट्टीवर (On Leave)</span>
-            <div className="p-2.5 rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
-              <UserX className="w-6 h-6" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">सुट्टीवर (Leave)</span>
+            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+              <UserX className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-4xl sm:text-5xl font-black text-rose-400 tracking-tight font-mono">
+            <div className="text-3xl sm:text-4xl font-black text-rose-400 tracking-tight font-mono">
               {forecast.membersOnLeave}
             </div>
-            <span className="text-xs text-slate-400 mt-1 block">आज जेवणार नाहीत</span>
+            <span className="text-[11px] text-slate-400 mt-1 block">आज जेवणार नाहीत</span>
           </div>
         </div>
       </div>

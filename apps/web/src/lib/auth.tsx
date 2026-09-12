@@ -15,9 +15,9 @@ interface AuthContextType {
 
 const DEFAULT_OWNER_USER: AuthUser = {
   id: 'usr-owner-001',
-  email: 'owner@balajimess.com',
+  email: 'shankargiri@balajimess.com',
   role: 'owner',
-  name: 'Ganesh Balaji Patil (मेस मालक)',
+  name: 'Shankar Giri (शंकर गिरी - ९८२२३३८९७५)',
   messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   token: 'token-owner-demo',
 };
@@ -28,7 +28,7 @@ const DEFAULT_MEMBER_USER: AuthUser = {
   role: 'member',
   name: 'Rahul Deshmukh (सभासद)',
   messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-  memberId: 'm1111111-1111-1111-1111-111111111111',
+  memberId: '11111111-1111-1111-1111-111111111111',
   token: 'token-member-demo',
 };
 
@@ -44,9 +44,9 @@ const DEFAULT_STAFF_USER: AuthUser = {
 export const DEMO_CREDENTIALS = [
   {
     role: 'owner' as UserRole,
-    title: 'मेस चालक (Owner / Admin)',
-    subtitle: 'Full Admin & Financial Access',
-    email: 'owner@balajimess.com',
+    title: 'श्री शंकर गिरी (Owner / चालक)',
+    subtitle: 'Full Admin & Financial Access • 9822338975',
+    email: 'shankargiri@balajimess.com',
     password: 'password123',
     user: DEFAULT_OWNER_USER,
     badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',

@@ -35,13 +35,13 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
 
   // Form State
   const [formData, setFormData] = useState({
-    name: currentMess?.name || 'Balaji Executive Dining & Mess',
-    area: currentMess?.area || 'Karve Nagar / Kothrud',
-    city: currentMess?.city || 'Pune',
-    dailyCutoffTime: currentMess?.dailyCutoffTime || '09:00',
-    defaultMaleRate: currentMess?.defaultMaleRate || 3200,
-    defaultFemaleRate: currentMess?.defaultFemaleRate || 2800,
-    upiId: currentMess?.upiId || 'balajimess@okhdfcbank',
+    name: currentMess?.name || 'श्री बालाजी मेस',
+    area: currentMess?.area || 'कर्वे नगर / कोथरूड',
+    city: currentMess?.city || 'पुणे',
+    dailyCutoffTime: currentMess?.dailyCutoffTime || '18:00',
+    defaultVegRate: currentMess?.defaultVegRate || 3000,
+    defaultNonVegRate: currentMess?.defaultNonVegRate || 3200,
+    upiId: currentMess?.upiId || '9822338975@upi',
   });
 
   if (!isOpen) return null;
@@ -84,7 +84,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
 
           <h2 className="text-xl font-bold">
             {step === 1 && t('wizardStep1Title')}
-            {step === 2 && t('wizardStep2Title')}
+            {step === 2 && 'पायरी २: रात्रीचे जेवण कटऑफ वेळ (06:00 PM) व मासिक दर'}
             {step === 3 && t('wizardStep3Title')}
           </h2>
 
@@ -125,7 +125,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                    placeholder="उदा. Balaji Executive Mess"
+                    placeholder="उदा. श्री बालाजी मेस"
                   />
                 </div>
               </div>
@@ -141,7 +141,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     value={formData.area}
                     onChange={(e) => setFormData({ ...formData, area: e.target.value })}
                     className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                    placeholder="उदा. Karve Nagar"
+                    placeholder="उदा. कर्वे नगर / कोथरूड"
                   />
                 </div>
                 <div>
@@ -154,19 +154,19 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     className="w-full px-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                    placeholder="उदा. Pune"
+                    placeholder="उदा. पुणे"
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* STEP 2: Cutoff Time & Gender Rates */}
+          {/* STEP 2: Cutoff Time & Veg/Non-Veg Rates */}
           {step === 2 && (
             <div className="space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {t('cutoffTime')} *
+                  रात्रीचे जेवण कटऑफ वेळ (Dinner Cutoff Time - 06:00 PM) *
                 </label>
                 <div className="relative">
                   <Clock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -179,14 +179,14 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  {t('cutoffTimeHelp')}
+                  संध्याकाळी ०६:०० (06:00 PM) नंतर आलेल्या सुट्ट्या मंजुरीसाठी मालकाकडे प्रलंबित राहतील.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('maleRateLabel')} *
+                    🟢 शाकाहारी दर (Veg - 56 Meals) *
                   </label>
                   <div className="relative">
                     <span className="text-slate-400 absolute left-3 top-2 text-sm font-bold">₹</span>
@@ -195,18 +195,18 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                       required
                       min={0}
                       step={50}
-                      value={formData.defaultMaleRate}
+                      value={formData.defaultVegRate}
                       onChange={(e) =>
-                        setFormData({ ...formData, defaultMaleRate: Number(e.target.value) })
+                        setFormData({ ...formData, defaultVegRate: Number(e.target.value) })
                       }
-                      className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t('femaleRateLabel')} *
+                    🔴 मांसाहारी दर (Non-Veg - 56 Meals) *
                   </label>
                   <div className="relative">
                     <span className="text-slate-400 absolute left-3 top-2 text-sm font-bold">₹</span>
@@ -215,11 +215,11 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                       required
                       min={0}
                       step={50}
-                      value={formData.defaultFemaleRate}
+                      value={formData.defaultNonVegRate}
                       onChange={(e) =>
-                        setFormData({ ...formData, defaultFemaleRate: Number(e.target.value) })
+                        setFormData({ ...formData, defaultNonVegRate: Number(e.target.value) })
                       }
-                      className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                      className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
                     />
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
             <div className="space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {t('upiIdLabel')} *
+                  {t('upiIdLabel')} (शंकर गिरी) *
                 </label>
                 <div className="relative">
                   <QrCode className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -241,8 +241,8 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     required
                     value={formData.upiId}
                     onChange={(e) => setFormData({ ...formData, upiId: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono"
-                    placeholder="उदा. yourname@okhdfcbank"
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono font-bold"
+                    placeholder="उदा. 9822338975@upi"
                   />
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
@@ -259,7 +259,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                 <p className="font-sans whitespace-pre-line bg-white dark:bg-slate-800 p-3 rounded-lg border border-emerald-100 dark:border-slate-700 text-[11px] leading-relaxed shadow-sm">
                   🙏 *नमस्ते राहुल*,{'\n'}
                   {formData.name} चे *सप्टेंबर* महिन्याचे बिल:{'\n'}
-                  💰 *एकूण बाकी: ₹3,200*{'\n'}
+                  💰 *एकूण बाकी: ₹3,000 / ₹3,200*{'\n'}
                   👉 *UPI ID:* <span className="font-mono text-brand-600 font-bold">{formData.upiId}</span>{'\n'}
                   🔗 थेट पेमेंट लिंक: <span className="text-blue-500 underline">upi://pay?pa={formData.upiId}...</span>
                 </p>

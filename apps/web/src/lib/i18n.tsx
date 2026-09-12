@@ -144,14 +144,54 @@ export const translations: Translations = {
     en: 'Inactive',
   },
   male: {
-    mr: 'मुलगा (Male)',
-    hi: 'पुरुष (Male)',
-    en: 'Male',
+    mr: '🟢 शाकाहारी (Veg)',
+    hi: '🟢 शाकाहारी (Veg)',
+    en: '🟢 Vegetarian',
   },
   female: {
-    mr: 'मुलगी (Female)',
-    hi: 'महिला (Female)',
-    en: 'Female',
+    mr: '🔴 मांसाहारी (Non-Veg)',
+    hi: '🔴 मांसाहारी (Non-Veg)',
+    en: '🔴 Non-Vegetarian',
+  },
+  veg: {
+    mr: '🟢 शाकाहारी (Veg)',
+    hi: '🟢 शाकाहारी (Veg)',
+    en: '🟢 Veg',
+  },
+  nonveg: {
+    mr: '🔴 मांसाहारी (Non-Veg)',
+    hi: '🔴 मांसाहारी (Non-Veg)',
+    en: '🔴 Non-Veg',
+  },
+  dietPreference: {
+    mr: 'आहार प्रकार (Diet Preference)',
+    hi: 'भोजन प्रकार (Diet Preference)',
+    en: 'Diet Preference',
+  },
+  vegRate: {
+    mr: 'शाकाहारी दर (Veg Rate - ₹3,000)',
+    hi: 'शाकाहारी दर (Veg Rate - ₹3,000)',
+    en: 'Veg Monthly Rate (₹3,000)',
+  },
+  nonVegRate: {
+    mr: 'मांसाहारी दर (Non-Veg Rate - ₹3,200)',
+    hi: 'मांसाहारी दर (Non-Veg Rate - ₹3,200)',
+    en: 'Non-Veg Monthly Rate (₹3,200)',
+  },
+  legacyBadge: {
+    mr: '२१ वर्षांची परंपरा • चव हीच आमची ओळख',
+    hi: '२१ वर्षों की परंपरा • स्वाद ही हमारी पहचान',
+    en: '21 Years of Heritage • Taste is Our Identity',
+  },
+  dinnerCutoffLabel: {
+    mr: 'रात्रीचे जेवण कटऑफ वेळ (Dinner Cutoff)',
+    hi: 'रात के खाने का कटऑफ समय',
+    en: 'Dinner Cutoff Time (6:00 PM)',
+  },
+  lunchCutoffLabel: {
+    mr: 'दुपारचे जेवण कटऑफ वेळ (Lunch Cutoff)',
+    hi: 'दोपहर के खाने का कटऑफ समय',
+    en: 'Lunch Cutoff Time (9:00 AM)',
   },
   bothMeals: {
     mr: 'दुपार + रात्र (दोन्ही)',

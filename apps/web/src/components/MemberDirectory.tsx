@@ -32,7 +32,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
 }) => {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive' | 'male' | 'female'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'inactive' | 'veg' | 'nonveg'>('all');
 
   const filteredMembers = members.filter((m) => {
     // Search filter
@@ -42,11 +42,13 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
 
     if (!matchesSearch) return false;
 
+    const diet = m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg');
+
     // Tab filter
     if (activeTab === 'active') return m.status === 'active';
     if (activeTab === 'inactive') return m.status === 'inactive';
-    if (activeTab === 'male') return m.gender === 'male';
-    if (activeTab === 'female') return m.gender === 'female';
+    if (activeTab === 'veg') return diet === 'veg';
+    if (activeTab === 'nonveg') return diet === 'nonveg';
     return true;
   });
 
@@ -136,24 +138,24 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
           {t('inactive')} ({members.filter((m) => m.status === 'inactive').length})
         </button>
         <button
-          onClick={() => setActiveTab('male')}
+          onClick={() => setActiveTab('veg')}
           className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
-            activeTab === 'male'
-              ? 'bg-blue-600 text-white shadow-sm'
+            activeTab === 'veg'
+              ? 'bg-emerald-600 text-white shadow-sm'
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          {t('male')} ({members.filter((m) => m.gender === 'male').length})
+          🟢 शाकाहारी (Veg - ₹3,000) ({members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg').length})
         </button>
         <button
-          onClick={() => setActiveTab('female')}
+          onClick={() => setActiveTab('nonveg')}
           className={`px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
-            activeTab === 'female'
-              ? 'bg-pink-600 text-white shadow-sm'
+            activeTab === 'nonveg'
+              ? 'bg-rose-600 text-white shadow-sm'
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          {t('female')} ({members.filter((m) => m.gender === 'female').length})
+          🔴 मांसाहारी (Non-Veg - ₹3,200) ({members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg').length})
         </button>
       </div>
 
@@ -165,7 +167,9 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMembers.map((member) => (
+          {filteredMembers.map((member) => {
+            const isVeg = (member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+            return (
             <div
               key={member.id}
               className={`rounded-2xl p-4 transition-all duration-200 border relative bg-white dark:bg-slate-900 shadow-sm hover:shadow-md ${
@@ -174,7 +178,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                   : 'border-slate-200 dark:border-slate-800 opacity-60 bg-slate-50 dark:bg-slate-950/40'
               }`}
             >
-              {/* Header: Name & Gender */}
+              {/* Header: Name & Diet Badge */}
               <div className="flex items-start justify-between gap-2 mb-2.5">
                 <div>
                   <div className="flex items-center gap-2">
@@ -182,13 +186,13 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                       {member.name}
                     </h4>
                     <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                        member.gender === 'male'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
-                          : 'bg-pink-100 text-pink-800 dark:bg-pink-950/60 dark:text-pink-300'
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                        isVeg
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-500/30'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-500/30'
                       }`}
                     >
-                      {member.gender === 'male' ? 'M' : 'F'}
+                      {isVeg ? '🟢 व्हेज' : '🔴 नॉन-व्हेज'}
                     </span>
                   </div>
                   <a
@@ -257,7 +261,8 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

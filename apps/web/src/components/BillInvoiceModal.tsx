@@ -41,11 +41,11 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
 
   const outstanding = Math.max(0, cycle.amountDue - cycle.amountPaid);
   const waLink = generateWhatsAppReminderLink(
-    cycle.memberPhone || '9890123456',
+    cycle.memberPhone || '9822338975',
     cycle.memberName || 'Member',
-    mess?.name || 'Balaji Mess',
+    mess?.name || 'श्री बालाजी मेस',
     outstanding,
-    mess?.upiId || 'balajimess@okhdfcbank',
+    mess?.upiId || '9822338975@upi',
     cycle.month,
     cycle.approvedLeaveDays
   );
@@ -91,14 +91,17 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
                   <Utensils className="w-4 h-4" />
                 </div>
                 <h1 className="text-xl font-black text-slate-900 tracking-tight">
-                  {mess?.name || 'Balaji Executive Dining & Mess'}
+                  {mess?.name || 'श्री बालाजी मेस'}
                 </h1>
               </div>
-              <p className="text-xs text-slate-600">
-                {mess?.area}, {mess?.city} • दैनिक कटऑफ: {mess?.dailyCutoffTime || '09:00'} AM
+              <p className="text-xs text-orange-700 font-bold">
+                ✨ २१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख
+              </p>
+              <p className="text-xs text-slate-600 mt-0.5">
+                {mess?.area || 'कर्वे नगर / कोथरूड'}, {mess?.city || 'पुणे'} • मालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong>
               </p>
               <p className="text-xs text-slate-600 font-mono mt-0.5">
-                UPI ID: <strong>{mess?.upiId || 'balajimess@okhdfcbank'}</strong>
+                UPI ID: <strong>{mess?.upiId || '9822338975@upi'}</strong> • रात्रीचे कटऑफ: <strong>06:00 PM</strong>
               </p>
             </div>
 

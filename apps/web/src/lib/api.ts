@@ -45,14 +45,22 @@ export function notifyDataChanged() {
 
 const DEFAULT_MESS: Mess = {
   id: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-  name: 'Balaji Executive Dining & Mess',
-  area: 'Karve Nagar / Kothrud',
-  city: 'Pune',
-  dailyCutoffTime: '09:00',
+  name: 'श्री बालाजी मेस',
+  area: 'कर्वे नगर / कोथरूड',
+  city: 'पुणे',
+  dailyCutoffTime: '18:00',
+  lunchCutoffTime: '09:00',
+  dinnerCutoffTime: '18:00',
   ownerId: '00000000-0000-0000-0000-000000000001',
-  upiId: 'balajimess@okhdfcbank',
+  ownerName: 'शंकर गिरी',
+  contactNumber: '+91 98223 38975',
+  upiId: '9822338975@upi',
   defaultMaleRate: 3200,
-  defaultFemaleRate: 2800,
+  defaultFemaleRate: 3000,
+  defaultVegRate: 3000,
+  defaultNonVegRate: 3200,
+  tagline: 'चव हीच आमची ओळख • २१ वर्षांची अखंड परंपरा',
+  establishedYears: 21,
   createdAt: '2026-06-01T00:00:00Z',
 };
 
@@ -63,6 +71,7 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Rahul Deshmukh',
     phone: '+91 98901 23456',
     gender: 'male',
+    dietPreference: 'nonveg',
     rate: 3200,
     planType: 'both',
     joinDate: '2026-06-01',
@@ -75,7 +84,8 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Priya Kulkarni',
     phone: '+91 98902 34567',
     gender: 'female',
-    rate: 2800,
+    dietPreference: 'veg',
+    rate: 3000,
     planType: 'both',
     joinDate: '2026-07-15',
     status: 'active',
@@ -87,6 +97,7 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Amit Joshi',
     phone: '+91 98903 45678',
     gender: 'male',
+    dietPreference: 'nonveg',
     rate: 3200,
     planType: 'both',
     joinDate: '2026-08-01',
@@ -99,7 +110,8 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Sneha Shinde',
     phone: '+91 98904 56789',
     gender: 'female',
-    rate: 2800,
+    dietPreference: 'veg',
+    rate: 3000,
     planType: 'both',
     joinDate: '2026-08-10',
     status: 'active',
@@ -111,7 +123,8 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Omkar Jadhav',
     phone: '+91 98905 67890',
     gender: 'male',
-    rate: 1800,
+    dietPreference: 'veg',
+    rate: 1500,
     planType: 'lunch',
     joinDate: '2026-09-01',
     status: 'active',
@@ -123,6 +136,7 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Tanvi Pawar',
     phone: '+91 98906 78901',
     gender: 'female',
+    dietPreference: 'nonveg',
     rate: 1600,
     planType: 'dinner',
     joinDate: '2026-09-05',
@@ -135,6 +149,7 @@ const DEFAULT_MEMBERS: Member[] = [
     name: 'Vikas Gaikwad',
     phone: '+91 98907 89012',
     gender: 'male',
+    dietPreference: 'nonveg',
     rate: 3200,
     planType: 'both',
     joinDate: '2026-05-10',
@@ -221,7 +236,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
     amount: 1450,
     date: '2026-09-02',
     note: 'Fresh market vegetables (मंडी खरेदी)',
-    createdBy: 'Ganesh Balaji Patil',
+    createdBy: 'Shankar Giri',
     createdAt: '2026-09-02T08:00:00Z',
   },
   {
@@ -231,7 +246,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
     amount: 840,
     date: '2026-09-05',
     note: 'Milk, Curd, Paneer for feast day',
-    createdBy: 'Ganesh Balaji Patil',
+    createdBy: 'Shankar Giri',
     createdAt: '2026-09-05T07:30:00Z',
   },
   {
@@ -241,7 +256,7 @@ const DEFAULT_ONEOFF: ExpenseOneOff[] = [
     amount: 4200,
     date: '2026-09-08',
     note: 'Kolam Rice & Toor Dal sack',
-    createdBy: 'Ganesh Balaji Patil',
+    createdBy: 'Shankar Giri',
     createdAt: '2026-09-08T16:00:00Z',
   },
 ];
@@ -281,14 +296,22 @@ export const MessMitraApi = {
         if (!error && data) {
           const messObj: Mess = {
             id: data.id,
-            name: data.name,
-            area: data.area,
-            city: data.city,
-            dailyCutoffTime: (data.daily_cutoff_time || '09:00').substring(0, 5),
+            name: data.name || 'श्री बालाजी मेस',
+            area: data.area || 'कर्वे नगर / कोथरूड',
+            city: data.city || 'पुणे',
+            dailyCutoffTime: (data.daily_cutoff_time || '18:00').substring(0, 5),
+            lunchCutoffTime: (data.lunch_cutoff_time || '09:00').substring(0, 5),
+            dinnerCutoffTime: (data.dinner_cutoff_time || '18:00').substring(0, 5),
             ownerId: data.owner_id || '00000000-0000-0000-0000-000000000001',
-            upiId: data.upi_id,
+            ownerName: data.owner_name || 'शंकर गिरी',
+            contactNumber: data.contact_number || '+91 98223 38975',
+            upiId: data.upi_id || '9822338975@upi',
             defaultMaleRate: Number(data.default_male_rate || 3200),
-            defaultFemaleRate: Number(data.default_female_rate || 2800),
+            defaultFemaleRate: Number(data.default_female_rate || 3000),
+            defaultVegRate: Number(data.default_veg_rate || data.default_female_rate || 3000),
+            defaultNonVegRate: Number(data.default_nonveg_rate || data.default_male_rate || 3200),
+            tagline: data.tagline || 'चव हीच आमची ओळख • २१ वर्षांची अखंड परंपरा',
+            establishedYears: Number(data.established_years || 21),
             createdAt: data.created_at,
           };
           if (typeof window !== 'undefined') {
@@ -329,8 +352,8 @@ export const MessMitraApi = {
             city: dto.city || current.city,
             daily_cutoff_time: dto.dailyCutoffTime || current.dailyCutoffTime,
             upi_id: dto.upiId || current.upiId,
-            default_male_rate: dto.defaultMaleRate || current.defaultMaleRate,
-            default_female_rate: dto.defaultFemaleRate || current.defaultFemaleRate,
+            default_male_rate: dto.defaultNonVegRate || dto.defaultMaleRate || current.defaultMaleRate,
+            default_female_rate: dto.defaultVegRate || dto.defaultFemaleRate || current.defaultFemaleRate,
           })
           .select()
           .single();
@@ -342,10 +365,18 @@ export const MessMitraApi = {
             area: data.area,
             city: data.city,
             dailyCutoffTime: data.daily_cutoff_time.substring(0, 5),
+            lunchCutoffTime: '09:00',
+            dinnerCutoffTime: '18:00',
             ownerId: data.owner_id,
+            ownerName: 'शंकर गिरी',
+            contactNumber: '+91 98223 38975',
             upiId: data.upi_id,
             defaultMaleRate: Number(data.default_male_rate),
             defaultFemaleRate: Number(data.default_female_rate),
+            defaultVegRate: Number(data.default_female_rate || 3000),
+            defaultNonVegRate: Number(data.default_male_rate || 3200),
+            tagline: 'चव हीच आमची ओळख • २१ वर्षांची अखंड परंपरा',
+            establishedYears: 21,
             createdAt: data.created_at,
           };
           if (typeof window !== 'undefined') {
@@ -397,6 +428,7 @@ export const MessMitraApi = {
             name: row.name,
             phone: row.phone,
             gender: row.gender,
+            dietPreference: (row.diet_preference as any) || (row.gender === 'female' ? 'veg' : 'nonveg'),
             rate: Number(row.rate),
             planType: row.plan_type,
             joinDate: row.join_date,
@@ -452,7 +484,7 @@ export const MessMitraApi = {
             mess_id: mess.id,
             name: memberData.name,
             phone: memberData.phone,
-            gender: memberData.gender,
+            gender: memberData.gender || (memberData.dietPreference === 'veg' ? 'female' : 'male'),
             rate: memberData.rate,
             plan_type: memberData.planType,
             join_date: memberData.joinDate,
@@ -468,6 +500,7 @@ export const MessMitraApi = {
             name: data.name,
             phone: data.phone,
             gender: data.gender,
+            dietPreference: memberData.dietPreference || (data.gender === 'female' ? 'veg' : 'nonveg'),
             rate: Number(data.rate),
             planType: data.plan_type,
             joinDate: data.join_date,
@@ -489,6 +522,7 @@ export const MessMitraApi = {
 
     const newMember: Member = {
       ...memberData,
+      dietPreference: memberData.dietPreference || 'veg',
       id: generateUUID(),
       messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
       createdAt: new Date().toISOString(),
@@ -530,6 +564,7 @@ export const MessMitraApi = {
             name: data.name,
             phone: data.phone,
             gender: data.gender,
+            dietPreference: memberData.dietPreference || (data.gender === 'female' ? 'veg' : 'nonveg'),
             rate: Number(data.rate),
             planType: data.plan_type,
             joinDate: data.join_date,
@@ -584,6 +619,17 @@ export const MessMitraApi = {
     const lunchCount = members.filter((m) => m.planType === 'both' || m.planType === 'lunch').length - membersOnLeave;
     const dinnerCount = members.filter((m) => m.planType === 'both' || m.planType === 'dinner').length - membersOnLeave;
 
+    const vegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg');
+    const nonVegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg');
+    const vegLeavesCount = activeLeaves.filter((l) => {
+      const m = members.find((mb) => mb.id === l.memberId);
+      return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+    }).length;
+    const nonVegLeavesCount = activeLeaves.filter((l) => {
+      const m = members.find((mb) => mb.id === l.memberId);
+      return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg';
+    }).length;
+
     return {
       date: tomorrow,
       totalActiveMembers: members.length,
@@ -591,6 +637,8 @@ export const MessMitraApi = {
       cookForCount: Math.max(0, members.length - membersOnLeave),
       lunchCount: Math.max(0, lunchCount),
       dinnerCount: Math.max(0, dinnerCount),
+      vegCount: Math.max(0, vegMembers.length - vegLeavesCount),
+      nonVegCount: Math.max(0, nonVegMembers.length - nonVegLeavesCount),
     };
   },
 
@@ -804,11 +852,16 @@ export const MessMitraApi = {
       // Check payments recorded for this member and month
       const memberCycleId = `b-${m.id}-${month}`;
       const matchingPayments = storedPayments.filter(
-        (p) => (p.billingCycleId === memberCycleId || p.billingCycleId === `b-${m.id}` || p.memberId === m.id) && p.month === month
+        (p) =>
+          (p.billingCycleId === memberCycleId ||
+            p.billingCycleId === `b-${m.id}` ||
+            p.memberId === m.id ||
+            (p.billingCycleId && p.billingCycleId.includes(m.id))) &&
+          (!p.month || p.month === month)
       );
-      const customPaid = matchingPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
-      const defaultPaid = m.name.includes('Rahul') ? bill.finalAmountDue : 0;
-      const amountPaid = customPaid > 0 ? customPaid : (matchingPayments.length === 0 ? defaultPaid : 0);
+      const customPaid = matchingPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+      const defaultPaid = m.name.includes('Rahul') && matchingPayments.length === 0 ? bill.finalAmountDue : 0;
+      const amountPaid = matchingPayments.length > 0 ? customPaid : defaultPaid;
 
       const status = amountPaid >= bill.finalAmountDue ? 'paid' : (amountPaid > 0 ? 'partially_paid' : 'unpaid');
 
@@ -854,17 +907,22 @@ export const MessMitraApi = {
     transactionRef?: string
   ) {
     const cycleId = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.billingCycleId : billingCycleIdOrObj;
-    const payAmount = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.amount : (amount || 0);
+    const payAmount = typeof billingCycleIdOrObj === 'object' ? Number(billingCycleIdOrObj.amount) : Number(amount || 0);
     const payMethod = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.method : method;
     const ref = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.transactionRef : transactionRef;
+
+    const cycleParts = cycleId.replace(/^b-/, '').split('-');
+    const cycleMonth = cycleParts.length >= 2 ? `${cycleParts[cycleParts.length - 2]}-${cycleParts[cycleParts.length - 1]}` : new Date().toISOString().substring(0, 7);
+    const memberId = cycleParts.slice(0, cycleParts.length - 2).join('-');
 
     const paymentRecord = {
       id: generateUUID(),
       billingCycleId: cycleId,
+      memberId: memberId || undefined,
       amount: payAmount,
       method: payMethod,
       transactionRef: ref,
-      month: cycleId.includes('-202') ? cycleId.split('-').slice(-2).join('-') : new Date().toISOString().substring(0, 7),
+      month: cycleMonth,
       paidAt: new Date().toISOString(),
     };
 
@@ -885,17 +943,22 @@ export const MessMitraApi = {
     note?: string
   ) {
     const cycleId = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.billingCycleId : billingCycleIdOrObj;
-    const adjAmount = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.amount : (amount || 0);
+    const adjAmount = typeof billingCycleIdOrObj === 'object' ? Number(billingCycleIdOrObj.amount) : Number(amount || 0);
     const adjNote = typeof billingCycleIdOrObj === 'object' ? billingCycleIdOrObj.note : (note || '');
+
+    const cycleParts = cycleId.replace(/^b-/, '').split('-');
+    const cycleMonth = cycleParts.length >= 2 ? `${cycleParts[cycleParts.length - 2]}-${cycleParts[cycleParts.length - 1]}` : new Date().toISOString().substring(0, 7);
+    const memberId = cycleParts.slice(0, cycleParts.length - 2).join('-');
 
     const paymentRecord = {
       id: generateUUID(),
       billingCycleId: cycleId,
+      memberId: memberId || undefined,
       amount: -adjAmount, // negative deduction
       method: 'cash',
       isAdjustment: true,
       adjustmentNote: adjNote,
-      month: cycleId.includes('-202') ? cycleId.split('-').slice(-2).join('-') : new Date().toISOString().substring(0, 7),
+      month: cycleMonth,
       paidAt: new Date().toISOString(),
     };
 
