@@ -28,6 +28,8 @@ import {
   Sparkles,
   X,
   LayoutDashboard,
+  Smartphone,
+  Monitor,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
 
@@ -46,6 +48,8 @@ interface NavbarProps {
   onOpenBulkImport?: () => void;
   onOpenQrPoster?: () => void;
   onOpenWhatsAppBroadcast?: () => void;
+  onToggleMobileSimulator?: () => void;
+  isMobileSimulator?: boolean;
   pendingLeavesCount?: number;
   pendingRegistrationsCount?: number;
 }
@@ -62,6 +66,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenBulkImport,
   onOpenQrPoster,
   onOpenWhatsAppBroadcast,
+  onToggleMobileSimulator,
+  isMobileSimulator = false,
   pendingLeavesCount = 0,
   pendingRegistrationsCount = 0,
 }) => {
@@ -186,6 +192,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {theme === 'light' ? 'Dark' : 'Light'}
                 </span>
               </button>
+
+              {/* Temporary Mobile View Test Button (Can be removed later) */}
+              {onToggleMobileSimulator && (
+                <button
+                  onClick={onToggleMobileSimulator}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                    isMobileSimulator
+                      ? 'bg-brand-600 text-white border-brand-500 shadow-md'
+                      : 'bg-amber-500/15 text-amber-900 dark:text-amber-300 border-amber-400/50 hover:bg-amber-500/25'
+                  }`}
+                  title={isMobileSimulator ? 'फुल स्क्रीन डेस्कटॉप मोडवर परत जा' : 'मोबाईल स्क्रीन व्ह्यू टेस्ट करा (375px)'}
+                >
+                  {isMobileSimulator ? (
+                    <Monitor className="w-3.5 h-3.5 text-white" />
+                  ) : (
+                    <Smartphone className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {isMobileSimulator ? 'Full Screen' : '📱 मोबाईल व्ह्यू'}
+                  </span>
+                </button>
+              )}
 
               {/* Language Switcher */}
               <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700 text-xs font-medium">

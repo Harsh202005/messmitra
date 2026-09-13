@@ -35,7 +35,17 @@ import { BulkMemberImportModal } from '../components/BulkMemberImportModal';
 import { MessNoticeBoardQrModal } from '../components/MessNoticeBoardQrModal';
 import { WhatsAppBroadcastModal } from '../components/WhatsAppBroadcastModal';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
-import { CheckCircle2, Sparkles, IndianRupee, Users, QrCode, MessageSquare, FileSpreadsheet } from 'lucide-react';
+import {
+  CheckCircle2,
+  Sparkles,
+  IndianRupee,
+  Users,
+  QrCode,
+  MessageSquare,
+  FileSpreadsheet,
+  Smartphone,
+  Monitor,
+} from 'lucide-react';
 
 function DashboardContent() {
   const { t } = useI18n();
@@ -104,6 +114,8 @@ function DashboardContent() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isQrPosterOpen, setIsQrPosterOpen] = useState(false);
   const [isWhatsAppBroadcastOpen, setIsWhatsAppBroadcastOpen] = useState(false);
+  const [isMobileSimulatorActive, setIsMobileSimulatorActive] = useState(false);
+  const [simulatorWidth, setSimulatorWidth] = useState<'360' | '375' | '390'>('375');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -324,7 +336,7 @@ function DashboardContent() {
 
   const activeMemberBilling = billingData.cycles.find((c) => c.memberId === activeMember.id) || null;
 
-  return (
+  const appContent = (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Toast Alert */}
       {toastMessage && (
@@ -347,6 +359,8 @@ function DashboardContent() {
         onOpenBulkImport={() => setIsBulkImportOpen(true)}
         onOpenQrPoster={() => setIsQrPosterOpen(true)}
         onOpenWhatsAppBroadcast={() => setIsWhatsAppBroadcastOpen(true)}
+        onToggleMobileSimulator={() => setIsMobileSimulatorActive(!isMobileSimulatorActive)}
+        isMobileSimulator={isMobileSimulatorActive}
         pendingLeavesCount={leaves.filter((l) => l.status === 'pending_approval').length}
         pendingRegistrationsCount={registrations.filter((r) => r.status === 'pending_approval').length}
       />
@@ -614,6 +628,116 @@ function DashboardContent() {
         mess={mess}
       />
     </div>
+  );
+
+  return (
+    <>
+      {isMobileSimulatorActive ? (
+        /* Mobile Simulator Shell Mode */
+        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-start py-4 px-2 select-none overflow-x-hidden">
+          {/* Top Simulator Control Bar */}
+          <header className="w-full max-w-4xl bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-3 mb-4 flex flex-wrap items-center justify-between gap-3 shadow-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
+                <Smartphone className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <strong className="text-sm font-bold text-white">📱 मोबाईल व्ह्यू सिम्युलेटर (Mobile PWA Simulator)</strong>
+                  <span className="text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.2 rounded-full uppercase">
+                    Test Mode
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Android PWA Baseline: 360px-390px • Bottom Navigation, Large Touch Buttons (≥44px), Stacked Cards
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Width Selector */}
+              <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
+                <button
+                  onClick={() => setSimulatorWidth('360')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    simulatorWidth === '360' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Galaxy (360px)
+                </button>
+                <button
+                  onClick={() => setSimulatorWidth('375')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    simulatorWidth === '375' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Standard (375px)
+                </button>
+                <button
+                  onClick={() => setSimulatorWidth('390')}
+                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
+                    simulatorWidth === '390' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  iPhone (390px)
+                </button>
+              </div>
+
+              {/* Exit Button */}
+              <button
+                onClick={() => setIsMobileSimulatorActive(false)}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Exit Mobile View</span>
+              </button>
+            </div>
+          </header>
+
+          {/* Physical Phone Mockup Container */}
+          <div
+            style={{
+              width: `${simulatorWidth === '360' ? 360 : simulatorWidth === '390' ? 390 : 375}px`,
+            }}
+            className="max-w-full h-[844px] max-h-[88vh] border-[10px] border-slate-900 rounded-[48px] shadow-[0_25px_80px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 relative ring-2 ring-slate-800"
+          >
+            {/* Phone Top Notch Bar */}
+            <div className="bg-slate-900 h-6 shrink-0 flex items-center justify-between px-6 text-[10px] text-white/70 select-none z-50">
+              <span className="font-bold">9:41</span>
+              <div className="w-20 h-3.5 bg-black rounded-full mx-auto" />
+              <span className="flex items-center gap-1 font-mono">5G 🔋</span>
+            </div>
+
+            {/* Scrollable Mobile App Container */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
+              {appContent}
+            </div>
+
+            {/* Phone Bottom Home Swipe Bar */}
+            <div className="bg-white dark:bg-slate-900 py-1 flex justify-center shrink-0 border-t border-slate-200 dark:border-slate-800">
+              <div className="w-28 h-1 bg-slate-400 dark:bg-slate-600 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Regular View */
+        <>
+          {appContent}
+
+          {/* Floating Mobile View Test Button (Can be removed later) */}
+          <div className="hidden md:flex fixed bottom-6 right-6 z-50">
+            <button
+              onClick={() => setIsMobileSimulatorActive(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 hover:to-amber-500 text-white font-extrabold text-xs rounded-full shadow-2xl shadow-brand-500/40 border border-white/20 transition-all transform hover:scale-105 cursor-pointer min-h-[44px]"
+              title="मोबाईल स्क्रीन व्ह्यू टेस्ट सिम्युलेटर सुरू करा"
+            >
+              <Smartphone className="w-4 h-4 animate-bounce" />
+              <span>📱 मोबाईल व्ह्यू टेस्ट (Mobile Frame)</span>
+            </button>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
