@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useI18n } from '../lib/i18n';
 import { Member, PlanType } from '@messmitra/types';
 import {
@@ -18,11 +18,8 @@ import {
   ChevronUp,
   FileSpreadsheet,
   CheckCircle2,
-  UserCheck,
-  UserX,
-  CreditCard,
-  ShieldCheck,
   Info,
+  RotateCcw,
 } from 'lucide-react';
 import { generateDirectWhatsAppUrl } from '../lib/whatsappTemplates';
 
@@ -44,30 +41,55 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive' | 'veg' | 'nonveg'>('all');
-  
-  // Track which member has expanded details open (accordion or modal)
+
+  // Track expanded cards and detail modal
   const [expandedMemberId, setExpandedMemberId] = useState<string | null>(null);
   const [selectedMemberModal, setSelectedMemberModal] = useState<Member | null>(null);
 
-  // Filter members
-  const filteredMembers = members.filter((m) => {
-    const query = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      query === '' ||
-      m.name.toLowerCase().includes(query) ||
-      m.phone.replace(/[^0-9]/g, '').includes(query.replace(/[^0-9]/g, '')) ||
-      (m.id && m.id.toLowerCase().includes(query));
+  const formatMemberCode = (index: number) => {
+    return `#SBM-${String(index + 1).padStart(3, '0')}`;
+  };
 
-    if (!matchesSearch) return false;
+  const isMemberVeg = (m: Member) => {
+    return (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+  };
 
-    const diet = m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg');
+  // 1. Filter by Search Query
+  const membersMatchingSearch = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return members;
 
-    if (activeFilter === 'active') return m.status === 'active';
-    if (activeFilter === 'inactive') return m.status === 'inactive';
-    if (activeFilter === 'veg') return diet === 'veg';
-    if (activeFilter === 'nonveg') return diet === 'nonveg';
-    return true;
-  });
+    const cleanNumeric = q.replace(/[^0-9]/g, '');
+
+    return members.filter((m, idx) => {
+      const code = formatMemberCode(idx).toLowerCase(); // "#sbm-001"
+      const numOnlyCode = String(idx + 1); // "1"
+      const name = (m.name || '').toLowerCase();
+      const phone = (m.phone || '').replace(/[^0-9]/g, '');
+      const diet = isMemberVeg(m) ? 'veg शाकाहारी व्हेज' : 'nonveg मांसाहारी नॉनव्हेज';
+      const plan = m.planType || '';
+
+      const matchName = name.includes(q);
+      const matchPhone = cleanNumeric ? phone.includes(cleanNumeric) : false;
+      const matchCode = code.includes(q) || numOnlyCode === q;
+      const matchDiet = diet.includes(q);
+      const matchPlan = plan.includes(q);
+
+      return matchName || matchPhone || matchCode || matchDiet || matchPlan;
+    });
+  }, [members, searchQuery]);
+
+  // 2. Filter by Tab (Active / Inactive / Veg / Non-Veg)
+  const filteredMembers = useMemo(() => {
+    return membersMatchingSearch.filter((m) => {
+      const isVeg = isMemberVeg(m);
+      if (activeFilter === 'active') return m.status === 'active';
+      if (activeFilter === 'inactive') return m.status === 'inactive';
+      if (activeFilter === 'veg') return isVeg;
+      if (activeFilter === 'nonveg') return !isVeg;
+      return true;
+    });
+  }, [membersMatchingSearch, activeFilter]);
 
   const getPlanLabel = (plan: PlanType) => {
     switch (plan) {
@@ -107,18 +129,20 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
     }
   };
 
-  const formatMemberCode = (index: number) => {
-    return `#SBM-${String(index + 1).padStart(3, '0')}`;
-  };
-
   return (
     <div className="space-y-3.5">
-      {/* 1. Header Action Bar - Separate from Search */}
+      {/* 1. Header Action Row */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
             <Utensils className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" />
-            <span>सभासद यादी ({members.length} एकूण)</span>
+            <span>
+              सभासद यादी{' '}
+              <span className="text-brand-600 dark:text-brand-400 font-mono">
+                ({filteredMembers.length}
+                {searchQuery ? ` / ${members.length}` : ' एकूण'})
+              </span>
+            </span>
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
             नावावर क्लिक करून सविस्तर माहिती पाहा
@@ -149,8 +173,8 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
         </div>
       </div>
 
-      {/* 2. Independent Search Bar with Clear Button */}
-      <div className="bg-white dark:bg-slate-900 p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      {/* 2. Independent Search Bar */}
+      <div className="bg-white dark:bg-slate-900 p-2.5 sm:p-3 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
         <div className="relative flex items-center">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
           <input
@@ -160,8 +184,8 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
             onKeyDown={(e) => {
               if (e.key === 'Enter') e.preventDefault();
             }}
-            placeholder="सभासदाचे नाव किंवा मोबाइल नंबरने शोधा..."
-            className="w-full pl-9 pr-9 py-2 min-h-[40px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition font-medium"
+            placeholder="नाव, मोबाइल नंबर किंवा ID ने शोधा (उदा. Priya, 98902, 001)..."
+            className="w-full pl-9 pr-9 py-2 min-h-[42px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 transition font-medium"
           />
           {searchQuery && (
             <button
@@ -174,9 +198,29 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
             </button>
           )}
         </div>
+
+        {/* Live Search Status Notice */}
+        {searchQuery.trim() && (
+          <div className="flex items-center justify-between text-xs bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-medium">
+            <span>
+              🔍 &quot;<strong>{searchQuery}</strong>&quot; शोध परिणामामध्ये{' '}
+              <strong className="font-bold text-brand-600 dark:text-brand-400 font-mono">
+                {filteredMembers.length}
+              </strong>{' '}
+              सभासद सापडले
+            </span>
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="text-[11px] font-bold text-amber-800 dark:text-amber-300 underline underline-offset-2 hover:text-brand-600 cursor-pointer"
+            >
+              साफ करा (Clear)
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 3. Filter Tabs (Horizontal Scroll on Mobile) */}
+      {/* 3. Filter Tabs (Counts Dynamically Update with Search) */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
         <button
           type="button"
@@ -187,7 +231,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          {t('all')} ({members.length})
+          {t('all')} ({membersMatchingSearch.length})
         </button>
         <button
           type="button"
@@ -198,7 +242,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          {t('active')} ({members.filter((m) => m.status === 'active').length})
+          {t('active')} ({membersMatchingSearch.filter((m) => m.status === 'active').length})
         </button>
         <button
           type="button"
@@ -209,7 +253,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          🟢 व्हेज ({members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg').length})
+          🟢 व्हेज ({membersMatchingSearch.filter((m) => isMemberVeg(m)).length})
         </button>
         <button
           type="button"
@@ -220,7 +264,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          🔴 नॉन-व्हेज ({members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg').length})
+          🔴 नॉन-व्हेज ({membersMatchingSearch.filter((m) => !isMemberVeg(m)).length})
         </button>
         <button
           type="button"
@@ -231,23 +275,42 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          {t('inactive')} ({members.filter((m) => m.status === 'inactive').length})
+          {t('inactive')} ({membersMatchingSearch.filter((m) => m.status === 'inactive').length})
         </button>
       </div>
 
       {/* 4. Compact Member Grid (Only Name, ID No, and WhatsApp Button Visible by Default) */}
       {filteredMembers.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800">
-          <Utensils className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-          <p className="text-xs text-slate-500 font-medium">{t('noMembersFound')}</p>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800 space-y-3">
+          <Utensils className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto" />
+          <div>
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {searchQuery ? `"${searchQuery}" शोध परिणामामध्ये कोणताही सभासद सापडला नाही.` : 'कोणताही सभासद उपलब्ध नाही.'}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              कृपया नाव, फोन नंबर किंवा ID तपासा किंवा शोध साफ करा.
+            </p>
+          </div>
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>सर्व सभासद दाखवा (Reset)</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2.5 sm:gap-3">
-          {filteredMembers.map((member, idx) => {
-            const isVeg = (member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
-            const memberCode = formatMemberCode(members.indexOf(member));
+          {filteredMembers.map((member) => {
+            const isVeg = isMemberVeg(member);
+            const originalIndex = members.findIndex((m) => m.id === member.id);
+            const memberSeq = originalIndex >= 0 ? originalIndex + 1 : 1;
+            const memberCode = formatMemberCode(originalIndex >= 0 ? originalIndex : 0);
+            const memberBadgeId = `#${String(memberSeq).padStart(2, '0')}`;
             const isExpanded = expandedMemberId === member.id;
-            const waPhone = member.phone.replace(/[^0-9]/g, '');
             const waUrl = generateDirectWhatsAppUrl(
               member.phone,
               `🙏 *नमस्ते ${member.name}*,\nश्री बालाजी मेस (चालक: शंकर गिरी - ९८२२३३८९७५) कडून संदेश.`
@@ -264,27 +327,28 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                     : 'border-slate-200 dark:border-slate-800 opacity-65 bg-slate-50 dark:bg-slate-950/40'
                 }`}
               >
-                {/* Compact Row (Default View): Name, ID No, and WhatsApp Message Button */}
+                {/* Compact Row (Default View): ID No, Name, and WhatsApp Message Button */}
                 <div className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5">
-                  {/* Clickable Area on Member Name & ID Number to Expand Details */}
+                  {/* Clickable Area on Member ID & Name to Expand Details */}
                   <button
                     type="button"
                     onClick={() => setExpandedMemberId(isExpanded ? null : member.id)}
                     className="flex-1 min-w-0 text-left flex items-center gap-2.5 group cursor-pointer"
                     title="सविस्तर माहिती पाहण्यासाठी क्लिक करा"
                   >
-                    {/* Diet Indicator Dot / Avatar */}
+                    {/* Member ID Badge (Replaces first letter icon) */}
                     <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
+                      className={`min-w-[36px] h-9 px-1.5 rounded-xl flex items-center justify-center font-black font-mono text-xs shrink-0 tracking-tight ${
                         isVeg
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-400/30'
-                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-400/30'
+                          ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/90 dark:text-emerald-300 border border-emerald-400/40 shadow-xs'
+                          : 'bg-rose-100 text-rose-900 dark:bg-rose-950/90 dark:text-rose-300 border border-rose-400/40 shadow-xs'
                       }`}
+                      title={`सभासद क्रमांक: ${memberCode}`}
                     >
-                      {member.name.charAt(0)}
+                      {memberBadgeId}
                     </div>
 
-                    {/* Member Name and ID No */}
+                    {/* Member Name and Full Code */}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition truncate">
@@ -323,7 +387,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                     <button
                       type="button"
                       onClick={() => setExpandedMemberId(isExpanded ? null : member.id)}
-                      className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition"
+                      className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg transition cursor-pointer"
                       title={isExpanded ? 'तपशील बंद करा' : 'सविस्तर तपशील उघडा'}
                     >
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -447,8 +511,8 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
             <div className="p-6 space-y-4 text-xs overflow-y-auto">
               {/* Profile Card Header */}
               <div className="flex items-center gap-3 p-3.5 bg-slate-100 dark:bg-slate-800 rounded-2xl">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white text-lg font-black shadow-md shrink-0">
-                  {selectedMemberModal.name.charAt(0)}
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white text-base font-black font-mono shadow-md shrink-0">
+                  #{String(members.findIndex((m) => m.id === selectedMemberModal.id) + 1).padStart(2, '0')}
                 </div>
                 <div>
                   <h4 className="font-bold text-base text-slate-900 dark:text-white">
@@ -465,7 +529,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                 <div className="flex justify-between items-center py-2">
                   <span className="text-slate-500 font-medium">आहार प्रकार (Diet):</span>
                   <span className="font-bold text-sm">
-                    {(selectedMemberModal.dietPreference || (selectedMemberModal.gender === 'female' ? 'veg' : 'nonveg')) === 'veg'
+                    {isMemberVeg(selectedMemberModal)
                       ? '🟢 शाकाहारी (₹3,000)'
                       : '🔴 मांसाहारी (₹3,200)'}
                   </span>

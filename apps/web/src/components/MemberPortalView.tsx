@@ -96,8 +96,8 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
       {/* Member Profile Banner & Member Switcher */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white text-lg font-black shadow-md shrink-0">
-            {member.name.charAt(0)}
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-500 flex items-center justify-center text-white text-base font-black font-mono shadow-md shrink-0">
+            #{String(Math.max(1, allMembers.findIndex((m) => m.id === member.id) + 1)).padStart(2, '0')}
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
