@@ -15,11 +15,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#f97316',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ea580c' },
+    { media: '(prefers-color-scheme: dark)', color: '#090d16' },
+  ],
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

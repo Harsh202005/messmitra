@@ -43,8 +43,6 @@ import {
   QrCode,
   MessageSquare,
   FileSpreadsheet,
-  Smartphone,
-  Monitor,
 } from 'lucide-react';
 
 function DashboardContent() {
@@ -114,8 +112,6 @@ function DashboardContent() {
   const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
   const [isQrPosterOpen, setIsQrPosterOpen] = useState(false);
   const [isWhatsAppBroadcastOpen, setIsWhatsAppBroadcastOpen] = useState(false);
-  const [isMobileSimulatorActive, setIsMobileSimulatorActive] = useState(false);
-  const [simulatorWidth, setSimulatorWidth] = useState<'360' | '375' | '390'>('375');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -336,11 +332,11 @@ function DashboardContent() {
 
   const activeMemberBilling = billingData.cycles.find((c) => c.memberId === activeMember.id) || null;
 
-  const appContent = (
+  return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Toast Alert */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-emerald-400/30 text-xs font-bold animate-bounce">
+        <div className="fixed top-20 right-4 sm:right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-emerald-400/30 text-xs font-bold animate-bounce">
           <CheckCircle2 className="w-4 h-4" />
           <span>{toastMessage}</span>
         </div>
@@ -359,14 +355,12 @@ function DashboardContent() {
         onOpenBulkImport={() => setIsBulkImportOpen(true)}
         onOpenQrPoster={() => setIsQrPosterOpen(true)}
         onOpenWhatsAppBroadcast={() => setIsWhatsAppBroadcastOpen(true)}
-        onToggleMobileSimulator={() => setIsMobileSimulatorActive(!isMobileSimulatorActive)}
-        isMobileSimulator={isMobileSimulatorActive}
         pendingLeavesCount={leaves.filter((l) => l.status === 'pending_approval').length}
         pendingRegistrationsCount={registrations.filter((r) => r.status === 'pending_approval').length}
       />
 
-      {/* Main Container with bottom padding for mobile fixed navigation */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-12 space-y-6">
+      {/* Main Container with real mobile measures and safe area insets */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 space-y-4 sm:space-y-6">
         {/* ROLE 1: MEMBER PORTAL VIEW */}
         {role === 'member' && (
           <MemberPortalView
@@ -395,7 +389,7 @@ function DashboardContent() {
         {role === 'owner' && (
           <>
             {/* Owner Header / Quick Mess Info */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <div>
                 <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-semibold text-xs tracking-wider uppercase mb-1">
                   <Sparkles className="w-4 h-4" />
@@ -442,7 +436,7 @@ function DashboardContent() {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     onClick={() => setIsQrPosterOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-300 dark:border-amber-700 transition cursor-pointer min-h-[40px]"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-300 dark:border-amber-700 transition cursor-pointer min-h-[44px]"
                     title="टेबल किंवा नोटीस बोर्डासाठी QR कोड पोस्टर"
                   >
                     <QrCode className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -451,7 +445,7 @@ function DashboardContent() {
 
                   <button
                     onClick={() => setIsWhatsAppBroadcastOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-700 transition cursor-pointer min-h-[40px]"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-700 transition cursor-pointer min-h-[44px]"
                     title="सर्व सभासदांना WhatsApp मेसेज पाठवा"
                   >
                     <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -460,7 +454,7 @@ function DashboardContent() {
 
                   <button
                     onClick={() => setIsBulkImportOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold rounded-xl border border-blue-300 dark:border-blue-700 transition cursor-pointer min-h-[40px]"
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold rounded-xl border border-blue-300 dark:border-blue-700 transition cursor-pointer min-h-[44px]"
                     title="CSV / Excel फाईलवरून सभासद जोडा"
                   >
                     <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -472,7 +466,7 @@ function DashboardContent() {
 
             {/* TAB: MEMBERS */}
             {activeTab === 'members' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-4 sm:space-y-6 animate-fadeIn">
                 <DailyForecastCard
                   forecast={forecast}
                   cutoffTime={mess?.dailyCutoffTime}
@@ -502,7 +496,7 @@ function DashboardContent() {
 
             {/* TAB: LEAVES */}
             {activeTab === 'leaves' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div className="space-y-4 sm:space-y-6 animate-fadeIn">
                 <DailyForecastCard
                   forecast={forecast}
                   cutoffTime={mess?.dailyCutoffTime}
@@ -628,116 +622,6 @@ function DashboardContent() {
         mess={mess}
       />
     </div>
-  );
-
-  return (
-    <>
-      {isMobileSimulatorActive ? (
-        /* Mobile Simulator Shell Mode */
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-start py-4 px-2 select-none overflow-x-hidden">
-          {/* Top Simulator Control Bar */}
-          <header className="w-full max-w-4xl bg-slate-900/90 backdrop-blur border border-slate-800 rounded-2xl p-3 mb-4 flex flex-wrap items-center justify-between gap-3 shadow-2xl">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-brand-500/20 text-brand-400 flex items-center justify-center border border-brand-500/30">
-                <Smartphone className="w-5 h-5 animate-pulse" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <strong className="text-sm font-bold text-white">📱 मोबाईल व्ह्यू सिम्युलेटर (Mobile PWA Simulator)</strong>
-                  <span className="text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.2 rounded-full uppercase">
-                    Test Mode
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  Android PWA Baseline: 360px-390px • Bottom Navigation, Large Touch Buttons (≥44px), Stacked Cards
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Width Selector */}
-              <div className="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs">
-                <button
-                  onClick={() => setSimulatorWidth('360')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
-                    simulatorWidth === '360' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Galaxy (360px)
-                </button>
-                <button
-                  onClick={() => setSimulatorWidth('375')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
-                    simulatorWidth === '375' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Standard (375px)
-                </button>
-                <button
-                  onClick={() => setSimulatorWidth('390')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition cursor-pointer ${
-                    simulatorWidth === '390' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  iPhone (390px)
-                </button>
-              </div>
-
-              {/* Exit Button */}
-              <button
-                onClick={() => setIsMobileSimulatorActive(false)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer"
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span>Exit Mobile View</span>
-              </button>
-            </div>
-          </header>
-
-          {/* Physical Phone Mockup Container */}
-          <div
-            style={{
-              width: `${simulatorWidth === '360' ? 360 : simulatorWidth === '390' ? 390 : 375}px`,
-            }}
-            className="max-w-full h-[844px] max-h-[88vh] border-[10px] border-slate-900 rounded-[48px] shadow-[0_25px_80px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 relative ring-2 ring-slate-800"
-          >
-            {/* Phone Top Notch Bar */}
-            <div className="bg-slate-900 h-6 shrink-0 flex items-center justify-between px-6 text-[10px] text-white/70 select-none z-50">
-              <span className="font-bold">9:41</span>
-              <div className="w-20 h-3.5 bg-black rounded-full mx-auto" />
-              <span className="flex items-center gap-1 font-mono">5G 🔋</span>
-            </div>
-
-            {/* Scrollable Mobile App Container */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col">
-              {appContent}
-            </div>
-
-            {/* Phone Bottom Home Swipe Bar */}
-            <div className="bg-white dark:bg-slate-900 py-1 flex justify-center shrink-0 border-t border-slate-200 dark:border-slate-800">
-              <div className="w-28 h-1 bg-slate-400 dark:bg-slate-600 rounded-full" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Regular View */
-        <>
-          {appContent}
-
-          {/* Floating Mobile View Test Button (Can be removed later) */}
-          <div className="hidden md:flex fixed bottom-6 right-6 z-50">
-            <button
-              onClick={() => setIsMobileSimulatorActive(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 hover:to-amber-500 text-white font-extrabold text-xs rounded-full shadow-2xl shadow-brand-500/40 border border-white/20 transition-all transform hover:scale-105 cursor-pointer min-h-[44px]"
-              title="मोबाईल स्क्रीन व्ह्यू टेस्ट सिम्युलेटर सुरू करा"
-            >
-              <Smartphone className="w-4 h-4 animate-bounce" />
-              <span>📱 मोबाईल व्ह्यू टेस्ट (Mobile Frame)</span>
-            </button>
-          </div>
-        </>
-      )}
-    </>
   );
 }
 
