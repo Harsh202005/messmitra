@@ -31,8 +31,11 @@ import { LoginModal } from '../components/LoginModal';
 import { MessSetupWizardModal } from '../components/MessSetupWizardModal';
 import { AddEditMemberModal } from '../components/AddEditMemberModal';
 import { CloudDatabaseSyncModal } from '../components/CloudDatabaseSyncModal';
+import { BulkMemberImportModal } from '../components/BulkMemberImportModal';
+import { MessNoticeBoardQrModal } from '../components/MessNoticeBoardQrModal';
+import { WhatsAppBroadcastModal } from '../components/WhatsAppBroadcastModal';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
-import { CheckCircle2, Sparkles, IndianRupee, Users } from 'lucide-react';
+import { CheckCircle2, Sparkles, IndianRupee, Users, QrCode, MessageSquare, FileSpreadsheet } from 'lucide-react';
 
 function DashboardContent() {
   const { t } = useI18n();
@@ -98,6 +101,9 @@ function DashboardContent() {
   const [isSetupWizardOpen, setIsSetupWizardOpen] = useState(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isQrPosterOpen, setIsQrPosterOpen] = useState(false);
+  const [isWhatsAppBroadcastOpen, setIsWhatsAppBroadcastOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -338,10 +344,15 @@ function DashboardContent() {
         onOpenSettings={() => setIsSetupWizardOpen(true)}
         onOpenCloudSync={() => setIsCloudSyncOpen(true)}
         onOpenLogin={() => setIsLoginModalOpen(true)}
+        onOpenBulkImport={() => setIsBulkImportOpen(true)}
+        onOpenQrPoster={() => setIsQrPosterOpen(true)}
+        onOpenWhatsAppBroadcast={() => setIsWhatsAppBroadcastOpen(true)}
+        pendingLeavesCount={leaves.filter((l) => l.status === 'pending_approval').length}
+        pendingRegistrationsCount={registrations.filter((r) => r.status === 'pending_approval').length}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      {/* Main Container with bottom padding for mobile fixed navigation */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-28 md:pb-12 space-y-6">
         {/* ROLE 1: MEMBER PORTAL VIEW */}
         {role === 'member' && (
           <MemberPortalView
@@ -370,7 +381,7 @@ function DashboardContent() {
         {role === 'owner' && (
           <>
             {/* Owner Header / Quick Mess Info */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
               <div>
                 <div className="flex items-center gap-2 text-brand-600 dark:text-brand-400 font-semibold text-xs tracking-wider uppercase mb-1">
                   <Sparkles className="w-4 h-4" />
@@ -388,26 +399,59 @@ function DashboardContent() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 overflow-x-auto">
-                <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[130px]">
-                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
-                    <IndianRupee className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>जमा फी ({selectedMonth})</span>
+              {/* Owner Stats & Quick Action Tools */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <div className="bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[120px]">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
+                      <IndianRupee className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>जमा फी ({selectedMonth})</span>
+                    </div>
+                    <div className="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                      ₹{pnlData.totalDuesCollected.toLocaleString('en-IN')}
+                    </div>
                   </div>
-                  <div className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                    ₹{pnlData.totalDuesCollected.toLocaleString('en-IN')}
+
+                  <div className="bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[110px]">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
+                      <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                      <span>सक्रिय सभासद</span>
+                    </div>
+                    <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
+                      {members.filter((m) => m.status === 'active').length}{' '}
+                      <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ {members.length}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 dark:bg-slate-800/80 px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[120px]">
-                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[11px]">
-                    <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                    <span>सक्रिय सभासद</span>
-                  </div>
-                  <div className="text-lg font-extrabold text-slate-900 dark:text-white">
-                    {members.filter((m) => m.status === 'active').length}{' '}
-                    <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/ {members.length}</span>
-                  </div>
+                {/* Quick Shortcut Buttons */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => setIsQrPosterOpen(true)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-300 dark:border-amber-700 transition cursor-pointer min-h-[40px]"
+                    title="टेबल किंवा नोटीस बोर्डासाठी QR कोड पोस्टर"
+                  >
+                    <QrCode className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span>QR पोस्टर</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsWhatsAppBroadcastOpen(true)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-900 dark:text-emerald-200 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-700 transition cursor-pointer min-h-[40px]"
+                    title="सर्व सभासदांना WhatsApp मेसेज पाठवा"
+                  >
+                    <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span>ब्रॉडकास्ट</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsBulkImportOpen(true)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-900 dark:text-blue-200 text-xs font-bold rounded-xl border border-blue-300 dark:border-blue-700 transition cursor-pointer min-h-[40px]"
+                    title="CSV / Excel फाईलवरून सभासद जोडा"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Excel इंपोर्ट</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -544,6 +588,30 @@ function DashboardContent() {
         member={selectedMember}
         mess={mess}
         onSave={handleSaveMember}
+      />
+
+      <BulkMemberImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        messId={mess?.id || 'balaji-mess-pune'}
+        onMembersImported={() => {
+          showToast('सर्व सभासद यशस्वीरित्या जोडले गेले! 🎉');
+          loadAllData();
+        }}
+      />
+
+      <MessNoticeBoardQrModal
+        isOpen={isQrPosterOpen}
+        onClose={() => setIsQrPosterOpen(false)}
+        mess={mess}
+      />
+
+      <WhatsAppBroadcastModal
+        isOpen={isWhatsAppBroadcastOpen}
+        onClose={() => setIsWhatsAppBroadcastOpen(false)}
+        members={members}
+        billingCycles={billingData.cycles}
+        mess={mess}
       />
     </div>
   );

@@ -40,7 +40,7 @@ export function notifyDataChanged() {
     window.dispatchEvent(new CustomEvent('messmitra_data_changed'));
     try {
       localStorage.setItem('messmitra_last_sync', Date.now().toString());
-    } catch {}
+    } catch { }
   }
 }
 
@@ -356,7 +356,7 @@ export const MessMitraApi = {
         headers: { Authorization: 'Bearer demo-owner-token' },
       });
       if (res.ok) return await res.json();
-    } catch {}
+    } catch { }
 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_mess');
@@ -451,7 +451,7 @@ export const MessMitraApi = {
         body: JSON.stringify(dto),
       });
       if (res.ok) return await res.json();
-    } catch {}
+    } catch { }
 
     const updated = { ...DEFAULT_MESS, ...dto };
     if (typeof window !== 'undefined') {
@@ -505,7 +505,7 @@ export const MessMitraApi = {
         headers: { Authorization: 'Bearer demo-owner-token' },
       });
       if (res.ok) return await res.json();
-    } catch {}
+    } catch { }
 
     let members = DEFAULT_MEMBERS;
     if (typeof window !== 'undefined') {
@@ -653,6 +653,61 @@ export const MessMitraApi = {
 
   async toggleMemberStatus(id: string, newStatus: MemberStatus): Promise<Member> {
     return this.updateMember(id, { status: newStatus });
+  },
+
+  async createMembersBulk(membersList: Omit<Member, 'id' | 'createdAt' | 'messId'>[]): Promise<Member[]> {
+    const created: Member[] = [];
+    for (const m of membersList) {
+      const res = await this.createMember(m);
+      created.push(res);
+    }
+    notifyDataChanged();
+    return created;
+  },
+
+  async clearDemoData(): Promise<void> {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_members', JSON.stringify([]));
+      localStorage.setItem('messmitra_leaves', JSON.stringify([]));
+      localStorage.setItem('messmitra_expenses_recurring', JSON.stringify([]));
+      localStorage.setItem('messmitra_expenses_oneoff', JSON.stringify([]));
+      localStorage.setItem('messmitra_staff', JSON.stringify([]));
+      localStorage.setItem('messmitra_registrations', JSON.stringify([]));
+      localStorage.setItem('messmitra_payments', JSON.stringify([]));
+    }
+    notifyDataChanged();
+  },
+
+  async exportFullBackup(): Promise<string> {
+    const backup = {
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      mess: await this.getCurrentMess(),
+      members: await this.getMembers(),
+      leaves: await this.getLeaves(),
+      recurringExpenses: await this.getRecurringExpenses(),
+      staff: await this.getStaff(),
+      registrations: await this.getPendingRegistrations(),
+    };
+    return JSON.stringify(backup, null, 2);
+  },
+
+  async restoreFullBackup(jsonData: string): Promise<boolean> {
+    try {
+      const parsed = JSON.parse(jsonData);
+      if (typeof window !== 'undefined') {
+        if (parsed.mess) localStorage.setItem('messmitra_mess', JSON.stringify(parsed.mess));
+        if (parsed.members) localStorage.setItem('messmitra_members', JSON.stringify(parsed.members));
+        if (parsed.leaves) localStorage.setItem('messmitra_leaves', JSON.stringify(parsed.leaves));
+        if (parsed.recurringExpenses) localStorage.setItem('messmitra_expenses_recurring', JSON.stringify(parsed.recurringExpenses));
+        if (parsed.staff) localStorage.setItem('messmitra_staff', JSON.stringify(parsed.staff));
+        if (parsed.registrations) localStorage.setItem('messmitra_registrations', JSON.stringify(parsed.registrations));
+      }
+      notifyDataChanged();
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   // -------------------------------------------------------------

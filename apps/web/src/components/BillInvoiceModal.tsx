@@ -19,41 +19,49 @@ import {
 interface BillInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  cycle: BillingCycle | null;
+  cycle?: BillingCycle | null;
+  billingCycle?: BillingCycle | null;
   mess: Mess | null;
-  member: Member | null;
+  member?: Member | null;
 }
 
 export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
   isOpen,
   onClose,
   cycle,
+  billingCycle,
   mess,
   member,
 }) => {
   const { t } = useI18n();
+  const currentCycle = cycle || billingCycle;
 
-  if (!isOpen || !cycle) return null;
+  if (!isOpen || !currentCycle) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
-  const outstanding = Math.max(0, cycle.amountDue - cycle.amountPaid);
+  const outstanding = Math.max(0, currentCycle.amountDue - currentCycle.amountPaid);
   const waLink = generateWhatsAppReminderLink(
-    cycle.memberPhone || '9822338975',
-    cycle.memberName || 'Member',
+    currentCycle.memberPhone || '9822338975',
+    currentCycle.memberName || 'Member',
     mess?.name || 'श्री बालाजी मेस',
     outstanding,
     mess?.upiId || '9822338975@upi',
-    cycle.month,
-    cycle.approvedLeaveDays
+    currentCycle.month,
+    currentCycle.approvedLeaveDays
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       {/* Modal Card */}
-      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col">
+      <div className="relative w-full sm:max-w-2xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col">
+        {/* Mobile Drag Handle */}
+        <div className="sm:hidden pt-3 pb-1 flex justify-center bg-slate-50 dark:bg-slate-900">
+          <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+        </div>
+
         {/* Modal Controls Header (Hidden on Print) */}
         <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2">
@@ -107,9 +115,9 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
 
             <div className="text-left sm:text-right text-xs text-slate-600 space-y-1">
               <span className="inline-block px-2.5 py-1 bg-slate-100 text-slate-800 rounded font-bold uppercase tracking-wider text-[11px]">
-                पावती क्र. #INV-{cycle.month.replace('-', '')}-{cycle.id.substring(cycle.id.length - 4)}
+                पावती क्र. #INV-{currentCycle.month.replace('-', '')}-{currentCycle.id.substring(currentCycle.id.length - 4)}
               </span>
-              <p className="text-slate-500 font-mono">महिना: <strong>{cycle.month}</strong></p>
+              <p className="text-slate-500 font-mono">महिना: <strong>{currentCycle.month}</strong></p>
               <p className="text-slate-500 font-mono">दिनांक: {new Date().toLocaleDateString()}</p>
             </div>
           </div>
@@ -118,11 +126,11 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
               <span className="text-slate-500 block text-[11px]">सभासदाचे नाव (Member Name)</span>
-              <strong className="text-sm text-slate-900">{cycle.memberName}</strong>
+              <strong className="text-sm text-slate-900">{currentCycle.memberName}</strong>
             </div>
             <div>
               <span className="text-slate-500 block text-[11px]">संपर्क फोन (Phone)</span>
-              <span className="font-mono text-slate-900">{cycle.memberPhone || '-'}</span>
+              <span className="font-mono text-slate-900">{currentCycle.memberPhone || '-'}</span>
             </div>
           </div>
 
@@ -143,22 +151,22 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
                   <td className="p-3 font-sans font-medium">
                     मासिक नियमित जेवण (Monthly Subscription Base)
                   </td>
-                  <td className="p-3 text-center">{cycle.baseMeals} जेवण</td>
-                  <td className="p-3 text-right">₹{cycle.rate}</td>
-                  <td className="p-3 text-right font-bold">₹{cycle.rate}</td>
+                  <td className="p-3 text-center">{currentCycle.baseMeals} जेवण</td>
+                  <td className="p-3 text-right">₹{currentCycle.rate}</td>
+                  <td className="p-3 text-right font-bold">₹{currentCycle.rate}</td>
                 </tr>
 
                 {/* Line 2: Approved Leaves Deduction */}
-                {cycle.approvedLeaveDays > 0 ? (
+                {currentCycle.approvedLeaveDays > 0 ? (
                   <tr className="text-emerald-700 bg-emerald-50/50">
                     <td className="p-3 font-sans font-medium flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       मंजूर सुट्टी वजावट (Approved Leaves Deduction)
                     </td>
-                    <td className="p-3 text-center">{cycle.approvedLeaveDays} दिवस ({cycle.approvedLeaveDays * 2} जेवण)</td>
-                    <td className="p-3 text-right">-₹{Math.round(cycle.perMealRate || 57.14)}/meal</td>
+                    <td className="p-3 text-center">{currentCycle.approvedLeaveDays} दिवस ({currentCycle.approvedLeaveDays * 2} जेवण)</td>
+                    <td className="p-3 text-right">-₹{Math.round(currentCycle.perMealRate || 57.14)}/meal</td>
                     <td className="p-3 text-right font-bold">
-                      -₹{Math.round((cycle.approvedLeaveDays || 0) * 2 * (cycle.perMealRate || 57.14))}
+                      -₹{Math.round((currentCycle.approvedLeaveDays || 0) * 2 * (currentCycle.perMealRate || 57.14))}
                     </td>
                   </tr>
                 ) : (
@@ -180,7 +188,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
               <UpiQrCode
                 upiId={mess?.upiId || 'balajimess@okhdfcbank'}
                 name={mess?.name || 'Mess'}
-                amount={outstanding > 0 ? outstanding : cycle.amountDue}
+                amount={outstanding > 0 ? outstanding : currentCycle.amountDue}
                 size={140}
               />
             </div>
@@ -189,11 +197,11 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
             <div className="space-y-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <div className="flex justify-between text-slate-600">
                 <span>एकूण आकारलेली रक्कम (Total Due):</span>
-                <span className="font-mono font-bold text-slate-900">₹{cycle.amountDue}</span>
+                <span className="font-mono font-bold text-slate-900">₹{currentCycle.amountDue}</span>
               </div>
               <div className="flex justify-between text-emerald-700">
                 <span>भरलेली रक्कम (Amount Paid):</span>
-                <span className="font-mono font-bold">₹{cycle.amountPaid}</span>
+                <span className="font-mono font-bold">₹{currentCycle.amountPaid}</span>
               </div>
               <div className="flex justify-between text-sm font-black pt-2 border-t-2 border-slate-300 text-slate-900">
                 <span>बाकी देय रक्कम (Balance Due):</span>
@@ -204,7 +212,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
               <div className="pt-2 text-center text-[10px] text-slate-500">
                 स्थिती:{' '}
                 <strong className="uppercase">
-                  {cycle.status === 'paid' ? 'Paid in Full ✅' : cycle.status === 'partially_paid' ? 'Partially Paid' : 'Pending'}
+                  {currentCycle.status === 'paid' ? 'Paid in Full ✅' : currentCycle.status === 'partially_paid' ? 'Partially Paid' : 'Pending'}
                 </strong>
               </div>
             </div>

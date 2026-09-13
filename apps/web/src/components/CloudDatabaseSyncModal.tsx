@@ -117,8 +117,13 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full sm:max-w-xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col">
+        {/* Mobile Drag Handle */}
+        <div className="sm:hidden pt-3 pb-1 flex justify-center bg-gradient-to-r from-brand-600 to-amber-600">
+          <div className="w-12 h-1.5 rounded-full bg-white/40" />
+        </div>
+
         {/* Toast */}
         {toast && (
           <div className="absolute top-4 right-4 z-50 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg animate-bounce">
@@ -127,7 +132,7 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
         )}
 
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-brand-600 to-amber-600 p-6 text-white flex items-center justify-between">
+        <div className="bg-gradient-to-r from-brand-600 to-amber-600 p-5 sm:p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center backdrop-blur">
               <Database className="w-5 h-5" />
@@ -147,7 +152,7 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 space-y-5 text-xs">
+        <div className="p-6 space-y-5 text-xs overflow-y-auto">
           {/* Free Supabase Cloud Callout */}
           <div className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
             <div className="flex items-center justify-between">

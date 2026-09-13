@@ -91,9 +91,9 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
       </div>
 
       {/* Main KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 my-4 sm:my-5">
         {/* Total Active */}
-        <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-slate-200 dark:border-slate-700/50">
+        <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur rounded-2xl p-3.5 sm:p-4 border border-slate-200 dark:border-slate-700/50">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
             <span className="text-xs font-medium">{t('activeMembers')}</span>
             <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -105,7 +105,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
         </div>
 
         {/* Members on Approved Leave */}
-        <div className="bg-amber-50/70 dark:bg-slate-800/50 backdrop-blur rounded-xl p-4 border border-amber-200 dark:border-slate-700/50">
+        <div className="bg-amber-50/70 dark:bg-slate-800/50 backdrop-blur rounded-2xl p-3.5 sm:p-4 border border-amber-200 dark:border-slate-700/50">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
             <span className="text-xs font-medium">{t('membersOnLeave')}</span>
             <UserX className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -117,7 +117,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
         </div>
 
         {/* Cook For (Net Count) */}
-        <div className="bg-gradient-to-br from-brand-50 to-amber-100/70 dark:from-brand-950/60 dark:to-brand-900/40 rounded-xl p-4 border border-brand-300 dark:border-brand-500/40 relative">
+        <div className="bg-gradient-to-br from-brand-50 to-amber-100/70 dark:from-brand-950/60 dark:to-brand-900/40 rounded-2xl p-4 border border-brand-300 dark:border-brand-500/40 relative">
           <div className="flex items-center justify-between text-brand-800 dark:text-brand-300 mb-1">
             <span className="text-xs font-bold uppercase tracking-wider">{t('cookFor')}</span>
             <ChefHat className="w-5 h-5 text-brand-600 dark:text-brand-400 animate-pulse" />
@@ -129,25 +129,33 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
         </div>
       </div>
 
-      {/* Meal breakdown pills & Veg/Non-Veg split */}
-      <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-150 dark:border-slate-800/80 text-xs">
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-          <Sun className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <span className="text-slate-600 dark:text-slate-300">{t('lunchCount')}:</span>
-          <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.lunchCount}</strong>
+      {/* Meal breakdown pills & Veg/Non-Veg split - 2 cols on phone, flex wrap on tablet/desktop */}
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-slate-150 dark:border-slate-800/80 text-xs">
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
+          <Sun className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <div className="truncate">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] block leading-tight">{t('lunchCount')}</span>
+            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.lunchCount}</strong>
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-          <Moon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          <span className="text-slate-600 dark:text-slate-300">{t('dinnerCount')}:</span>
-          <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.dinnerCount}</strong>
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
+          <Moon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+          <div className="truncate">
+            <span className="text-slate-500 dark:text-slate-400 text-[10px] block leading-tight">{t('dinnerCount')}</span>
+            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.dinnerCount}</strong>
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold">
-          <span>🟢 शाकाहारी (Veg):</span>
-          <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.vegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold">
+          <div className="truncate">
+            <span className="text-emerald-700 dark:text-emerald-400 text-[10px] block leading-tight">🟢 शाकाहारी</span>
+            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.vegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+          </div>
         </div>
-        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 px-3 py-1.5 rounded-lg border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300 font-semibold">
-          <span>🔴 मांसाहारी (Non-Veg):</span>
-          <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.nonVegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300 font-semibold">
+          <div className="truncate">
+            <span className="text-rose-700 dark:text-rose-400 text-[10px] block leading-tight">🔴 मांसाहारी</span>
+            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.nonVegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+          </div>
         </div>
       </div>
     </div>

@@ -120,28 +120,28 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
       </div>
 
       {/* Main Big Counters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Net Heads Cook For */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-100/70 dark:from-emerald-950 dark:to-slate-900 rounded-3xl p-5 border border-emerald-300 dark:border-emerald-500/60 shadow-sm flex flex-col justify-between">
+        <div className="col-span-2 sm:col-span-1 relative overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-100/70 dark:from-emerald-950 dark:to-slate-900 rounded-3xl p-4 sm:p-5 border border-emerald-300 dark:border-emerald-500/60 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">एकूण जेवण</span>
-            <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
-              <ChefHat className="w-5 h-5 animate-pulse" />
+            <div className="p-1.5 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+              <ChefHat className="w-4 h-4 animate-pulse" />
             </div>
           </div>
           <div>
             <div className="text-3xl sm:text-4xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight font-mono">
               {forecast.cookForCount}
             </div>
-            <span className="text-[11px] text-emerald-800/80 dark:text-emerald-200/80 mt-1 block font-medium">निव्वळ ताटे</span>
+            <span className="text-[11px] text-emerald-800/80 dark:text-emerald-200/80 mt-0.5 block font-medium">निव्वळ ताटे</span>
           </div>
         </div>
 
         {/* 🟢 Veg Count */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-emerald-300 dark:border-emerald-500/40 shadow-sm flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-emerald-300 dark:border-emerald-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">🟢 शाकाहारी</span>
-            <div className="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-bold text-xs">
+            <div className="px-1.5 py-0.2 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 font-bold text-[10px]">
               व्हेज
             </div>
           </div>
@@ -149,15 +149,15 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-300 tracking-tight font-mono">
               {vegCookCount}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">शाकाहारी ताटे</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">शाकाहारी ताटे</span>
           </div>
         </div>
 
         {/* 🔴 Non-Veg Count */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-rose-300 dark:border-rose-500/40 shadow-sm flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-rose-300 dark:border-rose-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-rose-700 dark:text-rose-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">🔴 मांसाहारी</span>
-            <div className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 font-bold text-xs">
+            <div className="px-1.5 py-0.2 rounded-lg bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 font-bold text-[10px]">
               नॉनव्हेज
             </div>
           </div>
@@ -165,55 +165,55 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             <div className="text-3xl sm:text-4xl font-black text-rose-600 dark:text-rose-300 tracking-tight font-mono">
               {nonVegCookCount}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">मांसाहारी ताटे</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">मांसाहारी ताटे</span>
           </div>
         </div>
 
         {/* Lunch Count */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-amber-300 dark:border-amber-500/40 shadow-sm flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-amber-300 dark:border-amber-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-amber-700 dark:text-amber-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">दुपारचे (Lunch)</span>
-            <div className="p-2 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30">
-              <Sun className="w-5 h-5 animate-spin-slow" />
+            <div className="p-1.5 rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30">
+              <Sun className="w-4 h-4 animate-spin-slow" />
             </div>
           </div>
           <div>
             <div className="text-3xl sm:text-4xl font-black text-amber-600 dark:text-amber-300 tracking-tight font-mono">
               {forecast.lunchCount}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">दुपारची ताटे</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">दुपारची ताटे</span>
           </div>
         </div>
 
         {/* Dinner Count */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-indigo-300 dark:border-indigo-500/40 shadow-sm flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-indigo-300 dark:border-indigo-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-indigo-700 dark:text-indigo-400 mb-2">
             <span className="text-[11px] font-bold uppercase tracking-wider">रात्रीचे (Dinner)</span>
-            <div className="p-2 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/30">
-              <Moon className="w-5 h-5" />
+            <div className="p-1.5 rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/30">
+              <Moon className="w-4 h-4" />
             </div>
           </div>
           <div>
             <div className="text-3xl sm:text-4xl font-black text-indigo-600 dark:text-indigo-300 tracking-tight font-mono">
               {forecast.dinnerCount}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">रात्रीची ताटे</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">रात्रीची ताटे</span>
           </div>
         </div>
 
         {/* Members on Leave */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-5 border border-rose-300 dark:border-rose-500/30 shadow-sm flex flex-col justify-between">
+        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-rose-300 dark:border-rose-500/30 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-rose-700 dark:text-rose-400 mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider">सुट्टीवर (Leave)</span>
-            <div className="p-2 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30">
-              <UserX className="w-5 h-5" />
+            <span className="text-[11px] font-bold uppercase tracking-wider">सुट्टीवर</span>
+            <div className="p-1.5 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30">
+              <UserX className="w-4 h-4" />
             </div>
           </div>
           <div>
             <div className="text-3xl sm:text-4xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono">
               {forecast.membersOnLeave}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block font-medium">आज जेवणार नाहीत</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">आज गैरहजर</span>
           </div>
         </div>
       </div>

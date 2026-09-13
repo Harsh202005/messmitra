@@ -96,7 +96,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
       setRegSuccessMsg(
         `नोंदणी यशस्वी झाली! मेस चालक (शंकर गिरी - ९८२२३३८९७५) यांच्या मंजुरीनंतर तुमचे खाते सक्रिय होईल.`
       );
-      // Reset registration form
       setRegName('');
       setRegPhone('');
       setRegPassword('');
@@ -128,16 +127,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full sm:max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100 max-h-[92vh] flex flex-col">
+        <div className="sm:hidden w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mt-3" />
+
         {/* Header */}
-        <div className="relative px-6 pt-5 pb-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-amber-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="relative px-6 pt-4 pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-brand-600 to-amber-600 flex items-center justify-center text-white shadow-md shrink-0">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <span>श्री बालाजी मेस • {activeMode === 'login' ? 'लॉगिन' : 'नवीन नोंदणी'}</span>
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -148,14 +149,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tab Toggle: Login vs Register */}
-        <div className="p-6 pb-0">
+        <div className="px-6 pt-4 pb-0">
           <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
             <button
               type="button"
@@ -164,13 +165,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 setErrorMsg(null);
                 setRegSuccessMsg(null);
               }}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`min-h-[44px] py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeMode === 'login'
                   ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <LogIn className="w-3.5 h-3.5" />
+              <LogIn className="w-4 h-4" />
               <span>लॉगिन करा (Login)</span>
             </button>
             <button
@@ -180,19 +181,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 setErrorMsg(null);
                 setRegSuccessMsg(null);
               }}
-              className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`min-h-[44px] py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                 activeMode === 'register'
                   ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
-              <UserPlus className="w-3.5 h-3.5" />
+              <UserPlus className="w-4 h-4" />
               <span>नवीन नोंदणी (Register)</span>
             </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-5 overflow-y-auto">
+        <div className="p-6 space-y-4 overflow-y-auto">
           {/* Success Message Banner */}
           {regSuccessMsg && (
             <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 rounded-2xl text-emerald-800 dark:text-emerald-200 text-xs space-y-2">
@@ -207,7 +208,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 href="https://wa.me/919822338975?text=Namaste%20Shankar%20Giri%20ji,%20I%20have%20submitted%20my%20registration%20on%20Shree%20Balaji%20Mess%20app.%20Please%20approve%20my%20account."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[11px] font-bold shadow transition"
+                className="min-h-[40px] inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow transition"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
                 <span>शंकर गिरी यांना WhatsApp करा (९८२२३३८९७५)</span>
@@ -225,40 +226,38 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
           {/* TAB 1: LOGIN MODE */}
           {activeMode === 'login' && (
-            <div className="space-y-5 animate-fadeIn">
+            <div className="space-y-4 animate-fadeIn">
               {/* Quick Demo Persona Chips */}
               <div>
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>१-क्लिक चाचणी खाती (Quick Demo Roles):</span>
-                  </span>
-                </div>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span>१-क्लिक चाचणी खाती (Quick Demo Roles):</span>
+                </span>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {DEMO_CREDENTIALS.map((demo) => (
                     <button
                       key={demo.role}
                       type="button"
                       onClick={() => handleQuickLogin(demo)}
-                      className="group text-left p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700/80 hover:border-brand-500/60 transition shadow-sm hover:shadow-md flex flex-col justify-between gap-1.5 cursor-pointer"
+                      className="min-h-[56px] text-left p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 border border-slate-200 dark:border-slate-700/80 transition shadow-sm flex items-center justify-between gap-2 cursor-pointer"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="p-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shrink-0">
                           {getRoleIcon(demo.role)}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${demo.badgeColor}`}>
-                          {demo.role.toUpperCase()}
-                        </span>
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                            {demo.title.split('(')[0]}
+                          </h4>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {demo.subtitle}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition">
-                          {demo.title.split('(')[0]}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                          {demo.subtitle}
-                        </p>
-                      </div>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 border ${demo.badgeColor}`}>
+                        {demo.role.toUpperCase()}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -266,70 +265,62 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
               <div className="relative flex py-1 items-center">
                 <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
-                <span className="flex-shrink mx-4 text-slate-400 dark:text-slate-500 text-[11px] uppercase tracking-wider font-semibold">
-                  किंवा आयडी पासवर्डने लॉगिन करा (Or Login with ID)
+                <span className="flex-shrink mx-3 text-slate-400 text-[10px] uppercase font-bold">
+                  किंवा आयडीने लॉगिन करा
                 </span>
                 <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
               </div>
 
               {/* Login Form */}
-              <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    ईमेल किंवा युझरनेम (Email / Username ID) *
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    ईमेल किंवा मोबाइल नंबर *
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                     <input
                       type="text"
                       required
-                      placeholder="उदा. owner@balajimess.com किंवा rahul@messmitra.com"
+                      placeholder="उदा. owner@balajimess.com किंवा 9822338975"
                       value={usernameOrEmail}
                       onChange={(e) => setUsernameOrEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                      className="w-full pl-10 pr-4 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    पासवर्ड (Password) *
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    पासवर्ड *
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
-                    </div>
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="Demo: password123"
+                      placeholder="पासवर्ड टाका"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 dark:bg-slate-800/90 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition font-mono"
+                      className="w-full pl-10 pr-10 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    चाचणी पासवर्ड: <code className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-brand-600 dark:text-brand-300 font-mono font-bold">password123</code>
-                  </span>
-
+                <div className="pt-1">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 hover:to-amber-500 text-white text-xs font-bold shadow-lg shadow-brand-500/20 transition disabled:opacity-50 cursor-pointer"
+                    className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <span>{isSubmitting ? 'तपासत आहे...' : 'लॉगिन करा (Login)'}</span>
+                    <span>{isSubmitting ? 'लॉगिन होत आहे...' : 'लॉगिन करा (Sign In)'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -337,168 +328,174 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
             </div>
           )}
 
-          {/* TAB 2: SELF-REGISTRATION MODE */}
+          {/* TAB 2: REGISTER MODE */}
           {activeMode === 'register' && (
-            <div className="space-y-4 animate-fadeIn">
-              {/* Role Selection */}
+            <form onSubmit={handleRegisterSubmit} className="space-y-3.5 animate-fadeIn">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  तुम्ही कोण म्हणून नोंदणी करत आहात? (Register As) *
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  नोंदणी प्रकार (I am registering as):
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setRegisterRole('member')}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`min-h-[44px] rounded-xl font-bold flex items-center justify-center gap-1.5 border transition cursor-pointer text-xs ${
                       registerRole === 'member'
-                        ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <User className="w-4 h-4" />
-                    <span>👨‍🎓 सभासद (Member)</span>
+                    <span>मेस सभासद (Member)</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setRegisterRole('staff')}
-                    className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    className={`min-h-[44px] rounded-xl font-bold flex items-center justify-center gap-1.5 border transition cursor-pointer text-xs ${
                       registerRole === 'staff'
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
-                        : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     <ChefHat className="w-4 h-4" />
-                    <span>👨‍🍳 आचारी (Cook / Maharaj)</span>
+                    <span>आचारी / कर्मचारी (Cook)</span>
                   </button>
                 </div>
               </div>
 
-              {/* Registration Form */}
-              <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    पूर्ण नाव (Full Name) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="उदा. अनिकेत पवार"
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  पूर्ण नाव *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="उदा. अमित जोशी"
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    मोबाईल नंबर (Phone Number) *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98901 12345"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  मोबाइल नंबर (WhatsApp) *
+                </label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  required
+                  placeholder="उदा. 9822338975"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
+                  className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none"
+                />
+              </div>
 
-                {/* Member Specific Fields */}
-                {registerRole === 'member' && (
-                  <>
+              {registerRole === 'member' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      आहार प्रकार *
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          आहार प्रकार (Diet) *
-                        </label>
-                        <select
-                          value={regDiet}
-                          onChange={(e) => setRegDiet(e.target.value as DietPreference)}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold"
-                        >
-                          <option value="veg">🟢 शाकाहारी (₹3,000 / 56 जेवण)</option>
-                          <option value="nonveg">🔴 मांसाहारी (₹3,200 / 56 जेवण)</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          प्लॅन (Plan Type) *
-                        </label>
-                        <select
-                          value={regPlan}
-                          onChange={(e) => setRegPlan(e.target.value as PlanType)}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold"
-                        >
-                          <option value="both">दोन्ही वेळ (दुपार + रात्र)</option>
-                          <option value="lunch">फक्त दुपारचे जेवण</option>
-                          <option value="dinner">फक्त रात्रीचे जेवण</option>
-                        </select>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setRegDiet('veg')}
+                        className={`min-h-[44px] rounded-xl font-bold border transition text-xs ${
+                          regDiet === 'veg'
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        🟢 शाकाहारी (₹3,000)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRegDiet('nonveg')}
+                        className={`min-h-[44px] rounded-xl font-bold border transition text-xs ${
+                          regDiet === 'nonveg'
+                            ? 'bg-rose-600 text-white border-rose-600'
+                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        🔴 मांसाहारी (₹3,200)
+                      </button>
                     </div>
-                  </>
-                )}
+                  </div>
 
-                {/* Staff Specific Fields */}
-                {registerRole === 'staff' && (
-                  <>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          पद (Designation) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={regStaffRole}
-                          onChange={(e) => setRegStaffRole(e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          अपेक्षित मासिक वेतन (Salary) *
-                        </label>
-                        <input
-                          type="number"
-                          required
-                          value={regSalary}
-                          onChange={(e) => setRegSalary(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      प्लॅन *
+                    </label>
+                    <select
+                      value={regPlan}
+                      onChange={(e) => setRegPlan(e.target.value as PlanType)}
+                      className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                    >
+                      <option value="both">दोन्ही वेळ (दुपार + रात्र - ५६ जेवणे)</option>
+                      <option value="lunch">फक्त दुपारचे जेवण (२८ जेवणे)</option>
+                      <option value="dinner">फक्त रात्रीचे जेवण (२८ जेवणे)</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    पासवर्ड तयार करा (Create Password) *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="किमान ६ अक्षरे/अंक"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  />
-                </div>
+              {registerRole === 'staff' && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      काम / पद *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={regStaffRole}
+                      onChange={(e) => setRegStaffRole(e.target.value)}
+                      placeholder="उदा. मुख्य आचारी / मदतनीस"
+                      className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      अपेक्षित मासिक मानधन (₹ Salary)
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={regSalary}
+                      onChange={(e) => setRegSalary(Number(e.target.value))}
+                      className="w-full px-3 py-2.5 min-h-[44px] text-sm font-mono font-bold bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
 
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-600/40 text-[11px] text-amber-800 dark:text-amber-200">
-                  ⚠️ <strong>सूचना:</strong> नोंदणी दाखल केल्यानंतर मेस चालक (शंकर गिरी - ९८२२३३८९७५) यांच्या मंजुरीनंतरच ॲप वापरता येईल.
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  लॉगिनसाठी पासवर्ड तयार करा *
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="किमान ६ अक्षरी पासवर्ड"
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
 
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-2.5 px-4 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50"
                 >
-                  <UserPlus className="w-4 h-4" />
-                  <span>{isSubmitting ? 'नोंदवत आहे...' : 'नोंदणी दाखल करा (Submit Registration)'}</span>
+                  {isSubmitting ? 'नोंदणी सुरू आहे...' : 'नोंदणी अर्ज पाठवा (Submit for Approval)'}
                 </button>
-              </form>
-            </div>
+              </div>
+            </form>
           )}
         </div>
       </div>

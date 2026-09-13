@@ -67,7 +67,6 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
 
   const handleDietChange = (dietPreference: DietPreference) => {
     let rate = formData.rate;
-    // Auto-update rate to default based on diet choice
     if (!member) {
       rate = dietPreference === 'veg' ? defaultVegRate : defaultNonVegRate;
       if (formData.planType !== 'both') {
@@ -100,41 +99,43 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
+      <div className="relative w-full sm:max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[92vh] flex flex-col">
+        <div className="sm:hidden w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mt-3" />
+
         {/* Modal Header */}
         <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/30">
+            <div className="w-8 h-8 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center border border-brand-500/30">
               <User className="w-4 h-4" />
             </div>
             <h3 className="font-bold text-base">
-              {member ? t('editMember') : t('addMember')}
+              {member ? 'सभासद माहिती संपादित करा' : 'नवीन सभासद जोडा (Add Member)'}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
+            className="p-1 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
           {/* Full Name */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t('fullName')} *
+              सभासदाचे पूर्ण नाव *
             </label>
             <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <User className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
               <input
                 type="text"
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
                 placeholder="उदा. राहुल देशमुख"
               />
             </div>
@@ -143,156 +144,168 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Phone Number */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {t('phoneNumber')} *
+              मोबाइल नंबर (WhatsApp) *
             </label>
             <div className="relative">
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
               <input
-                type="text"
+                type="tel"
+                inputMode="numeric"
                 required
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-mono"
-                placeholder="+91 98901 23456"
+                className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                placeholder="उदा. 9822338975"
               />
             </div>
           </div>
 
-          {/* Diet Preference & Plan Type in 2 columns */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Diet Preference */}
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t('dietPreference')} *
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDietChange('veg')}
-                  className={`py-2 px-2 text-xs font-semibold rounded-lg border transition text-center ${
-                    formData.dietPreference === 'veg'
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  🟢 व्हेज (₹३०००)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDietChange('nonveg')}
-                  className={`py-2 px-2 text-xs font-semibold rounded-lg border transition text-center ${
-                    formData.dietPreference === 'nonveg'
-                      ? 'bg-rose-50 border-rose-500 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
-                      : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  🔴 नॉन-व्हेज (₹३२००)
-                </button>
-              </div>
-            </div>
-
-            {/* Plan Type */}
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t('planType')} *
-              </label>
-              <select
-                value={formData.planType}
-                onChange={(e) => handlePlanChange(e.target.value as PlanType)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              >
-                <option value="both">{t('bothMeals')}</option>
-                <option value="lunch">{t('lunchOnly')}</option>
-                <option value="dinner">{t('dinnerOnly')}</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Monthly Rate & Join Date */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Monthly Rate */}
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t('monthlyRate')} *
-              </label>
-              <div className="relative">
-                <span className="text-slate-400 absolute left-3 top-2 text-sm font-bold">₹</span>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  step={50}
-                  value={formData.rate}
-                  onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })}
-                  className="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold"
-                />
-              </div>
-            </div>
-
-            {/* Join Date */}
-            <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t('joinDate')} *
-              </label>
-              <div className="relative">
-                <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="date"
-                  required
-                  value={formData.joinDate}
-                  onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Status Toggle */}
-          <div className="pt-2 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div>
-              <span className="font-bold text-slate-800 dark:text-slate-200 block">{t('status')}</span>
-              <span className="text-[11px] text-slate-500">
-                {formData.status === 'active' ? 'सक्रिय (जेवण चालू)' : 'बंद (जेवण थांबवले)'}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+          {/* Diet Preference */}
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+              आहार प्रकार (Diet Preference) *
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  setFormData({
-                    ...formData,
-                    status: formData.status === 'active' ? 'inactive' : 'active',
-                  })
-                }
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                  formData.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'
+                onClick={() => handleDietChange('veg')}
+                className={`min-h-[44px] px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                  formData.dietPreference === 'veg'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    formData.status === 'active' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
+                <span>🟢 शाकाहारी (Veg)</span>
+                <span className="text-[10px] opacity-90">(₹3,000)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDietChange('nonveg')}
+                className={`min-h-[44px] px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                  formData.dietPreference === 'nonveg'
+                    ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <span>🔴 मांसाहारी (Non-Veg)</span>
+                <span className="text-[10px] opacity-90">(₹3,200)</span>
               </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 bg-slate-100 dark:bg-slate-800 rounded-lg transition"
-            >
-              {t('cancel')}
-            </button>
+          {/* Plan Type */}
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+              प्लॅन प्रकार (Plan Type) *
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handlePlanChange('both')}
+                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                  formData.planType === 'both'
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                दोन्ही वेळ (56 जेवण)
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePlanChange('lunch')}
+                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                  formData.planType === 'lunch'
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                फक्त दुपार (28 जेवण)
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePlanChange('dinner')}
+                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                  formData.planType === 'dinner'
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                फक्त रात्र (28 जेवण)
+              </button>
+            </div>
+          </div>
+
+          {/* Rate & Join Date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                मासिक दर (₹ Rate) *
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                required
+                min={0}
+                step={50}
+                value={formData.rate}
+                onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })}
+                className="w-full px-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                सामील तारीख *
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.joinDate}
+                onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+              स्थिती (Status) *
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: 'active' })}
+                className={`min-h-[44px] rounded-xl font-bold border transition ${
+                  formData.status === 'active'
+                    ? 'bg-emerald-600 text-white border-emerald-600'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                सक्रिय (Active)
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: 'inactive' })}
+                className={`min-h-[44px] rounded-xl font-bold border transition ${
+                  formData.status === 'inactive'
+                    ? 'bg-slate-700 text-white border-slate-700'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                बंद (Inactive)
+              </button>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <div className="pt-2">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 hover:to-amber-500 rounded-xl shadow-md transition disabled:opacity-50"
+              className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{isSubmitting ? 'जतन करत आहे...' : t('save')}</span>
+              {isSubmitting ? 'जतन करत आहे...' : member ? 'बदल सेव्ह करा' : 'सभासद नोंदणी पूर्ण करा'}
             </button>
           </div>
         </form>
