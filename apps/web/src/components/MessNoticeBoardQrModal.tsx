@@ -147,8 +147,9 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-rose-50 border border-rose-300">
                   <div>
-                    <strong className="text-rose-800 text-sm block">🔴 मांसाहारी (Non-Veg Special)</strong>
-                    <span className="text-[10px] text-rose-600">आठवड्यातून २ दिवस चिकन/अंडे स्पेशल</span>
+                    <strong className="text-rose-800 text-sm block">🔴 मांसाहारी (Non-Veg / Egg)</strong>
+                    <span className="text-[10px] text-rose-600 block">आठवड्यातून ३ दिवस (बुधवार, शुक्रवार, रविवार) मांसाहारी/अंडी</span>
+                    <span className="text-[9px] text-slate-500">इतर ४ दिवस (सोम, मंगळ, गुरू, शनि) स्वादिष्ट शाकाहारी</span>
                   </div>
                   <span className="text-base font-black font-mono text-rose-700">₹३,२००/महिना</span>
                 </div>

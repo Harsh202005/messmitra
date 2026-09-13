@@ -15,6 +15,7 @@ import {
   calculateProratedMeals,
   calculateMonthlyBill,
   isLeaveSubmissionLate,
+  isNonVegDay,
   generateBillingCsv,
   generateExpensesCsv,
 } from '@messmitra/types';
@@ -711,7 +712,7 @@ export const MessMitraApi = {
   },
 
   // -------------------------------------------------------------
-  // 3. DAILY COOK FORECAST
+  // 3. DAILY COOK FORECAST (With 3-day Non-Veg Schedule: Wed, Fri, Sun)
   // -------------------------------------------------------------
   async getCookForecast(targetDateStr?: string): Promise<DailyCookForecast> {
     const members = await this.getMembers('active');
@@ -721,9 +722,12 @@ export const MessMitraApi = {
       (l) => (l.status === 'auto_valid' || l.status === 'approved') && l.startDate <= tomorrow && l.endDate >= tomorrow
     );
     const membersOnLeave = activeLeaves.length;
+    const totalCookFor = Math.max(0, members.length - membersOnLeave);
 
     const lunchCount = members.filter((m) => m.planType === 'both' || m.planType === 'lunch').length - membersOnLeave;
     const dinnerCount = members.filter((m) => m.planType === 'both' || m.planType === 'dinner').length - membersOnLeave;
+
+    const isNonVegSpecialDay = isNonVegDay(tomorrow);
 
     const vegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg');
     const nonVegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg');
@@ -736,15 +740,24 @@ export const MessMitraApi = {
       return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg';
     }).length;
 
+    // If it's a Non-Veg Day (Wed/Fri/Sun), split by actual member preference.
+    // If it's a Veg Day (Mon/Tue/Thu/Sat), 100% of headcount is pure veg (0 non-veg).
+    const vegCount = isNonVegSpecialDay
+      ? Math.max(0, vegMembers.length - vegLeavesCount)
+      : totalCookFor;
+    const nonVegCount = isNonVegSpecialDay
+      ? Math.max(0, nonVegMembers.length - nonVegLeavesCount)
+      : 0;
+
     return {
       date: tomorrow,
       totalActiveMembers: members.length,
       membersOnLeave,
-      cookForCount: Math.max(0, members.length - membersOnLeave),
+      cookForCount: totalCookFor,
       lunchCount: Math.max(0, lunchCount),
       dinnerCount: Math.max(0, dinnerCount),
-      vegCount: Math.max(0, vegMembers.length - vegLeavesCount),
-      nonVegCount: Math.max(0, nonVegMembers.length - nonVegLeavesCount),
+      vegCount,
+      nonVegCount,
     };
   },
 

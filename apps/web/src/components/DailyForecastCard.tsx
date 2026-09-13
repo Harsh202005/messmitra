@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { useI18n } from '../lib/i18n';
-import { DailyCookForecast } from '@messmitra/types';
-import { ChefHat, Users, UserX, Sun, Moon, CalendarDays, Sparkles } from 'lucide-react';
+import { DailyCookForecast, isNonVegDay, getWeeklyDayScheduleMarathi } from '@messmitra/types';
+import { ChefHat, Users, UserX, Sun, Moon, CalendarDays, Sparkles, UtensilsCrossed } from 'lucide-react';
 
 interface DailyForecastCardProps {
   forecast: DailyCookForecast;
@@ -19,27 +19,39 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
   const isToday = forecast.date === todayStr;
   const isTomorrow = forecast.date === tomorrowStr;
 
+  const scheduleInfo = getWeeklyDayScheduleMarathi(forecast.date);
+  const isNonVegToday = scheduleInfo.isNonVegDay;
+
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-6 shadow-md border border-slate-200 dark:border-slate-800">
+    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-6 shadow-md border border-slate-200 dark:border-slate-800">
       {/* Background glowing ambient light */}
       <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-brand-500/5 dark:bg-brand-500/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/3 -mb-16 w-48 h-48 rounded-full bg-amber-500/5 dark:bg-amber-500/10 blur-2xl pointer-events-none" />
 
       {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-150 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-150 dark:border-slate-800">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-500/30 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 flex items-center justify-center border border-brand-200 dark:border-brand-500/30 shadow-sm shrink-0">
             <ChefHat className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100 flex items-center gap-2 flex-wrap">
-              {isTomorrow ? t('tomorrowForecast') : `जेवण अंदाज (${forecast.date})`}
-              <span className="inline-flex items-center gap-1 text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40">
-                ✨ २१ वर्षांची परंपरा • चव हीच आमची ओळख
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-bold text-base sm:text-lg text-slate-900 dark:text-slate-100">
+                {isTomorrow ? t('tomorrowForecast') : `जेवण अंदाज (${forecast.date})`}
+              </h3>
+              {/* Day of Week Badge */}
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  isNonVegToday
+                    ? 'bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-500/40'
+                    : 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/40'
+                }`}
+              >
+                {scheduleInfo.badgeText}
               </span>
-            </h3>
+            </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              तारीख: <strong className="text-slate-800 dark:text-slate-200">{forecast.date}</strong> • दुपार कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">06:00 PM</strong>
+              वार: <strong className="text-slate-800 dark:text-slate-200">{scheduleInfo.dayName}</strong> • दुपार कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">06:00 PM</strong>
             </p>
           </div>
         </div>
@@ -51,7 +63,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
               <button
                 type="button"
                 onClick={() => onDateChange(todayStr)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                   isToday
                     ? 'bg-brand-600 text-white shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700'
@@ -62,7 +74,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
               <button
                 type="button"
                 onClick={() => onDateChange(tomorrowStr)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
+                className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                   isTomorrow
                     ? 'bg-brand-600 text-white shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700'
@@ -70,7 +82,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
               >
                 उद्या (Tomorrow)
               </button>
-              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 min-h-[36px] rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
                 <CalendarDays className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                 <input
                   type="date"
@@ -91,7 +103,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
       </div>
 
       {/* Main KPI Stats Grid (Compact 2-col grid on mobile) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 my-3 sm:my-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 my-3 sm:my-4">
         {/* Total Active */}
         <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700/50">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
@@ -130,7 +142,8 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
       </div>
 
       {/* Meal breakdown pills & Veg/Non-Veg split - 2 cols on phone, flex wrap on tablet/desktop */}
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-slate-150 dark:border-slate-800/80 text-xs">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-slate-150 dark:border-slate-800/80 text-xs">
+        {/* Lunch */}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
           <Sun className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <div className="truncate">
@@ -138,6 +151,8 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
             <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.lunchCount}</strong>
           </div>
         </div>
+
+        {/* Dinner */}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
           <Moon className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
           <div className="truncate">
@@ -145,16 +160,34 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
             <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.dinnerCount}</strong>
           </div>
         </div>
+
+        {/* 🟢 Veg Count */}
         <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold">
           <div className="truncate">
-            <span className="text-emerald-700 dark:text-emerald-400 text-[10px] block leading-tight">🟢 शाकाहारी</span>
-            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.vegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+            <span className="text-emerald-700 dark:text-emerald-400 text-[10px] block leading-tight">
+              🟢 शाकाहारी {isNonVegToday ? '(व्हेज)' : '(सर्व)'}
+            </span>
+            <strong className="text-slate-900 dark:text-white font-bold text-sm">
+              {isNonVegToday ? (forecast.vegCount ?? forecast.cookForCount) : forecast.cookForCount}
+            </strong>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-rose-50 dark:bg-rose-950/40 px-3 py-2 rounded-xl border border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300 font-semibold">
+
+        {/* 🔴 Non-Veg Count (Only on Wed / Fri / Sun) */}
+        <div
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-semibold ${
+            isNonVegToday
+              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300'
+              : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-80'
+          }`}
+        >
           <div className="truncate">
-            <span className="text-rose-700 dark:text-rose-400 text-[10px] block leading-tight">🔴 मांसाहारी</span>
-            <strong className="text-slate-900 dark:text-white font-bold text-sm">{forecast.nonVegCount ?? Math.round(forecast.cookForCount / 2)}</strong>
+            <span className="text-[10px] block leading-tight">
+              🔴 मांसाहारी {isNonVegToday ? '(बुध/शुक्र/रवि)' : '(आज नाही)'}
+            </span>
+            <strong className="text-sm font-bold">
+              {isNonVegToday ? (forecast.nonVegCount ?? 0) : '0 (आज शाकाहारी)'}
+            </strong>
           </div>
         </div>
       </div>

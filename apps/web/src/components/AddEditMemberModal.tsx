@@ -192,6 +192,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                 <span className="text-[10px] opacity-90">(₹3,200)</span>
               </button>
             </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+              * मांसाहारी/अंडी: आठवड्यातून ३ दिवस (बुधवार, शुक्रवार, रविवार) दिले जाते. इतर दिवस (सोम, मंगळ, गुरू, शनि) स्वादिष्ट शाकाहारी भोजन.
+            </p>
           </div>
 
           {/* Plan Type */}

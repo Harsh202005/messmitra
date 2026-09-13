@@ -220,6 +220,57 @@ export interface ProfitAndLossSummary {
 export const STANDARD_BASE_MEALS = 56;
 
 /**
+ * Shree Balaji Mess Weekly Menu Schedule:
+ * Non-Veg / Egg is served 3 times a week on:
+ * - बुधवार (Wednesday - Day 3)
+ * - शुक्रवार (Friday - Day 5)
+ * - रविवार (Sunday - Day 0)
+ * All other 4 days (सोमवार, मंगळवार, गुरुवार, शनिवार) are 100% Pure Veg.
+ */
+export const NON_VEG_DAYS_OF_WEEK = [0, 3, 5] as const; // 0 = Sun, 3 = Wed, 5 = Fri
+
+export function isNonVegDay(dateOrDayOfWeek: string | Date | number): boolean {
+  let dayOfWeek: number;
+  if (typeof dateOrDayOfWeek === 'number') {
+    dayOfWeek = dateOrDayOfWeek;
+  } else if (dateOrDayOfWeek instanceof Date) {
+    dayOfWeek = dateOrDayOfWeek.getDay();
+  } else {
+    const [y, m, d] = dateOrDayOfWeek.split('-').map(Number);
+    dayOfWeek = new Date(y, m - 1, d).getDay();
+  }
+  return dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 5;
+}
+
+export function getWeeklyDayScheduleMarathi(dateOrDayOfWeek: string | Date | number): {
+  dayName: string;
+  isNonVegDay: boolean;
+  badgeText: string;
+} {
+  let dayOfWeek: number;
+  if (typeof dateOrDayOfWeek === 'number') {
+    dayOfWeek = dateOrDayOfWeek;
+  } else if (dateOrDayOfWeek instanceof Date) {
+    dayOfWeek = dateOrDayOfWeek.getDay();
+  } else {
+    const [y, m, d] = dateOrDayOfWeek.split('-').map(Number);
+    dayOfWeek = new Date(y, m - 1, d).getDay();
+  }
+
+  const daysMarathi = ['रविवार', 'सोमवार', 'मंगळवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+  const dayName = daysMarathi[dayOfWeek] || '';
+  const nonVeg = dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 5;
+
+  return {
+    dayName,
+    isNonVegDay: nonVeg,
+    badgeText: nonVeg
+      ? `🍗 मांसाहारी/अंडी विशेष दिवस (${dayName})`
+      : `🥗 पूर्ण शाकाहारी दिवस (${dayName})`,
+  };
+}
+
+/**
  * Checks if a leave submission is late relative to the daily cutoff times for the start date.
  * Default cutoffs: Lunch = 09:00 AM, Dinner = 18:00 (06:00 PM).
  */
