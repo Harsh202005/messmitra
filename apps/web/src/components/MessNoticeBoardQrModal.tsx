@@ -13,8 +13,10 @@ import {
   QrCode,
   Share2,
   Check,
-  Moon,
-  Sun,
+  Globe,
+  Edit3,
+  ExternalLink,
+  RotateCcw,
 } from 'lucide-react';
 
 interface MessNoticeBoardQrModalProps {
@@ -32,12 +34,49 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [isGeneratingDownload, setIsGeneratingDownload] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
-  const posterCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
 
-  const registrationUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/?register=true`
-      : 'https://balajimess.app/?register=true';
+  // Determine initial live public URL
+  const getInitialPublicUrl = () => {
+    if (typeof window === 'undefined') return 'https://shreebalajimess.app/?register=true';
+
+    // 1. Check saved custom URL in localStorage
+    const saved = localStorage.getItem('messmitra_custom_app_url');
+    if (saved) return saved;
+
+    // 2. If on a live production hostname (not localhost)
+    const hostname = window.location.hostname;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168.')) {
+      return `${window.location.origin}/?register=true`;
+    }
+
+    // 3. If on localhost, use production live domain fallback so printed posters have a real working link
+    return process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/?register=true`
+      : 'https://shreebalajimess.app/?register=true';
+  };
+
+  const [liveAppUrl, setLiveAppUrl] = useState<string>('https://shreebalajimess.app/?register=true');
+
+  useEffect(() => {
+    if (isOpen) {
+      setLiveAppUrl(getInitialPublicUrl());
+    }
+  }, [isOpen]);
+
+  const handleSaveCustomUrl = (url: string) => {
+    let cleanUrl = url.trim();
+    if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
+    if (cleanUrl && !cleanUrl.includes('register=true')) {
+      cleanUrl = cleanUrl.includes('?') ? `${cleanUrl}&register=true` : `${cleanUrl}/?register=true`;
+    }
+    setLiveAppUrl(cleanUrl);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_custom_app_url', cleanUrl);
+    }
+  };
 
   const upiUri = `upi://pay?pa=${encodeURIComponent(
     mess?.upiId || '9822338975@upi'
@@ -45,16 +84,16 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
     'श्री बालाजी मेस मासिक फी'
   )}`;
 
-  const activeQrContent = qrType === 'register' ? registrationUrl : upiUri;
+  const activeQrContent = qrType === 'register' ? liveAppUrl : upiUri;
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !activeQrContent) return;
 
     QRCode.toDataURL(activeQrContent, {
-      width: 400,
+      width: 450,
       margin: 1.5,
       color: {
-        dark: '#1e293b',
+        dark: '#0f172a',
         light: '#ffffff',
       },
     })
@@ -91,7 +130,6 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
       ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
 
       // 2. Draw dynamic QR Code in the designated white square
-      // Based on 720x1080: Frame is located at x: ~445, y: ~365, size: ~225
       const qrX = canvas.width * 0.622;
       const qrY = canvas.height * 0.338;
       const qrSize = canvas.width * 0.315;
@@ -126,10 +164,12 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(registrationUrl);
+    navigator.clipboard.writeText(liveAppUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
+
+  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
@@ -186,50 +226,130 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
         </div>
 
         {/* Mode Selector Tabs (Hidden on Print) */}
-        <div className="print:hidden px-5 py-2.5 bg-slate-100 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs flex-wrap">
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setQrType('register')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[32px] ${
-                qrType === 'register'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              👥 नवीन सभासद नोंदणी QR
-            </button>
+        <div className="print:hidden px-5 py-2.5 bg-slate-100 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 space-y-2">
+          <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setQrType('register')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[32px] ${
+                  qrType === 'register'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                👥 नवीन सभासद नोंदणी QR
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setQrType('payment')}
-              className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[32px] ${
-                qrType === 'payment'
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              💰 UPI पेमेंट QR
-            </button>
+              <button
+                type="button"
+                onClick={() => setQrType('payment')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[32px] ${
+                  qrType === 'payment'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                }`}
+              >
+                💰 UPI पेमेंट QR
+              </button>
+            </div>
+
+            {qrType === 'register' && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingUrl(!isEditingUrl)}
+                  className="flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>{isEditingUrl ? 'लिंक लपवा' : 'वेबसाईट लिंक बदला (Live URL)'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-500" />
+                      <span>लिंक कॉपी झाली!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3 h-3" />
+                      <span>कॉपी</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="flex items-center gap-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-          >
-            {copiedLink ? (
-              <>
-                <Check className="w-3 h-3 text-emerald-500" />
-                <span>लिंक कॉपी झाली!</span>
-              </>
-            ) : (
-              <>
-                <Share2 className="w-3 h-3" />
-                <span>नोंदणी लिंक कॉपी करा</span>
-              </>
-            )}
-          </button>
+          {/* Live Public URL Editor Section */}
+          {qrType === 'register' && (
+            <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs space-y-2">
+              <div className="flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-200">
+                <span className="flex items-center gap-1.5 font-bold">
+                  <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                  <span>QR स्कॅन केल्यानंतर उघडणारी लिंक (Public Link):</span>
+                </span>
+                <span className="font-mono text-[10px] bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 truncate max-w-[200px]">
+                  {liveAppUrl}
+                </span>
+              </div>
+
+              {/* Editable input */}
+              {isEditingUrl && (
+                <div className="space-y-1.5 pt-1 animate-fadeIn">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={liveAppUrl}
+                      onChange={(e) => setLiveAppUrl(e.target.value)}
+                      onBlur={(e) => handleSaveCustomUrl(e.target.value)}
+                      placeholder="उदा. https://shreebalajimess.app किंवा https://balajimess.vercel.app"
+                      className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white font-mono font-medium focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCustomUrl(liveAppUrl)}
+                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg transition shrink-0"
+                    >
+                      जतन करा (Save)
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-500 dark:text-slate-400">
+                    <span>जलद लिंक्स:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCustomUrl('https://shreebalajimess.app/?register=true')}
+                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
+                    >
+                      shreebalajimess.app
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCustomUrl('https://balajimess.vercel.app/?register=true')}
+                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
+                    >
+                      balajimess.vercel.app
+                    </button>
+                    {isLocalhost && (
+                      <button
+                        type="button"
+                        onClick={() => handleSaveCustomUrl(`${window.location.origin}/?register=true`)}
+                        className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
+                      >
+                        Localhost (PC Test)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Scrollable Poster Preview with Embedded Dynamic QR Code */}
@@ -277,7 +397,15 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
               💡 हे पोस्टर थेट A4 किंवा टेबल स्टँडीवर प्रिंट करून मेसमध्ये लावा.
             </p>
             <p className="text-[11px]">
-              विद्यार्थी/ग्राहक त्यांच्या मोबाईल कॅमेऱ्याने QR स्कॅन करून थेट स्वतःचे नाव नोंदवू शकतात किंवा Google Pay / PhonePe ने फी भरू शकतात.
+              {qrType === 'register' ? (
+                <>
+                  विद्यार्थी त्यांच्या मोबाईल कॅमेऱ्याने QR स्कॅन करून थेट <strong className="text-brand-600 dark:text-brand-400 font-mono">{liveAppUrl}</strong> वर स्वतःचे नाव नोंदवू शकतात.
+                </>
+              ) : (
+                <>
+                  ग्राहक Google Pay / PhonePe / Paytm द्वारे थेट <strong className="text-brand-600 dark:text-brand-400 font-mono">{mess?.upiId || '9822338975@upi'}</strong> वर फी भरू शकतात.
+                </>
+              )}
             </p>
           </div>
         </div>
