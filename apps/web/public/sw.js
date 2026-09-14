@@ -1,8 +1,10 @@
-// MessMitra Service Worker for Offline PWA Capabilities
-const CACHE_NAME = 'messmitra-v1';
+// Shree Balaji Mess Service Worker for Offline PWA Capabilities
+const CACHE_NAME = 'balajimess-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
+  '/logo.jpeg',
+  '/logo.png',
   '/favicon.ico',
 ];
 

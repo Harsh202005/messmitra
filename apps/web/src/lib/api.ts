@@ -712,7 +712,7 @@ export const MessMitraApi = {
   },
 
   // -------------------------------------------------------------
-  // 3. DAILY COOK FORECAST (With 3-day Non-Veg Schedule: Wed, Fri, Sun)
+  // 3. DAILY COOK FORECAST (Non-Veg/Egg ONLY at Night: Wed, Fri, Sun)
   // -------------------------------------------------------------
   async getCookForecast(targetDateStr?: string): Promise<DailyCookForecast> {
     const members = await this.getMembers('active');
@@ -724,29 +724,40 @@ export const MessMitraApi = {
     const membersOnLeave = activeLeaves.length;
     const totalCookFor = Math.max(0, members.length - membersOnLeave);
 
-    const lunchCount = members.filter((m) => m.planType === 'both' || m.planType === 'lunch').length - membersOnLeave;
-    const dinnerCount = members.filter((m) => m.planType === 'both' || m.planType === 'dinner').length - membersOnLeave;
+    const lunchMembers = members.filter((m) => m.planType === 'both' || m.planType === 'lunch');
+    const dinnerMembers = members.filter((m) => m.planType === 'both' || m.planType === 'dinner');
+
+    const lunchCount = Math.max(0, lunchMembers.length - activeLeaves.filter((l) => lunchMembers.some((m) => m.id === l.memberId)).length);
+    const dinnerCount = Math.max(0, dinnerMembers.length - activeLeaves.filter((l) => dinnerMembers.some((m) => m.id === l.memberId)).length);
 
     const isNonVegSpecialDay = isNonVegDay(tomorrow);
 
-    const vegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg');
-    const nonVegMembers = members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg');
-    const vegLeavesCount = activeLeaves.filter((l) => {
-      const m = members.find((mb) => mb.id === l.memberId);
-      return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
-    }).length;
-    const nonVegLeavesCount = activeLeaves.filter((l) => {
-      const m = members.find((mb) => mb.id === l.memberId);
-      return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg';
-    }).length;
+    // Lunch is ALWAYS 100% pure veg for everyone on all 7 days of the week
+    const lunchVegCount = lunchCount;
 
-    // If it's a Non-Veg Day (Wed/Fri/Sun), split by actual member preference.
-    // If it's a Veg Day (Mon/Tue/Thu/Sat), 100% of headcount is pure veg (0 non-veg).
+    // Dinner is Non-Veg ONLY on Wed, Fri, Sun for members with nonveg diet preference
+    const dinnerVegMembers = dinnerMembers.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg');
+    const dinnerNonVegMembers = dinnerMembers.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg');
+
+    const dinnerVegLeaves = activeLeaves.filter((l) => dinnerVegMembers.some((m) => m.id === l.memberId)).length;
+    const dinnerNonVegLeaves = activeLeaves.filter((l) => dinnerNonVegMembers.some((m) => m.id === l.memberId)).length;
+
+    const dinnerVegCount = isNonVegSpecialDay
+      ? Math.max(0, dinnerVegMembers.length - dinnerVegLeaves)
+      : dinnerCount;
+    const dinnerNonVegCount = isNonVegSpecialDay
+      ? Math.max(0, dinnerNonVegMembers.length - dinnerNonVegLeaves)
+      : 0;
+
     const vegCount = isNonVegSpecialDay
-      ? Math.max(0, vegMembers.length - vegLeavesCount)
+      ? Math.max(0, members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg').length - activeLeaves.filter((l) => {
+          const m = members.find((mb) => mb.id === l.memberId);
+          return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+        }).length)
       : totalCookFor;
+
     const nonVegCount = isNonVegSpecialDay
-      ? Math.max(0, nonVegMembers.length - nonVegLeavesCount)
+      ? dinnerNonVegCount
       : 0;
 
     return {
@@ -754,10 +765,13 @@ export const MessMitraApi = {
       totalActiveMembers: members.length,
       membersOnLeave,
       cookForCount: totalCookFor,
-      lunchCount: Math.max(0, lunchCount),
-      dinnerCount: Math.max(0, dinnerCount),
+      lunchCount,
+      dinnerCount,
       vegCount,
       nonVegCount,
+      lunchVegCount,
+      dinnerVegCount,
+      dinnerNonVegCount,
     };
   },
 

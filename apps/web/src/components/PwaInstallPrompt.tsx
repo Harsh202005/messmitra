@@ -48,8 +48,8 @@ export const PwaInstallPrompt: React.FC = () => {
     <>
       <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 z-40 max-w-sm bg-gradient-to-r from-brand-600 via-orange-600 to-amber-600 text-white p-3 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-3 animate-slideUp">
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => setShowPreviewModal(true)}>
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white flex-shrink-0 overflow-hidden border border-white/30">
-            <img src="/mobile_app_mockup.jpg" alt="App Preview" className="w-full h-full object-cover" />
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center flex-shrink-0 overflow-hidden border border-white/40 shadow-sm">
+            <img src="/logo.jpeg" alt="श्री बालाजी मेस Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <strong className="text-xs font-bold block leading-tight">

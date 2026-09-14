@@ -1,13 +1,26 @@
 {
   "name": "श्री बालाजी मेस",
-  "short_name": "श्री बालाजी मेस",
+  "short_name": "बालाजी मेस",
   "description": "श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा • चालक: शंकर गिरी (९८२२३३८९७५)",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#f97316",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
@@ -19,6 +32,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

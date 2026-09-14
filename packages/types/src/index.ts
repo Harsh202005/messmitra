@@ -200,6 +200,9 @@ export interface DailyCookForecast {
   dinnerCount: number;
   vegCount: number;
   nonVegCount: number;
+  lunchVegCount?: number;
+  dinnerVegCount?: number;
+  dinnerNonVegCount?: number;
 }
 
 export interface ProfitAndLossSummary {
@@ -221,11 +224,12 @@ export const STANDARD_BASE_MEALS = 56;
 
 /**
  * Shree Balaji Mess Weekly Menu Schedule:
- * Non-Veg / Egg is served 3 times a week on:
- * - बुधवार (Wednesday - Day 3)
- * - शुक्रवार (Friday - Day 5)
- * - रविवार (Sunday - Day 0)
- * All other 4 days (सोमवार, मंगळवार, गुरुवार, शनिवार) are 100% Pure Veg.
+ * - Lunch (दुपारचे जेवण): ALWAYS 100% Pure Veg for all members on all 7 days.
+ * - Dinner (रात्रीचे जेवण): Non-Veg / Egg special ONLY 3 times a week at NIGHT on:
+ *   1. बुधवार (Wednesday Night)
+ *   2. शुक्रवार (Friday Night)
+ *   3. रविवार (Sunday Night)
+ * Other 4 nights (सोमवार, मंगळवार, गुरुवार, शनिवार) are 100% Pure Veg for all.
  */
 export const NON_VEG_DAYS_OF_WEEK = [0, 3, 5] as const; // 0 = Sun, 3 = Wed, 5 = Fri
 
@@ -246,6 +250,8 @@ export function getWeeklyDayScheduleMarathi(dateOrDayOfWeek: string | Date | num
   dayName: string;
   isNonVegDay: boolean;
   badgeText: string;
+  lunchNote: string;
+  dinnerNote: string;
 } {
   let dayOfWeek: number;
   if (typeof dateOrDayOfWeek === 'number') {
@@ -265,8 +271,12 @@ export function getWeeklyDayScheduleMarathi(dateOrDayOfWeek: string | Date | num
     dayName,
     isNonVegDay: nonVeg,
     badgeText: nonVeg
-      ? `🍗 मांसाहारी/अंडी विशेष दिवस (${dayName})`
+      ? `🍗 मांसाहारी/अंडी विशेष दिवस (${dayName} - फक्त रात्री)`
       : `🥗 पूर्ण शाकाहारी दिवस (${dayName})`,
+    lunchNote: 'दुपारी: १००% शुद्ध शाकाहारी (सर्व सदस्यांसाठी)',
+    dinnerNote: nonVeg
+      ? `रात्री: चिकन/अंडे स्पेशल थाळी (मांसाहारी सदस्यांसाठी)`
+      : `रात्री: १००% शुद्ध शाकाहारी थाळी`,
   };
 }
 

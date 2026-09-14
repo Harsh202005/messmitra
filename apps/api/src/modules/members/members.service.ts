@@ -15,6 +15,7 @@ export class MembersService {
       name: 'Rahul Deshmukh',
       phone: '+91 98901 23456',
       gender: 'male',
+      dietPreference: 'nonveg',
       rate: 3200,
       planType: 'both',
       joinDate: '2026-06-01',
@@ -27,7 +28,8 @@ export class MembersService {
       name: 'Priya Kulkarni',
       phone: '+91 98902 34567',
       gender: 'female',
-      rate: 2800,
+      dietPreference: 'veg',
+      rate: 3000,
       planType: 'both',
       joinDate: '2026-07-15',
       status: 'active',
@@ -39,6 +41,7 @@ export class MembersService {
       name: 'Amit Joshi',
       phone: '+91 98903 45678',
       gender: 'male',
+      dietPreference: 'nonveg',
       rate: 3200,
       planType: 'both',
       joinDate: '2026-08-01',
@@ -51,7 +54,8 @@ export class MembersService {
       name: 'Sneha Shinde',
       phone: '+91 98904 56789',
       gender: 'female',
-      rate: 2800,
+      dietPreference: 'veg',
+      rate: 3000,
       planType: 'both',
       joinDate: '2026-08-10',
       status: 'active',
@@ -63,7 +67,8 @@ export class MembersService {
       name: 'Omkar Jadhav',
       phone: '+91 98905 67890',
       gender: 'male',
-      rate: 1800,
+      dietPreference: 'veg',
+      rate: 1500,
       planType: 'lunch',
       joinDate: '2026-09-01',
       status: 'active',
@@ -75,6 +80,7 @@ export class MembersService {
       name: 'Tanvi Pawar',
       phone: '+91 98906 78901',
       gender: 'female',
+      dietPreference: 'nonveg',
       rate: 1600,
       planType: 'dinner',
       joinDate: '2026-09-05',
@@ -87,6 +93,7 @@ export class MembersService {
       name: 'Vikas Gaikwad',
       phone: '+91 98907 89012',
       gender: 'male',
+      dietPreference: 'nonveg',
       rate: 3200,
       planType: 'both',
       joinDate: '2026-05-10',
@@ -172,6 +179,7 @@ export class MembersService {
         name: dto.name,
         phone: dto.phone,
         gender: dto.gender,
+        dietPreference: dto.dietPreference || (dto.gender === 'female' ? 'veg' : 'nonveg'),
         rate: dto.rate,
         planType: dto.planType,
         joinDate: dto.joinDate,
@@ -189,6 +197,7 @@ export class MembersService {
         name: dto.name,
         phone: dto.phone,
         gender: dto.gender,
+        diet_preference: dto.dietPreference || (dto.gender === 'female' ? 'veg' : 'nonveg'),
         rate: dto.rate,
         plan_type: dto.planType,
         join_date: dto.joinDate,
@@ -230,6 +239,7 @@ export class MembersService {
         ...(dto.name && { name: dto.name }),
         ...(dto.phone && { phone: dto.phone }),
         ...(dto.gender && { gender: dto.gender }),
+        ...(dto.dietPreference && { diet_preference: dto.dietPreference }),
         ...(dto.rate !== undefined && { rate: dto.rate }),
         ...(dto.planType && { plan_type: dto.planType }),
         ...(dto.joinDate && { join_date: dto.joinDate }),
@@ -265,14 +275,20 @@ export class MembersService {
     const membersOnLeave = 1;
     const lunchCount = members.filter(m => m.planType === 'both' || m.planType === 'lunch').length - membersOnLeave;
     const dinnerCount = members.filter(m => m.planType === 'both' || m.planType === 'dinner').length - membersOnLeave;
+    const totalCookFor = Math.max(0, members.length - membersOnLeave);
+
+    const vegMembers = members.filter((m) => m.dietPreference === 'veg');
+    const nonVegMembers = members.filter((m) => m.dietPreference === 'nonveg');
 
     return {
       date: targetDate,
       totalActiveMembers: members.length,
       membersOnLeave,
-      cookForCount: Math.max(0, members.length - membersOnLeave),
+      cookForCount: totalCookFor,
       lunchCount: Math.max(0, lunchCount),
       dinnerCount: Math.max(0, dinnerCount),
+      vegCount: vegMembers.length,
+      nonVegCount: Math.max(0, nonVegMembers.length - membersOnLeave),
     };
   }
 
@@ -284,6 +300,7 @@ export class MembersService {
       name: row.name,
       phone: row.phone,
       gender: row.gender,
+      dietPreference: row.diet_preference || (row.gender === 'female' ? 'veg' : 'nonveg'),
       rate: Number(row.rate),
       planType: row.plan_type,
       joinDate: row.join_date,

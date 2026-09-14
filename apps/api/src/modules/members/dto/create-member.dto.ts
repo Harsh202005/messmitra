@@ -38,6 +38,11 @@ export class CreateMemberDto {
   @IsNotEmpty()
   joinDate: string;
 
+  @ApiPropertyOptional({ enum: ['veg', 'nonveg'], example: 'veg', description: 'Diet preference' })
+  @IsOptional()
+  @IsEnum(['veg', 'nonveg'])
+  dietPreference?: 'veg' | 'nonveg';
+
   @ApiPropertyOptional({ enum: ['active', 'inactive'], example: 'active' })
   @IsOptional()
   @IsEnum(['active', 'inactive'])
