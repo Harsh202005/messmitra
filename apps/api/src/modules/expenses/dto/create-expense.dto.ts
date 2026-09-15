@@ -3,8 +3,8 @@ import { ExpenseCategory, RecurringFrequency } from '@messmitra/types';
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class CreateRecurringExpenseDto {
-  @ApiProperty({ enum: ['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other'], example: 'rent' })
-  @IsEnum(['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other'])
+  @ApiProperty({ enum: ['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'], example: 'rent' })
+  @IsEnum(['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'])
   category: ExpenseCategory;
 
   @ApiProperty({ example: 'Landlord (Mr. Kulkarni)', description: 'Payee name or vendor' })
@@ -24,8 +24,8 @@ export class CreateRecurringExpenseDto {
 }
 
 export class CreateOneOffExpenseDto {
-  @ApiProperty({ enum: ['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other'], example: 'vegetables' })
-  @IsEnum(['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'other'])
+  @ApiProperty({ enum: ['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'], example: 'vegetables' })
+  @IsEnum(['salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'])
   category: ExpenseCategory;
 
   @ApiProperty({ example: 1450, description: 'Amount spent in INR' })

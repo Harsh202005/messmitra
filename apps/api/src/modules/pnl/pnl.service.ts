@@ -49,6 +49,8 @@ export class PnLService {
       dairy: 0,
       vegetables: 0,
       maintenance: 0,
+      packaging: 0,
+      utilities: 0,
       other: 0,
     };
 

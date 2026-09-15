@@ -10,6 +10,7 @@ import {
 } from '@messmitra/types';
 import {
   TrendingDown,
+  TrendingUp,
   Repeat,
   ShoppingBag,
   Users,
@@ -25,7 +26,10 @@ import {
   UtensilsCrossed,
   Phone,
   Check,
+  Package,
+  Zap,
 } from 'lucide-react';
+import { ExpenseBudgetCategoryCards } from './ExpenseBudgetCategoryCards';
 
 interface ExpensesManagementProps {
   recurringExpenses: ExpenseRecurring[];
@@ -134,6 +138,10 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
       case 'groceries':
       case 'dairy':
         return <UtensilsCrossed className="w-4 h-4 text-emerald-500" />;
+      case 'utilities':
+        return <Zap className="w-4 h-4 text-amber-500" />;
+      case 'packaging':
+        return <Package className="w-4 h-4 text-indigo-500" />;
       default:
         return <ShoppingBag className="w-4 h-4 text-slate-500" />;
     }
@@ -182,6 +190,13 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Primary USP Feature: 8 Category Budget vs Actual Expense Comparison (बजेट आणि प्रत्यक्ष खर्च तुलना) */}
+      <ExpenseBudgetCategoryCards
+        recurringExpenses={recurringExpenses}
+        oneOffExpenses={oneOffExpenses}
+        staffList={staffList}
+      />
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
@@ -433,10 +448,13 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
                   <option value="rent">मेस गाळा भाडे (Rent)</option>
-                  <option value="gas">कमर्शियल गॅस सिलिंडर (Gas)</option>
-                  <option value="salary">कर्मचारी मानधन (Salary)</option>
-                  <option value="maintenance">लाईट बिल / पाणी (Electricity/Water)</option>
-                  <option value="other">इतर नियमित खर्च (Other)</option>
+                  <option value="gas">कमर्शियल गॅस सिलिंडर / इंधन (Gas/Fuel)</option>
+                  <option value="utilities">लाईट बिल आणि पाणी (Electricity & Water)</option>
+                  <option value="salary">कर्मचारी मानधन (Staff Salary)</option>
+                  <option value="maintenance">किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
+                  <option value="packaging">डबा पॅकिंग साहित्य (Packaging Material)</option>
+                  <option value="groceries">किराणा व इतर धान्य (Groceries)</option>
+                  <option value="other">इतर नियमित खर्च (Other Regular)</option>
                 </select>
               </div>
 
@@ -529,10 +547,15 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   }
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="vegetables">ताजी भाजी मंडी (Vegetables)</option>
-                  <option value="groceries">किराणा माल व तेल (Groceries)</option>
-                  <option value="dairy">दूध, ताक व दही (Dairy)</option>
-                  <option value="other">इतर किरकोळ खर्च (Other)</option>
+                  <option value="vegetables">ताजी भाजी मंडी (Fresh Vegetables)</option>
+                  <option value="groceries">किराणा माल व तेल (Groceries & Oil)</option>
+                  <option value="dairy">दूध, ताक व दही (Dairy Products)</option>
+                  <option value="gas">कमर्शियल गॅस सिलिंडर (Gas Refill)</option>
+                  <option value="packaging">डबा पॅकिंग साहित्य / पार्सल बॉक्सेस (Packaging Material)</option>
+                  <option value="maintenance">किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
+                  <option value="salary">कर्मचारी उचल / रोजंदारी (Staff Advance)</option>
+                  <option value="utilities">लाईट बिल / पाणी बिल (Electricity / Water)</option>
+                  <option value="other">इतर किरकोळ खर्च (Other Miscellaneous)</option>
                 </select>
               </div>
 

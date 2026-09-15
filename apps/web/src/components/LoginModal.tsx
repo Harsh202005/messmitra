@@ -29,14 +29,26 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialMode?: 'login' | 'register';
 }
 
-export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const LoginModal: React.FC<LoginModalProps> = ({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialMode = 'login',
+}) => {
   const { login, switchDemoRole } = useAuth();
   const { t } = useI18n();
 
-  const [activeMode, setActiveMode] = useState<'login' | 'register'>('login');
+  const [activeMode, setActiveMode] = useState<'login' | 'register'>(initialMode);
   const [registerRole, setRegisterRole] = useState<'member' | 'staff'>('member');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setActiveMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   // Login form state
   const [usernameOrEmail, setUsernameOrEmail] = useState('');

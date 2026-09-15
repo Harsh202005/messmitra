@@ -172,27 +172,50 @@ export const PnLDashboard: React.FC<PnLDashboardProps> = ({
 
       {/* Expense Distribution by Category Cards */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
-        <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-          {t('expenseBreakdown')}
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+            {t('expenseBreakdown')} (Category-wise Distribution)
+          </h4>
+          <span className="text-xs text-slate-400">एकूण खर्च: ₹{pnlData.totalExpenses.toLocaleString('en-IN')}</span>
+        </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {expenseBreakdown.map(([category, amount]) => (
-            <div
-              key={category}
-              className="bg-slate-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/60"
-            >
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                {category}
-              </span>
-              <div className="text-base font-black text-slate-900 dark:text-white mt-1 font-mono">
-                ₹{amount.toLocaleString('en-IN')}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {expenseBreakdown.map(([category, amount]) => {
+            const categoryLabelsMr: Record<string, string> = {
+              groceries: 'किराणा व भाजीपाला',
+              vegetables: 'ताजी भाजी मंडी',
+              dairy: 'दूध, ताक व दही',
+              gas: 'कमर्शियल गॅस / इंधन',
+              rent: 'मेस गाळा भाडे',
+              salary: 'कर्मचारी उचल व पगार',
+              maintenance: 'किचन देखभाल व दुरुस्ती',
+              utilities: 'लाईट बिल आणि पाणी',
+              packaging: 'डबा पॅकिंग साहित्य',
+              other: 'इतर किरकोळ खर्च',
+            };
+            const label = categoryLabelsMr[category] || category;
+            const pct = Math.round((amount / (pnlData.totalExpenses || 1)) * 100);
+
+            return (
+              <div
+                key={category}
+                className="bg-[#fbf9f4] dark:bg-slate-800/80 p-3.5 rounded-2xl border border-[#eae3d5] dark:border-slate-700/60 shadow-xs"
+              >
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block truncate">
+                  {label}
+                </span>
+                <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1 font-mono">
+                  ₹{amount.toLocaleString('en-IN')}
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 mt-2 overflow-hidden">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(100, pct)}%` }} />
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono mt-1 block">
+                  {pct}% of total
+                </span>
               </div>
-              <span className="text-[10px] text-slate-400">
-                {Math.round((amount / (pnlData.totalExpenses || 1)) * 100)}% of total
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

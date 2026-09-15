@@ -106,6 +106,7 @@ function DashboardContent() {
 
   // Modal State
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginModalMode, setLoginModalMode] = useState<'login' | 'register'>('login');
   const [isSetupWizardOpen, setIsSetupWizardOpen] = useState(false);
   const [isCloudSyncOpen, setIsCloudSyncOpen] = useState(false);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
@@ -114,6 +115,24 @@ function DashboardContent() {
   const [isWhatsAppBroadcastOpen, setIsWhatsAppBroadcastOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Check URL params for direct actions (e.g., ?register=true or ?join=true)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (
+        params.get('register') === 'true' ||
+        params.get('join') === 'true' ||
+        params.get('action') === 'register'
+      ) {
+        setLoginModalMode('register');
+        setIsLoginModalOpen(true);
+      } else if (params.get('login') === 'true') {
+        setLoginModalMode('login');
+        setIsLoginModalOpen(true);
+      }
+    }
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -573,6 +592,7 @@ function DashboardContent() {
       {/* Global Modals */}
       <LoginModal
         isOpen={isLoginModalOpen}
+        initialMode={loginModalMode}
         onClose={() => setIsLoginModalOpen(false)}
         onSuccess={() => showToast('लॉगिन यशस्वी! भूमिकेनुसार डॅशबोर्ड लोड झाला.')}
       />

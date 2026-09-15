@@ -38,7 +38,7 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
   // Determine initial live public URL
   const getInitialPublicUrl = () => {
-    if (typeof window === 'undefined') return 'https://shreebalajimess.app/?register=true';
+    if (typeof window === 'undefined') return 'https://messmitra-web.vercel.app/?register=true';
 
     // 1. Check saved custom URL in localStorage
     const saved = localStorage.getItem('messmitra_custom_app_url');
@@ -50,13 +50,13 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
       return `${window.location.origin}/?register=true`;
     }
 
-    // 3. If on localhost, use production live domain fallback so printed posters have a real working link
+    // 3. If on localhost, use production live deployment URL so printed posters have a real working link
     return process.env.NEXT_PUBLIC_APP_URL
       ? `${process.env.NEXT_PUBLIC_APP_URL}/?register=true`
-      : 'https://shreebalajimess.app/?register=true';
+      : 'https://messmitra-web.vercel.app/?register=true';
   };
 
-  const [liveAppUrl, setLiveAppUrl] = useState<string>('https://shreebalajimess.app/?register=true');
+  const [liveAppUrl, setLiveAppUrl] = useState<string>('https://messmitra-web.vercel.app/?register=true');
 
   useEffect(() => {
     if (isOpen) {
@@ -324,17 +324,24 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
                     <span>जलद लिंक्स:</span>
                     <button
                       type="button"
+                      onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/?register=true')}
+                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-brand-500 text-brand-600 dark:text-brand-400 font-bold cursor-pointer font-mono"
+                    >
+                      messmitra-web.vercel.app
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/register')}
+                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
+                    >
+                      /register
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleSaveCustomUrl('https://shreebalajimess.app/?register=true')}
                       className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
                     >
                       shreebalajimess.app
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSaveCustomUrl('https://balajimess.vercel.app/?register=true')}
-                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 dark:border-slate-700 hover:text-brand-600 cursor-pointer font-mono"
-                    >
-                      balajimess.vercel.app
                     </button>
                     {isLocalhost && (
                       <button

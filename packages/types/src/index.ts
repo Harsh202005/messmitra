@@ -39,6 +39,8 @@ export type ExpenseCategory =
   | 'dairy' 
   | 'vegetables' 
   | 'maintenance' 
+  | 'packaging'
+  | 'utilities'
   | 'other';
 
 export interface Mess {
