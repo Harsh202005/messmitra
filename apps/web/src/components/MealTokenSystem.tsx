@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MealToken, Mess, Member, TokenStatus, TokenType } from '@messmitra/types';
+import { MealToken, Mess, Member, TokenStatus, TokenType, DietPreference } from '@messmitra/types';
 import QRCode from 'qrcode';
 import {
   Ticket,
@@ -25,6 +25,10 @@ import {
   ShoppingBag,
   Layers,
   ArrowRight,
+  Salad,
+  Egg,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 export const DEFAULT_TOKENS: MealToken[] = [
@@ -37,6 +41,7 @@ export const DEFAULT_TOKENS: MealToken[] = [
     tokenType: 'single_veg',
     tokenName: '१-वेळ शुद्ध शाकाहारी जेवण',
     amount: 90,
+    dietPreference: 'veg',
     mealSlot: 'lunch',
     paymentMethod: 'upi',
     status: 'redeemed',
@@ -52,6 +57,7 @@ export const DEFAULT_TOKENS: MealToken[] = [
     tokenType: 'single_nonveg',
     tokenName: '१-वेळ स्पेशल चिकन थाळी टोकन',
     amount: 150,
+    dietPreference: 'nonveg',
     mealSlot: 'dinner',
     paymentMethod: 'cash',
     status: 'issued',
@@ -61,16 +67,16 @@ export const DEFAULT_TOKENS: MealToken[] = [
     id: 'tkn-003',
     tokenNumber: 'TKN-103',
     messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    customerName: 'अमोल शिंदे (Tiffin)',
+    customerName: 'अमोल शिंदे (Full Day)',
     customerPhone: '+91 98903 33445',
-    tokenType: 'parcel_box',
-    tokenName: 'डबा / पार्सल पॅकिंग जेवण',
-    amount: 100,
-    mealSlot: 'lunch',
+    tokenType: 'bundle_pass',
+    tokenName: '२-वेळ संपूर्ण दिवस टोकन (दुपार+रात्र)',
+    amount: 170,
+    dietPreference: 'veg',
+    mealSlot: 'both',
     paymentMethod: 'upi',
-    status: 'redeemed',
-    issuedAt: new Date(Date.now() - 7200000).toISOString(),
-    redeemedAt: new Date(Date.now() - 5400000).toISOString(),
+    status: 'issued',
+    issuedAt: new Date(Date.now() - 2400000).toISOString(),
   },
   {
     id: 'tkn-004',
@@ -80,6 +86,7 @@ export const DEFAULT_TOKENS: MealToken[] = [
     tokenType: 'single_veg',
     tokenName: '१-वेळ शुद्ध शाकाहारी जेवण',
     amount: 90,
+    dietPreference: 'veg',
     mealSlot: 'dinner',
     paymentMethod: 'cash',
     status: 'issued',
@@ -105,7 +112,8 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
   const [tokenPrice, setTokenPrice] = useState(90);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [mealSlot, setMealSlot] = useState<'lunch' | 'dinner'>('lunch');
+  const [dietPreference, setDietPreference] = useState<DietPreference>('veg');
+  const [mealSlot, setMealSlot] = useState<'lunch' | 'dinner' | 'both'>('lunch');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'prepaid_bundle'>('cash');
   const [tokenNotes, setTokenNotes] = useState('');
 
@@ -139,11 +147,13 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
     type: TokenType,
     name: string,
     price: number,
-    slot: 'lunch' | 'dinner' = 'lunch'
+    diet: DietPreference = 'veg',
+    slot: 'lunch' | 'dinner' | 'both' = 'lunch'
   ) => {
     setTokenType(type);
     setCustomName(name);
     setTokenPrice(price);
+    setDietPreference(diet);
     setMealSlot(slot);
   };
 
@@ -161,6 +171,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
       tokenType,
       tokenName: customName,
       amount: Number(tokenPrice),
+      dietPreference,
       mealSlot,
       paymentMethod,
       status: 'issued',
@@ -174,12 +185,12 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
     // Generate QR code for receipt
     try {
       const qrData = await QRCode.toDataURL(
-        `MESS_TOKEN:${newToken.tokenNumber}:${newToken.amount}:${newToken.mealSlot}:${newToken.status}`,
+        `MESS_TOKEN:${newToken.tokenNumber}:${newToken.amount}:${newToken.dietPreference}:${newToken.mealSlot}:${newToken.status}`,
         { width: 250, margin: 1 }
       );
       setQrCodeDataUrl(qrData);
     } catch (err) {
-      console.warn('QR generation error', err);
+      console.error('QR generation failed:', err);
     }
 
     setLatestIssuedToken(newToken);
@@ -192,48 +203,53 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
 
   // Redeem token in Kitchen
   const handleRedeemToken = (id: string) => {
-    const updated = tokens.map((t) => {
-      if (t.id === id) {
-        return {
-          ...t,
-          status: 'redeemed' as TokenStatus,
-          redeemedAt: new Date().toISOString(),
-        };
-      }
-      return t;
-    });
+    const updated = tokens.map((t) =>
+      t.id === id
+        ? {
+            ...t,
+            status: 'redeemed' as TokenStatus,
+            redeemedAt: new Date().toISOString(),
+          }
+        : t
+    );
     saveTokens(updated);
   };
 
-  // Daily statistics
+  // Stats calculations
   const todayStr = new Date().toISOString().split('T')[0];
   const todayTokens = tokens.filter((t) => t.issuedAt.startsWith(todayStr));
   const todayTotalAmount = todayTokens.reduce((a, b) => a + b.amount, 0);
-  const todayPendingCount = todayTokens.filter((t) => t.status === 'issued').length;
+  const todayPendingCount = tokens.filter((t) => t.status === 'issued').length;
   const todayRedeemedCount = todayTokens.filter((t) => t.status === 'redeemed').length;
   const cashTotal = todayTokens.filter((t) => t.paymentMethod === 'cash').reduce((a, b) => a + b.amount, 0);
   const upiTotal = todayTokens.filter((t) => t.paymentMethod === 'upi').reduce((a, b) => a + b.amount, 0);
 
+  // Filtered tokens for register
   const filteredTokens = tokens.filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-    if (searchQuery.trim()) {
+    if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (
         t.tokenNumber.toLowerCase().includes(q) ||
         t.customerName.toLowerCase().includes(q) ||
-        (t.customerPhone && t.customerPhone.includes(q)) ||
         t.tokenName.toLowerCase().includes(q)
       );
     }
     return true;
   });
 
+  const getSlotLabel = (slot: 'lunch' | 'dinner' | 'both') => {
+    if (slot === 'lunch') return 'दुपारचे जेवण (Lunch)';
+    if (slot === 'dinner') return 'रात्रीचे जेवण (Dinner)';
+    return 'दोन्ही वेळ (Lunch + Dinner)';
+  };
+
   return (
-    <div className="space-y-5 sm:space-y-6">
-      {/* Top Banner / Hero */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Top Header Banner */}
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-amber-500 text-white flex items-center justify-center shadow-md shrink-0">
             <Ticket className="w-5 h-5" />
           </div>
           <div>
@@ -241,7 +257,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
               जेवण टोकन सिस्टीम (Mess Meal Token System)
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              एकेरी जेवण • पार्सल डबा टोकन्स • किचन काउंटर पंचिंग • आजचा रोख गल्ला
+              एकेरी जेवण • व्हेज/नॉनव्हेज • दुपार/रात्र/दोन्ही वेळ • पार्सल डबा टोकन्स
             </p>
           </div>
         </div>
@@ -345,6 +361,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   type: 'single_veg' as TokenType,
                   name: '१-वेळ शुद्ध शाकाहारी जेवण (Single Veg Meal)',
                   price: 90,
+                  diet: 'veg' as DietPreference,
                   tag: 'Pure Veg',
                   desc: 'अमर्यादित चपाती, २ भाज्या, वरण, भात, सॅलड',
                   slot: 'lunch' as const,
@@ -354,15 +371,27 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   type: 'single_nonveg' as TokenType,
                   name: '१-वेळ स्पेशल चिकन थाळी टोकन (Special Non-Veg)',
                   price: 150,
+                  diet: 'nonveg' as DietPreference,
                   tag: 'Special Non-Veg',
                   desc: 'चिकन सुक्का/रस्सा, भाकरी, भात, तांबडा-पांढरा रस्सा',
                   slot: 'dinner' as const,
+                  color: 'border-rose-300 dark:border-rose-800 bg-rose-50/40 dark:bg-rose-950/20',
+                },
+                {
+                  type: 'bundle_pass' as TokenType,
+                  name: '२-वेळ संपूर्ण दिवस पास (Full Day: Lunch + Dinner)',
+                  price: 170,
+                  diet: 'veg' as DietPreference,
+                  tag: 'Full Day (2 Meals)',
+                  desc: 'दुपार + रात्र दोन्ही वेळचे संपूर्ण जेवण टोकन',
+                  slot: 'both' as const,
                   color: 'border-amber-300 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20',
                 },
                 {
                   type: 'parcel_box' as TokenType,
                   name: 'पार्सल / डबा पॅकिंग जेवण (Tiffin Box Parcel)',
                   price: 100,
+                  diet: 'veg' as DietPreference,
                   tag: 'Tiffin Parcel',
                   desc: '४ पोळ्या, २ डबे भाजी, वरण, भात पॅकिंगसह',
                   slot: 'lunch' as const,
@@ -372,18 +401,21 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   type: 'bundle_pass' as TokenType,
                   name: '१० जेवण विद्यार्थी कूपन पास (10-Meal Student Pass)',
                   price: 850,
+                  diet: 'veg' as DietPreference,
                   tag: '10-Meal Pass',
                   desc: 'विद्यार्थ्यांसाठी १० जेवण पास (~₹८५/जेवण)',
-                  slot: 'lunch' as const,
+                  slot: 'both' as const,
                   color: 'border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20',
                 },
               ].map((preset, idx) => (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => handleSelectPreset(preset.type, preset.name, preset.price, preset.slot)}
+                  onClick={() =>
+                    handleSelectPreset(preset.type, preset.name, preset.price, preset.diet, preset.slot)
+                  }
                   className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer hover:scale-[1.01] hover:shadow-md ${preset.color} ${
-                    tokenType === preset.type && tokenPrice === preset.price
+                    tokenType === preset.type && tokenPrice === preset.price && dietPreference === preset.diet
                       ? 'ring-2 ring-brand-500 shadow-md'
                       : ''
                   }`}
@@ -393,8 +425,8 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                       <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-mono">
                         {preset.tag}
                       </span>
-                      <span className="text-xs text-slate-400 font-mono uppercase">
-                        {preset.slot}
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">
+                        {preset.slot === 'both' ? 'दोन्ही वेळ' : preset.slot === 'lunch' ? 'दुपार' : 'रात्र'}
                       </span>
                     </div>
 
@@ -428,6 +460,55 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
             </h3>
 
             <form onSubmit={handleIssueToken} className="space-y-3.5 mt-4 text-xs">
+              {/* Diet Preference Selector (Veg vs Non-Veg) */}
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  आहार प्रकार (Diet Preference) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDietPreference('veg');
+                      if (tokenType === 'single_nonveg') {
+                        setTokenType('single_veg');
+                        setCustomName('१-वेळ शुद्ध शाकाहारी जेवण');
+                        setTokenPrice(90);
+                      }
+                    }}
+                    className={`p-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-xs border ${
+                      dietPreference === 'veg'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    <Salad className="w-4 h-4" />
+                    <span>🟢 शाकाहारी (Veg)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDietPreference('nonveg');
+                      if (tokenType === 'single_veg') {
+                        setTokenType('single_nonveg');
+                        setCustomName('१-वेळ स्पेशल चिकन थाळी टोकन');
+                        setTokenPrice(150);
+                      }
+                    }}
+                    className={`p-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-xs border ${
+                      dietPreference === 'nonveg'
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    <Egg className="w-4 h-4" />
+                    <span>🔴 मांसाहारी (Non-Veg)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Token Title */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   टोकन तपशील (Token Title) *
@@ -441,6 +522,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 />
               </div>
 
+              {/* Price & Meal Slot (Lunch / Dinner / Both) */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -469,14 +551,16 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   <select
                     value={mealSlot}
                     onChange={(e) => setMealSlot(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none"
+                    className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none text-xs"
                   >
                     <option value="lunch">दुपारचे जेवण (Lunch)</option>
                     <option value="dinner">रात्रीचे जेवण (Dinner)</option>
+                    <option value="both">दोन्ही वेळ (Lunch + Dinner)</option>
                   </select>
                 </div>
               </div>
 
+              {/* Customer Name */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   ग्राहकाचे नाव (Customer Name)
@@ -493,6 +577,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 </div>
               </div>
 
+              {/* Phone */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   मोबाईल नंबर (WhatsApp Receipt)
@@ -509,6 +594,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 </div>
               </div>
 
+              {/* Payment Mode */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   पेमेंट पद्धत (Payment Mode) *
@@ -579,8 +665,19 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                     key={token.id}
                     className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border-2 border-amber-400 dark:border-amber-600 shadow-md flex flex-col justify-between space-y-4 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 bg-amber-500 text-white font-mono font-bold text-[10px] px-3 py-0.5 rounded-bl-xl uppercase">
-                      {token.mealSlot}
+                    <div className="absolute top-0 right-0 flex items-center">
+                      <span
+                        className={`text-[9px] font-black px-2 py-0.5 rounded-bl-lg uppercase ${
+                          token.dietPreference === 'nonveg'
+                            ? 'bg-rose-600 text-white'
+                            : 'bg-emerald-600 text-white'
+                        }`}
+                      >
+                        {token.dietPreference === 'nonveg' ? '🔴 नॉनव्हेज' : '🟢 व्हेज'}
+                      </span>
+                      <span className="bg-amber-500 text-slate-950 font-mono font-bold text-[9px] px-2 py-0.5 uppercase">
+                        {token.mealSlot === 'both' ? 'दोन्ही वेळ' : token.mealSlot === 'lunch' ? 'दुपार' : 'रात्र'}
+                      </span>
                     </div>
 
                     <div>
@@ -678,12 +775,26 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                     }`}
                   >
                     <span className="text-[10px] font-bold">#{t.tokenNumber.split('-')[1]}</span>
-                    <span className="text-[8px] uppercase">{t.mealSlot}</span>
+                    <span className="text-[8px] uppercase font-bold">
+                      {t.dietPreference === 'nonveg' ? '🔴 NV' : '🟢 VG'}
+                    </span>
                   </div>
 
                   <div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>{t.tokenName}</span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-slate-900 dark:text-white">{t.tokenName}</span>
+                      <span
+                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded border ${
+                          t.dietPreference === 'nonveg'
+                            ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
+                            : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
+                        }`}
+                      >
+                        {t.dietPreference === 'nonveg' ? 'नॉनव्हेज' : 'व्हेज'}
+                      </span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        {t.mealSlot === 'both' ? 'दोन्ही वेळ' : t.mealSlot === 'lunch' ? 'दुपार' : 'रात्र'}
+                      </span>
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                           t.status === 'redeemed'
@@ -748,51 +859,74 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 <div className="w-7 h-7 rounded-lg overflow-hidden">
                   <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
                 </div>
-                <span className="font-black text-sm text-slate-900 dark:text-white">
+                <h3 className="font-black text-sm text-slate-900 dark:text-white">
                   श्री बालाजी मेस (पुणे)
-                </span>
+                </h3>
               </div>
 
-              <div className="py-2 border-y border-slate-200 dark:border-slate-700">
-                <div className="text-3xl font-black font-mono text-[#ea580c]">
+              <div className="text-[10px] text-slate-500">
+                २१ वर्षांची अखंड परंपरा • चालक: शंकर गिरी
+              </div>
+
+              {/* Big Token Number */}
+              <div className="py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl">
+                <span className="text-xs text-slate-400 block font-mono">TOKEN NUMBER</span>
+                <span className="text-3xl font-black font-mono tracking-wider">
                   #{latestIssuedToken.tokenNumber}
-                </div>
-                <div className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
-                  {latestIssuedToken.tokenName}
-                </div>
-                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-mono">
-                  {latestIssuedToken.mealSlot} Pass • ₹{latestIssuedToken.amount}
                 </span>
               </div>
 
+              {/* Badges: Diet & Slot */}
+              <div className="flex items-center justify-center gap-2">
+                <span
+                  className={`text-xs font-black px-2.5 py-1 rounded-full border ${
+                    latestIssuedToken.dietPreference === 'nonveg'
+                      ? 'bg-rose-100 text-rose-800 border-rose-300'
+                      : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  }`}
+                >
+                  {latestIssuedToken.dietPreference === 'nonveg' ? '🔴 नॉनव्हेज' : '🟢 शुद्ध शाकाहारी'}
+                </span>
+
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                  {latestIssuedToken.mealSlot === 'both' ? 'दोन्ही वेळ (Lunch+Dinner)' : latestIssuedToken.mealSlot === 'lunch' ? 'दुपारचे जेवण' : 'रात्रीचे जेवण'}
+                </span>
+              </div>
+
+              {/* Token Details */}
+              <div className="text-xs space-y-1 font-mono text-slate-700 dark:text-slate-300 pt-1 text-left bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div>तपशील: <strong>{latestIssuedToken.tokenName}</strong></div>
+                <div>ग्राहक: <strong>{latestIssuedToken.customerName}</strong></div>
+                <div>रक्कम: <strong className="text-emerald-600 font-bold">₹{latestIssuedToken.amount} ({latestIssuedToken.paymentMethod.toUpperCase()})</strong></div>
+                <div>तारीख: <strong>{new Date(latestIssuedToken.issuedAt).toLocaleDateString('en-IN')}</strong></div>
+              </div>
+
+              {/* QR Code */}
               {qrCodeDataUrl && (
-                <div className="w-32 h-32 mx-auto bg-white p-2 rounded-xl shadow-inner border border-slate-200">
-                  <img src={qrCodeDataUrl} alt="Token QR" className="w-full h-full object-contain" />
+                <div className="flex flex-col items-center pt-1">
+                  <img src={qrCodeDataUrl} alt="Token QR" className="w-28 h-28 rounded-lg border border-slate-200" />
+                  <span className="text-[9px] text-slate-400 mt-1 font-mono">किचन काउंटरवर स्कॅन करा</span>
                 </div>
               )}
-
-              <div className="text-[10px] text-slate-500 font-mono">
-                ग्राहक: {latestIssuedToken.customerName} • {new Date(latestIssuedToken.issuedAt).toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })}
-              </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
+            {/* Print & Close Actions */}
+            <div className="flex items-center gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Printer className="w-4 h-4" />
-                <span>प्रिंट करा</span>
+                <Printer className="w-3.5 h-3.5" />
+                <span>प्रिंट टोकन स्लिप</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setLatestIssuedToken(null)}
-                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
               >
-                <Check className="w-4 h-4" />
-                <span>पूर्ण झाले (Done)</span>
+                बंद करा
               </button>
             </div>
           </div>

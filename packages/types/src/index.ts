@@ -491,7 +491,8 @@ export interface MealToken {
   tokenType: TokenType;
   tokenName: string;
   amount: number;
-  mealSlot: 'lunch' | 'dinner';
+  dietPreference?: DietPreference;
+  mealSlot: 'lunch' | 'dinner' | 'both';
   paymentMethod: 'cash' | 'upi' | 'prepaid_bundle';
   status: TokenStatus;
   issuedAt: string;
