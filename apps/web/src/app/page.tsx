@@ -36,6 +36,7 @@ import { CloudDatabaseSyncModal } from '../components/CloudDatabaseSyncModal';
 import { BulkMemberImportModal } from '../components/BulkMemberImportModal';
 import { MessNoticeBoardQrModal } from '../components/MessNoticeBoardQrModal';
 import { WhatsAppBroadcastModal } from '../components/WhatsAppBroadcastModal';
+import { NotificationBanner } from '../components/NotificationBanner';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import {
   CheckCircle2,
@@ -666,6 +667,9 @@ function DashboardContent() {
         billingCycles={billingData.cycles}
         mess={mess}
       />
+
+      {/* Floating Free-Tier Mobile Push Notification Banner */}
+      <NotificationBanner />
     </div>
   );
 }

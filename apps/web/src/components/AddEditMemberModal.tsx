@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
 import { Member, Gender, DietPreference, PlanType, MemberStatus, Mess } from '@messmitra/types';
-import { X, User, Phone, DollarSign, Calendar, UtensilsCrossed, CheckCircle2 } from 'lucide-react';
+import { X, User, Phone, DollarSign, Calendar, UtensilsCrossed, CheckCircle2, Tag } from 'lucide-react';
+import { getDynamicRateForPlan, getStoredPlans } from '../lib/pricePlanService';
 
 interface AddEditMemberModalProps {
   isOpen: boolean;
@@ -23,15 +24,18 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   const { t } = useI18n();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const defaultVegRate = mess?.defaultVegRate || 3000;
-  const defaultNonVegRate = mess?.defaultNonVegRate || 3200;
+  // Dynamic rates computed from Owner's Plan Manager
+  const veg1Rate = getDynamicRateForPlan('lunch', 'veg');
+  const veg2Rate = getDynamicRateForPlan('both', 'veg');
+  const nonveg1Rate = getDynamicRateForPlan('lunch', 'nonveg');
+  const nonveg2Rate = getDynamicRateForPlan('both', 'nonveg');
 
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     dietPreference: 'veg' as DietPreference,
     gender: 'male' as Gender,
-    rate: defaultVegRate,
+    rate: veg2Rate,
     planType: 'both' as PlanType,
     joinDate: new Date().toISOString().split('T')[0],
     status: 'active' as MemberStatus,
@@ -50,28 +54,26 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
         status: member.status,
       });
     } else {
+      const initialRate = getDynamicRateForPlan('both', 'veg');
       setFormData({
         name: '',
         phone: '',
         dietPreference: 'veg',
         gender: 'male',
-        rate: defaultVegRate,
+        rate: initialRate,
         planType: 'both',
         joinDate: new Date().toISOString().split('T')[0],
         status: 'active',
       });
     }
-  }, [member, isOpen, defaultVegRate]);
+  }, [member, isOpen]);
 
   if (!isOpen) return null;
 
   const handleDietChange = (dietPreference: DietPreference) => {
     let rate = formData.rate;
     if (!member) {
-      rate = dietPreference === 'veg' ? defaultVegRate : defaultNonVegRate;
-      if (formData.planType !== 'both') {
-        rate = Math.round(rate / 2);
-      }
+      rate = getDynamicRateForPlan(formData.planType, dietPreference, formData.gender);
     }
     setFormData({ ...formData, dietPreference, rate });
   };
@@ -79,10 +81,17 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   const handlePlanChange = (planType: PlanType) => {
     let rate = formData.rate;
     if (!member) {
-      const base = formData.dietPreference === 'veg' ? defaultVegRate : defaultNonVegRate;
-      rate = planType === 'both' ? base : Math.round(base / 2);
+      rate = getDynamicRateForPlan(planType, formData.dietPreference, formData.gender);
     }
     setFormData({ ...formData, planType, rate });
+  };
+
+  const handleGenderChange = (gender: Gender) => {
+    let rate = formData.rate;
+    if (!member) {
+      rate = getDynamicRateForPlan(formData.planType, formData.dietPreference, gender);
+    }
+    setFormData({ ...formData, gender, rate });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,6 +169,38 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
             </div>
           </div>
 
+          {/* Gender Selection */}
+          <div>
+            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+              लिंग (Gender) *
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleGenderChange('male')}
+                className={`min-h-[44px] px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                  formData.gender === 'male'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <span>👨 पुरुष (Male)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleGenderChange('female')}
+                className={`min-h-[44px] px-3 py-2 rounded-xl font-bold flex items-center justify-center gap-2 border transition cursor-pointer ${
+                  formData.gender === 'female'
+                    ? 'bg-pink-600 text-white border-pink-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <span>👩 विद्यार्थिनी / महिला (Female)</span>
+              </button>
+            </div>
+          </div>
+
           {/* Diet Preference */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -176,7 +217,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                 }`}
               >
                 <span>🟢 शाकाहारी (Veg)</span>
-                <span className="text-[10px] opacity-90">(₹3,000)</span>
+                <span className="text-[10px] opacity-90 font-mono">
+                  (१ वेळ: ₹{veg1Rate} / २ वेळ: ₹{veg2Rate})
+                </span>
               </button>
 
               <button
@@ -189,52 +232,65 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                 }`}
               >
                 <span>🔴 मांसाहारी (Non-Veg)</span>
-                <span className="text-[10px] opacity-90">(₹3,200)</span>
+                <span className="text-[10px] opacity-90 font-mono">
+                  (१ वेळ: ₹{nonveg1Rate} / २ वेळ: ₹{nonveg2Rate})
+                </span>
               </button>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              * मांसाहारी/अंडी: आठवड्यातून ३ दिवस (बुधवार, शुक्रवार, रविवार) दिले जाते. इतर दिवस (सोम, मंगळ, गुरू, शनि) स्वादिष्ट शाकाहारी भोजन.
+              * मांसाहारी/अंडी: आठवड्यातून ३ दिवस (बुध, शुक्र, रविवार). इतर दिवस स्वादिष्ट शाकाहारी भोजन.
             </p>
           </div>
 
-          {/* Plan Type */}
+          {/* Plan Type (1 meal vs 2 meals) */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              प्लॅन प्रकार (Plan Type) *
+              जेवणाचा वेळ व प्रकार (Plan Type) *
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handlePlanChange('both')}
-                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                className={`min-h-[48px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer flex flex-col items-center justify-center ${
                   formData.planType === 'both'
                     ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                दोन्ही वेळ (56 जेवण)
+                <span>२-वेळ दोन्ही (Lunch+Dinner)</span>
+                <span className="text-[10px] font-mono opacity-90">
+                  ₹{formData.dietPreference === 'veg' ? veg2Rate : nonveg2Rate}/महिना
+                </span>
               </button>
+
               <button
                 type="button"
                 onClick={() => handlePlanChange('lunch')}
-                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                className={`min-h-[48px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer flex flex-col items-center justify-center ${
                   formData.planType === 'lunch'
                     ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                फक्त दुपार (28 जेवण)
+                <span>१-वेळ फक्त दुपार (Lunch)</span>
+                <span className="text-[10px] font-mono opacity-90">
+                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/महिना
+                </span>
               </button>
+
               <button
                 type="button"
                 onClick={() => handlePlanChange('dinner')}
-                className={`min-h-[44px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer ${
+                className={`min-h-[48px] py-2 px-1 rounded-xl text-center font-bold border transition text-xs cursor-pointer flex flex-col items-center justify-center ${
                   formData.planType === 'dinner'
                     ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                फक्त रात्र (28 जेवण)
+                <span>१-वेळ फक्त रात्र (Dinner)</span>
+                <span className="text-[10px] font-mono opacity-90">
+                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/महिना
+                </span>
               </button>
             </div>
           </div>
@@ -242,73 +298,74 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Rate & Join Date */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                मासिक दर (₹ Rate) *
-              </label>
-              <input
-                type="number"
-                inputMode="numeric"
-                required
-                min={0}
-                step={50}
-                value={formData.rate}
-                onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })}
-                className="w-full px-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
-              />
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-bold text-slate-700 dark:text-slate-300">
+                  मासिक दर (₹ Rate) *
+                </label>
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                  (मालक दर बदलू शकतात)
+                </span>
+              </div>
+              <div className="relative">
+                <span className="absolute left-3 top-3 text-slate-400 font-bold">₹</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  required
+                  min={1}
+                  step={50}
+                  value={formData.rate}
+                  onChange={(e) => setFormData({ ...formData, rate: Number(e.target.value) })}
+                  className="w-full pl-7 pr-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+              </div>
             </div>
+
             <div>
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                सामील तारीख *
+                जोडणी तारीख (Join Date) *
               </label>
-              <input
-                type="date"
-                required
-                value={formData.joinDate}
-                onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+              <div className="relative">
+                <input
+                  type="date"
+                  required
+                  value={formData.joinDate}
+                  onChange={(e) => setFormData({ ...formData, joinDate: e.target.value })}
+                  className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status Selection (Edit Mode Only) */}
+          {member && (
+            <div>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                स्थिती (Member Status)
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as MemberStatus })
+                }
                 className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Status */}
-          <div>
-            <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              स्थिती (Status) *
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, status: 'active' })}
-                className={`min-h-[44px] rounded-xl font-bold border transition ${
-                  formData.status === 'active'
-                    ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                }`}
               >
-                सक्रिय (Active)
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, status: 'inactive' })}
-                className={`min-h-[44px] rounded-xl font-bold border transition ${
-                  formData.status === 'inactive'
-                    ? 'bg-slate-700 text-white border-slate-700'
-                    : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                }`}
-              >
-                बंद (Inactive)
-              </button>
+                <option value="active">सक्रिय (Active)</option>
+                <option value="suspended">तात्पुरते बंद (Suspended)</option>
+                <option value="left">सोडून गेले (Left)</option>
+              </select>
             </div>
-          </div>
+          )}
 
-          {/* Submit */}
+          {/* Submit Button */}
           <div className="pt-2">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50"
+              className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
             >
-              {isSubmitting ? 'जतन करत आहे...' : member ? 'बदल सेव्ह करा' : 'सभासद नोंदणी पूर्ण करा'}
+              <CheckCircle2 className="w-4 h-4" />
+              <span>{isSubmitting ? 'जतन करत आहे...' : member ? 'बदल सेव्ह करा' : 'सभासद जोडा (Save Member)'}</span>
             </button>
           </div>
         </form>

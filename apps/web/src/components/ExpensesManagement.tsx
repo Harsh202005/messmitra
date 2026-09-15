@@ -61,6 +61,9 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
 
   // Forms
+  const [customTagRecurring, setCustomTagRecurring] = useState('');
+  const [customTagOneOff, setCustomTagOneOff] = useState('');
+
   const [recurringForm, setRecurringForm] = useState({
     category: 'rent' as ExpenseCategory,
     payeeName: '',
@@ -85,8 +88,17 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
   const handleRecurringSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onAddRecurring(recurringForm);
+    const finalPayee =
+      recurringForm.category === 'other' && customTagRecurring.trim()
+        ? `[${customTagRecurring.trim()}] ${recurringForm.payeeName}`
+        : recurringForm.payeeName;
+
+    await onAddRecurring({
+      ...recurringForm,
+      payeeName: finalPayee,
+    });
     setIsAddRecurringOpen(false);
+    setCustomTagRecurring('');
     setRecurringForm({
       category: 'rent',
       payeeName: '',
@@ -98,8 +110,17 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
   const handleOneOffSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onAddOneOff(oneOffForm);
+    const finalNote =
+      oneOffForm.category === 'other' && customTagOneOff.trim()
+        ? `[${customTagOneOff.trim()}] ${oneOffForm.note || customTagOneOff.trim()}`
+        : oneOffForm.note;
+
+    await onAddOneOff({
+      ...oneOffForm,
+      note: finalNote,
+    });
     setIsAddOneOffOpen(false);
+    setCustomTagOneOff('');
     setOneOffForm({
       category: 'vegetables',
       amount: 500,
@@ -438,7 +459,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <form onSubmit={handleRecurringSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  खर्चाचा प्रकार *
+                  खर्चाचा प्रकार (Category) *
                 </label>
                 <select
                   value={recurringForm.category}
@@ -447,16 +468,38 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   }
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="rent">मेस गाळा भाडे (Rent)</option>
-                  <option value="gas">कमर्शियल गॅस सिलिंडर / इंधन (Gas/Fuel)</option>
-                  <option value="utilities">लाईट बिल आणि पाणी (Electricity & Water)</option>
-                  <option value="salary">कर्मचारी मानधन (Staff Salary)</option>
-                  <option value="maintenance">किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
-                  <option value="packaging">डबा पॅकिंग साहित्य (Packaging Material)</option>
-                  <option value="groceries">किराणा व इतर धान्य (Groceries)</option>
-                  <option value="other">इतर नियमित खर्च (Other Regular)</option>
+                  <option value="rent">🏠 मेस गाळा भाडे (Mess Space Rent)</option>
+                  <option value="gas">🔥 कमर्शियल गॅस सिलिंडर / इंधन (Gas/Fuel)</option>
+                  <option value="utilities">⚡ लाईट बिल आणि पाणी बिल (Electricity & Water)</option>
+                  <option value="salary">👨‍🍳 कर्मचारी मानधन व पगार (Staff Salary)</option>
+                  <option value="maintenance">🔧 किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
+                  <option value="packaging">📦 डबा पॅकिंग साहित्य व बॉक्सेस (Packaging Material)</option>
+                  <option value="groceries">🌾 किराणा माल व इतर धान्य (Groceries)</option>
+                  <option value="vegetables">🥬 भाजीपाला व फळे (Vegetables)</option>
+                  <option value="dairy">🥛 दूध, दही व ताक (Dairy)</option>
+                  <option value="other">🏷️ इतर नियमित खर्च (Other Regular Expense)</option>
                 </select>
               </div>
+
+              {/* Conditional Custom Expense Tag Input when 'other' is chosen */}
+              {recurringForm.category === 'other' && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl space-y-1 animate-fadeIn">
+                  <label className="block font-bold text-amber-900 dark:text-amber-200 text-xs">
+                    🏷️ इतर खर्चाचा कस्टम टॅग (Custom Expense Tag) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="उदा. इंटरनेट वायफाय बिल, भांडी घासणी, टेम्पो भाडे..."
+                    value={customTagRecurring}
+                    onChange={(e) => setCustomTagRecurring(e.target.value)}
+                    className="w-full px-3 py-2 min-h-[40px] text-xs bg-white dark:bg-slate-900 border border-amber-400 dark:border-amber-600 rounded-lg text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400 block">
+                    हा टॅग खर्चाच्या नोंदीत व अहवालात वेगळा दिसेल.
+                  </span>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -538,7 +581,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <form onSubmit={handleOneOffSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  खर्च प्रकार *
+                  खर्च प्रकार (Category) *
                 </label>
                 <select
                   value={oneOffForm.category}
@@ -547,17 +590,37 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   }
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="vegetables">ताजी भाजी मंडी (Fresh Vegetables)</option>
-                  <option value="groceries">किराणा माल व तेल (Groceries & Oil)</option>
-                  <option value="dairy">दूध, ताक व दही (Dairy Products)</option>
-                  <option value="gas">कमर्शियल गॅस सिलिंडर (Gas Refill)</option>
-                  <option value="packaging">डबा पॅकिंग साहित्य / पार्सल बॉक्सेस (Packaging Material)</option>
-                  <option value="maintenance">किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
-                  <option value="salary">कर्मचारी उचल / रोजंदारी (Staff Advance)</option>
-                  <option value="utilities">लाईट बिल / पाणी बिल (Electricity / Water)</option>
-                  <option value="other">इतर किरकोळ खर्च (Other Miscellaneous)</option>
+                  <option value="vegetables">🥬 ताजी भाजी मंडी व फळे (Fresh Vegetables)</option>
+                  <option value="groceries">🌾 किराणा माल व तेल/मसाले (Groceries & Spices)</option>
+                  <option value="dairy">🥛 ताजे दूध, ताक व दही (Fresh Dairy Products)</option>
+                  <option value="gas">🔥 कमर्शियल गॅस सिलिंडर रिफिल (Gas Refill)</option>
+                  <option value="packaging">📦 डबा पॅकिंग साहित्य / पार्सल बॉक्सेस (Packaging Material)</option>
+                  <option value="maintenance">🔧 स्वयंपाक भांडी, स्वच्छता व मेंटेनन्स (Utensils & Maintenance)</option>
+                  <option value="salary">👨‍🍳 कर्मचारी उचल / रोजंदारी (Staff Advance)</option>
+                  <option value="utilities">⚡ लाईट बिल / पाणी कॅन खर्च (Electricity / Water Jars)</option>
+                  <option value="other">🏷️ इतर किरकोळ खर्च (Other Custom Expense)</option>
                 </select>
               </div>
+
+              {/* Conditional Custom Tag Input when 'other' is selected */}
+              {oneOffForm.category === 'other' && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl space-y-1 animate-fadeIn">
+                  <label className="block font-bold text-amber-900 dark:text-amber-200 text-xs">
+                    🏷️ इतर खर्चाचा कस्टम टॅग (Custom Expense Tag) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="उदा. भांडी घासणी, टेम्पो वाहतूक, अगरबत्ती/पूजा, किराणा हमाली..."
+                    value={customTagOneOff}
+                    onChange={(e) => setCustomTagOneOff(e.target.value)}
+                    className="w-full px-3 py-2 min-h-[40px] text-xs bg-white dark:bg-slate-900 border border-amber-400 dark:border-amber-600 rounded-lg text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400 block">
+                    हा टॅग खर्चाच्या नोंदीत व दैनंदिन हिशेबात वेगळा टॅग केला जाईल.
+                  </span>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">

@@ -23,131 +23,11 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
-export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
-  {
-    id: 'plan-1meal-veg',
-    badge: '1 MEAL/DAY',
-    badgeColor: 'purple',
-    name: '1-Meal Pure Veg (Lunch or Dinner)',
-    nameMr: '१-वेळ शुद्ध शाकाहारी (दुपार किंवा रात्र)',
-    price: 2400,
-    priceUnit: '/ month (~₹80/meal)',
-    description: 'Includes Unlimited Roti/Bhakri, 2 Sabzi, Dal Tadka, Steamed Rice, Salad & Sweet on Sundays.',
-    descriptionMr: 'अमर्यादित चपाती/भाकरी, २ भाज्या, वरण-भात, सॅलड आणि रविवारी गोड जेवण.',
-    tags: [{ label: 'Pure Veg', type: 'veg' }],
-    planCategory: 'monthly',
-    mealsPerDay: 1,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-1meal-nonveg',
-    badge: '1 MEAL/DAY',
-    badgeColor: 'purple',
-    name: '1-Meal Non-Veg / Special',
-    nameMr: '१-वेळ मांसाहारी / स्पेशल (बुध, शुक्र, रविवारी)',
-    price: 2850,
-    priceUnit: '/ month (~₹95/meal)',
-    description: 'Includes Special Chicken/Egg Thali twice a week + daily veg thali options.',
-    descriptionMr: 'आठवड्यातून २-३ वेळा स्पेशल चिकन/अंडी थाळी + नियमित शाकाहारी थाळी पर्याय.',
-    tags: [{ label: 'Non-Veg / Special', type: 'nonveg' }],
-    planCategory: 'monthly',
-    mealsPerDay: 1,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-2meal-veg',
-    badge: '2 MEALS/DAY',
-    badgeColor: 'purple',
-    name: '2-Meal Full Day Veg (Lunch + Dinner)',
-    nameMr: '२-वेळ संपूर्ण शाकाहारी (दुपार + रात्र)',
-    price: 4200,
-    priceUnit: '/ month (~₹70/meal)',
-    description: 'Complete daily nutrition with lunch and dinner. Best value for students & professionals.',
-    descriptionMr: 'दुपार आणि रात्र दोन्ही वेळचे पौष्टिक जेवण. विद्यार्थी व नोकरदारांसाठी सर्वोत्तम.',
-    tags: [{ label: 'Pure Veg', type: 'veg' }],
-    planCategory: 'monthly',
-    mealsPerDay: 2,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-2meal-special',
-    badge: '2 MEALS/DAY',
-    badgeColor: 'purple',
-    name: '2-Meal Full Day Special (Mixed / Non-Veg)',
-    nameMr: '२-वेळ संपूर्ण स्पेशल (मिश्र / मांसाहारी)',
-    price: 4950,
-    priceUnit: '/ month (~₹82.5/meal)',
-    description: 'Full lunch and dinner thalis with 2x weekly non-veg dinner specials.',
-    descriptionMr: 'दुपारचे शाकाहारी जेवण + रात्री मांसाहारी/अंडी विशेष जेवण (बुध, शुक्र, रविवार).',
-    tags: [{ label: 'Non-Veg / Special', type: 'nonveg' }],
-    planCategory: 'monthly',
-    mealsPerDay: 2,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-30token-flexi',
-    badge: 'TOKEN BUNDLE',
-    badgeColor: 'purple',
-    name: '30-Meal Flexi Token Pack',
-    nameMr: '३० जेवण फ्लेक्सी टोकन पास',
-    price: 2550,
-    priceUnit: '/ 30 tokens (45d)',
-    description: 'Bundle of 30 prepaid meal tokens. Deducts 1 token per meal consumed. 45 days validity.',
-    descriptionMr: '३० प्रीपेड जेवण कूपन्स. जेवल्यावर १ टोकन वजा होते. ४५ दिवसांची वैधता.',
-    tags: [
-      { label: 'Pure Veg', type: 'veg' },
-      { label: '30 Meal Tokens', type: 'token' },
-    ],
-    planCategory: 'token_bundle',
-    tokenCount: 30,
-    validityDays: 45,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-student-female-concession',
-    badge: '2 MEALS/DAY',
-    badgeColor: 'purple',
-    name: '2-Meal Student Concession (Female Tier)',
-    nameMr: '२-वेळ विद्यार्थिनी सवलत दर',
-    price: 3950,
-    priceUnit: '/ month (~₹65.8/meal)',
-    description: 'Concessional daily 2-meal plan for female college students nearby.',
-    descriptionMr: 'कॉलेज व स्पर्धा परीक्षा विद्यार्थिनींसाठी विशेष सवलतीचा मासिक दर.',
-    tags: [
-      { label: 'Pure Veg', type: 'veg' },
-      { label: 'Female Rate', type: 'female' },
-    ],
-    planCategory: 'concession',
-    mealsPerDay: 2,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: 'plan-20token-pack',
-    badge: 'TOKEN BUNDLE',
-    badgeColor: 'purple',
-    name: '20 tokens',
-    nameMr: '२० जेवण कूपन बंडल',
-    price: 1300,
-    priceUnit: '/ 20 tokens (30d)',
-    description: '20 single-meal prepaid tokens valid for 30 days. Transferable and flexible.',
-    descriptionMr: '२० एकेरी जेवण टोकन्स, ३० दिवसांसाठी वैध. अतिशय सोयीस्कर व लवचिक.',
-    tags: [
-      { label: 'Pure Veg', type: 'veg' },
-      { label: '20 Meal Tokens', type: 'token' },
-    ],
-    planCategory: 'token_bundle',
-    tokenCount: 20,
-    validityDays: 30,
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-];
+import {
+  DEFAULT_PRICE_PLANS,
+  getStoredPlans,
+  saveStoredPlans,
+} from '../lib/pricePlanService';
 
 interface PriceAndPlanManagerProps {
   members: Member[];
@@ -173,34 +53,28 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   const [formName, setFormName] = useState('');
   const [formNameMr, setFormNameMr] = useState('');
   const [formBadge, setFormBadge] = useState('1 MEAL/DAY');
-  const [formPrice, setFormPrice] = useState(2400);
-  const [formPriceUnit, setFormPriceUnit] = useState('/ month (~₹80/meal)');
+  const [formPrice, setFormPrice] = useState(1700);
+  const [formPriceUnit, setFormPriceUnit] = useState('/ month (~₹56.6/meal)');
   const [formDescription, setFormDescription] = useState('');
   const [formCategory, setFormCategory] = useState<'monthly' | 'token_bundle' | 'concession'>('monthly');
   const [formVegNonveg, setFormVegNonveg] = useState<'veg' | 'nonveg' | 'both'>('veg');
   const [formTokenCount, setFormTokenCount] = useState(30);
   const [formValidityDays, setFormValidityDays] = useState(45);
 
-  // Load persisted plans from localStorage
+  // Load persisted plans from service
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('messmitra_price_plans');
-      if (saved) {
-        setPlans(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.warn('Failed to load price plans from localStorage', e);
-    }
+    setPlans(getStoredPlans());
+
+    const handlePlansUpdated = (e: any) => {
+      setPlans(getStoredPlans());
+    };
+    window.addEventListener('messmitra_plans_updated', handlePlansUpdated);
+    return () => window.removeEventListener('messmitra_plans_updated', handlePlansUpdated);
   }, []);
 
   const savePlans = (newPlans: MessPricePlan[]) => {
     setPlans(newPlans);
-    try {
-      localStorage.setItem('messmitra_price_plans', JSON.stringify(newPlans));
-      window.dispatchEvent(new Event('messmitra_plans_changed'));
-    } catch (e) {
-      console.warn('Failed to save price plans to localStorage', e);
-    }
+    saveStoredPlans(newPlans);
   };
 
   const handleOpenEdit = (plan: MessPricePlan) => {

@@ -32,6 +32,7 @@ import {
   Ticket,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
+import { NotificationBell } from './NotificationBell';
 
 export type ActiveTab = 'members' | 'leaves' | 'billing' | 'expenses' | 'pnl' | 'plans' | 'tokens';
 export type UserViewRole = 'owner' | 'member' | 'staff';
@@ -201,6 +202,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Right Action Controls */}
             <div className="flex items-center gap-1 sm:gap-2">
+              {/* Free-Tier In-App & Mobile Notification Bell */}
+              <NotificationBell />
+
               {/* Light / Dark Theme Toggle Button */}
               <button
                 onClick={toggleTheme}

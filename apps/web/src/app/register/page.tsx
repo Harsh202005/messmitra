@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MessMitraApi } from '../../lib/api';
 import { DietPreference, PlanType } from '@messmitra/types';
@@ -20,7 +20,9 @@ import {
   Salad,
   ChevronRight,
   ExternalLink,
+  Tag,
 } from 'lucide-react';
+import { getDynamicRateForPlan, getStoredPlans } from '../../lib/pricePlanService';
 
 export default function RegisterPage() {
   const [registerRole, setRegisterRole] = useState<'member' | 'staff'>('member');
@@ -35,9 +37,13 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Rate calculation
-  const defaultRate = regDiet === 'nonveg' ? 3200 : 3000;
-  const calculatedRate = regPlan === 'both' ? defaultRate : Math.round(defaultRate / 2);
+  // Dynamic rates from Owner's Plan Manager
+  const veg1Rate = getDynamicRateForPlan('lunch', 'veg');
+  const veg2Rate = getDynamicRateForPlan('both', 'veg');
+  const nonveg1Rate = getDynamicRateForPlan('lunch', 'nonveg');
+  const nonveg2Rate = getDynamicRateForPlan('both', 'nonveg');
+
+  const calculatedRate = getDynamicRateForPlan(regPlan, regDiet);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,58 +231,94 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setRegDiet('veg')}
-                      className={`p-2.5 rounded-xl border font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-xs ${
+                      className={`p-2.5 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition cursor-pointer text-xs ${
                         regDiet === 'veg'
                           ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300'
                           : 'bg-slate-800 border-slate-700 text-slate-400'
                       }`}
                     >
-                      <Salad className="w-4 h-4 text-emerald-400" />
-                      <span>शुद्ध शाकाहारी (₹3,000)</span>
+                      <div className="flex items-center gap-1.5">
+                        <Salad className="w-4 h-4 text-emerald-400" />
+                        <span>शुद्ध शाकाहारी</span>
+                      </div>
+                      <span className="text-[10px] opacity-90 font-mono text-emerald-400">
+                        १ वेळ: ₹{veg1Rate} | २ वेळ: ₹{veg2Rate}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setRegDiet('nonveg')}
-                      className={`p-2.5 rounded-xl border font-bold flex items-center justify-center gap-1.5 transition cursor-pointer text-xs ${
+                      className={`p-2.5 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition cursor-pointer text-xs ${
                         regDiet === 'nonveg'
                           ? 'bg-amber-950/60 border-amber-500 text-amber-300'
                           : 'bg-slate-800 border-slate-700 text-slate-400'
                       }`}
                     >
-                      <Egg className="w-4 h-4 text-amber-400" />
-                      <span>मांसाहारी / अंडी (₹3,200)</span>
+                      <div className="flex items-center gap-1.5">
+                        <Egg className="w-4 h-4 text-amber-400" />
+                        <span>मांसाहारी / अंडी</span>
+                      </div>
+                      <span className="text-[10px] opacity-90 font-mono text-amber-400">
+                        १ वेळ: ₹{nonveg1Rate} | २ वेळ: ₹{nonveg2Rate}
+                      </span>
                     </button>
                   </div>
                   <p className="text-[10px] text-slate-400 mt-1">
-                    * मांसाहारी/अंडी विशेष जेवण फक्त बुध, शुक्र, रविवारी रात्री असते. दुपारचे जेवण १००% शाकाहारी असते.
+                    * मांसाहारी/अंडी विशेष जेवण बुध, शुक्र, रविवारी रात्री असते. दुपारचे जेवण १००% शाकाहारी असते.
                   </p>
                 </div>
 
-                {/* Plan */}
+                {/* Plan (1-meal vs 2-meals) */}
                 <div>
                   <label className="block font-bold text-slate-300 mb-1">
                     जेवणाची वेळ (Meal Plan) *
                   </label>
                   <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold">
-                    {[
-                      { id: 'both', label: 'दोन्ही वेळ (Both)' },
-                      { id: 'lunch', label: 'फक्त दुपार (Lunch)' },
-                      { id: 'dinner', label: 'फक्त रात्र (Dinner)' },
-                    ].map((plan) => (
-                      <button
-                        key={plan.id}
-                        type="button"
-                        onClick={() => setRegPlan(plan.id as PlanType)}
-                        className={`p-2 rounded-xl border text-center transition cursor-pointer ${
-                          regPlan === plan.id
-                            ? 'bg-brand-600/30 border-brand-500 text-white font-bold'
-                            : 'bg-slate-800 border-slate-700 text-slate-400'
-                        }`}
-                      >
-                        {plan.label}
-                      </button>
-                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setRegPlan('both')}
+                      className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        regPlan === 'both'
+                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
+                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                      }`}
+                    >
+                      <span>२-वेळ दोन्ही (Both)</span>
+                      <span className="text-[10px] font-mono text-amber-400">
+                        ₹{regDiet === 'veg' ? veg2Rate : nonveg2Rate}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRegPlan('lunch')}
+                      className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        regPlan === 'lunch'
+                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
+                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                      }`}
+                    >
+                      <span>१-वेळ दुपार (Lunch)</span>
+                      <span className="text-[10px] font-mono text-amber-400">
+                        ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setRegPlan('dinner')}
+                      className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
+                        regPlan === 'dinner'
+                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
+                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                      }`}
+                    >
+                      <span>१-वेळ रात्र (Dinner)</span>
+                      <span className="text-[10px] font-mono text-amber-400">
+                        ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
+                      </span>
+                    </button>
                   </div>
                 </div>
 
@@ -319,7 +361,7 @@ export default function RegisterPage() {
                     step={500}
                     value={regSalary}
                     onChange={(e) => setRegSalary(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none"
+                    className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none"
                   />
                 </div>
               </div>
@@ -328,15 +370,14 @@ export default function RegisterPage() {
             {/* Password */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                पासवर्ड तयार करा (Set Password for Portal) *
+                पासवर्ड तयार करा (Set Password for App Login) *
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   required
-                  minLength={4}
-                  placeholder="किमान ४ अक्षरे / आकडे"
+                  placeholder="उदा. balaji@123"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
@@ -344,40 +385,29 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Submit button */}
+            {/* Submit */}
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 min-h-[48px] bg-gradient-to-r from-brand-600 via-amber-600 to-amber-700 hover:from-brand-500 text-white font-bold rounded-2xl shadow-xl transition cursor-pointer flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                className="w-full py-3.5 bg-gradient-to-r from-brand-600 via-amber-600 to-brand-700 hover:from-brand-500 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                {isSubmitting ? (
-                  <span>नोंदणी होत आहे...</span>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4" />
-                    <span>नोंदणी अर्ज सादर करा (Submit Registration)</span>
-                  </>
-                )}
+                <span>{isSubmitting ? 'नोंदणी होत आहे...' : 'नोंदणी अर्ज सादर करा (Submit Registration)'}</span>
+                <ChevronRight className="w-4 h-4" />
               </button>
-            </div>
-
-            <div className="text-center pt-2">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>मुख्य डॅशबोर्डवर परत जा (Back to Home)</span>
-              </Link>
             </div>
           </form>
         )}
-      </div>
 
-      {/* Footer info */}
-      <div className="text-center text-xs text-slate-500 mt-6 max-w-sm">
-        श्री बालाजी मेस • चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong>
+        <div className="text-center pt-2">
+          <Link
+            href="/"
+            className="text-xs text-slate-400 hover:text-white transition inline-flex items-center gap-1"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>परत जा (Back to Home)</span>
+          </Link>
+        </div>
       </div>
     </main>
   );
