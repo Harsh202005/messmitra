@@ -377,16 +377,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Drawer Drag Bar */}
             <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto" />
 
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-500" />
-                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  श्री बालाजी मेस • अधिक टूल्स
-                </h3>
+            {/* Mobile App Brand Identity Card */}
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/5 border border-amber-500/30">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-brand-500 shadow-md shrink-0 bg-white">
+                  <img src="/logo.jpeg" alt="श्री बालाजी मेस" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-black text-sm text-slate-900 dark:text-white leading-tight">
+                      श्री बालाजी मेस
+                    </h3>
+                    <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-500 text-white uppercase">
+                      २१ वर्षे
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    २१ वर्षांची परंपरा • चालक: शंकर गिरी
+                  </p>
+                </div>
               </div>
+
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
