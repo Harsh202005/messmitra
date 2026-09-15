@@ -449,3 +449,54 @@ export function generateExpensesCsv(recurring: ExpenseRecurring[], oneOff: Expen
 
   return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }
+
+/**
+ * Mess Price Plans & Token System Types
+ */
+export interface PlanTag {
+  label: string;
+  type: 'veg' | 'nonveg' | 'token' | 'concession' | 'female' | 'custom';
+}
+
+export interface MessPricePlan {
+  id: string;
+  badge: string; // '1 MEAL/DAY' | '2 MEALS/DAY' | 'TOKEN BUNDLE' | 'STUDENT CONCESSION'
+  badgeColor?: 'purple' | 'blue' | 'amber' | 'emerald';
+  name: string;
+  nameMr?: string;
+  price: number; // e.g. 2400, 2850, 4200, 4950, 2550, 3950, 1300
+  priceUnit: string; // e.g. '/ month (~₹80/meal)', '/ 30 tokens (45d)', '/ 20 tokens (30d)'
+  description: string;
+  descriptionMr?: string;
+  tags: PlanTag[];
+  planCategory: 'monthly' | 'token_bundle' | 'concession';
+  mealsPerDay?: 1 | 2;
+  tokenCount?: number;
+  validityDays?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export type TokenStatus = 'issued' | 'redeemed' | 'expired';
+export type TokenType = 'single_veg' | 'single_nonveg' | 'parcel_box' | 'bundle_pass' | 'custom';
+
+export interface MealToken {
+  id: string;
+  tokenNumber: string; // e.g. 'TKN-101', 'TKN-102'
+  messId: string;
+  customerName: string;
+  customerPhone?: string;
+  memberId?: string;
+  planId?: string;
+  tokenType: TokenType;
+  tokenName: string;
+  amount: number;
+  mealSlot: 'lunch' | 'dinner';
+  paymentMethod: 'cash' | 'upi' | 'prepaid_bundle';
+  status: TokenStatus;
+  issuedAt: string;
+  redeemedAt?: string;
+  expiresAt?: string;
+  notes?: string;
+}
+

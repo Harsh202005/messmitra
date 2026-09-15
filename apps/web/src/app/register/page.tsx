@@ -45,7 +45,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await MessMitraApi.registerPendingMember({
+      await MessMitraApi.submitRegistration({
         messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
         name: regName.trim(),
         phone: regPhone.trim(),

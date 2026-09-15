@@ -24,6 +24,8 @@ import { LeavesManagement } from '../components/LeavesManagement';
 import { BillingDashboard } from '../components/BillingDashboard';
 import { ExpensesManagement } from '../components/ExpensesManagement';
 import { PnLDashboard } from '../components/PnLDashboard';
+import { PriceAndPlanManager } from '../components/PriceAndPlanManager';
+import { MealTokenSystem } from '../components/MealTokenSystem';
 import { MemberPortalView } from '../components/MemberPortalView';
 import { KitchenDisplayView } from '../components/KitchenDisplayView';
 import { RegistrationApprovalsQueue } from '../components/RegistrationApprovalsQueue';
@@ -90,6 +92,8 @@ function DashboardContent() {
       dairy: 0,
       vegetables: 0,
       maintenance: 0,
+      packaging: 0,
+      utilities: 0,
       other: 0,
     },
   });
@@ -572,6 +576,27 @@ function DashboardContent() {
                   }}
                   onExportBillingCsv={handleExportBillingCsv}
                   onExportExpensesCsv={handleExportExpensesCsv}
+                />
+              </div>
+            )}
+
+            {/* TAB: PRICE & PLANS */}
+            {activeTab === 'plans' && (
+              <div className="animate-fadeIn">
+                <PriceAndPlanManager
+                  members={members}
+                  mess={mess}
+                  onOpenTokenCounter={() => setActiveTab('tokens')}
+                />
+              </div>
+            )}
+
+            {/* TAB: MEAL TOKEN SYSTEM */}
+            {activeTab === 'tokens' && (
+              <div className="animate-fadeIn">
+                <MealTokenSystem
+                  mess={mess}
+                  members={members}
                 />
               </div>
             )}

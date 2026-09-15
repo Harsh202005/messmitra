@@ -28,10 +28,12 @@ import {
   Sparkles,
   X,
   LayoutDashboard,
+  Tag,
+  Ticket,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
 
-export type ActiveTab = 'members' | 'leaves' | 'billing' | 'expenses' | 'pnl';
+export type ActiveTab = 'members' | 'leaves' | 'billing' | 'expenses' | 'pnl' | 'plans' | 'tokens';
 export type UserViewRole = 'owner' | 'member' | 'staff';
 
 interface NavbarProps {
@@ -169,6 +171,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <PieChart className="w-3.5 h-3.5" />
                   <span>{t('pnl')}</span>
+                </button>
+
+                <button
+                  onClick={() => onSelectTab('plans')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                    activeTab === 'plans'
+                      ? 'bg-brand-600 text-white shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>प्लॅन्स</span>
+                </button>
+
+                <button
+                  onClick={() => onSelectTab('tokens')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                    activeTab === 'tokens'
+                      ? 'bg-brand-600 text-white shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Ticket className="w-3.5 h-3.5 text-amber-400" />
+                  <span>टोकन्स</span>
                 </button>
               </nav>
             )}
@@ -364,6 +390,28 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onSelectTab('plans');
+                }}
+                className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <Tag className="w-5 h-5 text-purple-600" />
+                <span>दर व योजना व्यवस्थापक</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onSelectTab('tokens');
+                }}
+                className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <Ticket className="w-5 h-5 text-emerald-600" />
+                <span>जेवण टोकन सिस्टीम</span>
+              </button>
+
               {onOpenQrPoster && (
                 <button
                   onClick={() => {
