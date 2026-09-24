@@ -1,0 +1,115 @@
+================================================================================
+           MESSMITRA (मेस मित्र) • SHREE BALAJI MESS (श्री बालाजी मेस)
+              OFFICIAL TEST CREDENTIALS & 3-MODULE TEST DATA
+================================================================================
+Generated Date: 2026-09-16
+Mess Name: श्री बालाजी मेस (Shree Balaji Mess - Pune)
+Owner: शंकर गिरी (Shankar Giri - 9822338975)
+Live App URL: http://localhost:3000
+API Docs URL: http://localhost:4000/api/docs
+
+--------------------------------------------------------------------------------
+📌 SUMMARY OF ALL TEST LOGINS (PIN & PASSWORD)
+--------------------------------------------------------------------------------
+Universal Demo Password for all accounts: "password123" or "balaji123"
+Or use 4-digit quick PINs:
+
+| Module / Role           | Name / Profile          | Phone / Email        | Quick PIN | Full Password |
+|-------------------------|-------------------------|----------------------|-----------|---------------|
+| 1. Owner / Admin        | शंकर गिरी (Shankar Giri)| 9822338975           | 1234      | password123   |
+|                         |                         | admin@balajimess.com | 1234      | password123   |
+| 2. Member (Non-Veg)     | राहुल देशमुख (Rahul D.) | 9822011111           | 1111      | password123   |
+|                         |                         | rahul@messmitra.com  | 1111      | password123   |
+| 2. Member (Pure Veg)    | प्रिया कुलकर्णी (Priya K.)| 9822022222           | 2222      | password123   |
+|                         |                         | priya@messmitra.com  | 2222      | password123   |
+| 2. Member (Lunch Only)  | अमित जोशी (Amit Joshi)  | 9822033333           | 3333      | password123   |
+|                         |                         | amit@messmitra.com   | 3333      | password123   |
+| 3. Head Cook / Kitchen  | महादेव मामा (Cook)     | 9822044444           | 4444      | password123   |
+|                         |                         | cook@balajimess.com  | 4444      | password123   |
+
+================================================================================
+MODULE 1: OWNER / ADMIN DASHBOARD (मेस मालक व संपूर्ण प्रशासन)
+================================================================================
+👤 Profile & Credentials:
+   - Name: शंकर गिरी (Shankar Giri)
+   - Role: owner / admin
+   - Login Email: admin@balajimess.com
+   - Login Mobile: 9822338975
+   - Password: password123 (or PIN: 1234)
+
+📊 Key Features & Test Scenarios:
+   1. Live Cook Forecast:
+      - Real-time headcounts for Lunch (Veg: 18, Non-Veg: 12) & Dinner (Veg: 16, Non-Veg: 14).
+      - Auto-deducts approved leave requests.
+   2. Member Roster Management:
+      - Add new members, toggle Veg/Non-Veg preference, assign Lunch/Dinner/Full plans.
+      - Edit rate per member or apply mess default (₹3,000 Veg / ₹3,200 Non-Veg).
+   3. Leave Approval System:
+      - View on-time vs late leave requests.
+      - 1-click Approve / Reject with automatic meal calculation adjustment.
+   4. Monthly Billing & Invoicing:
+      - Generate automated monthly cycles (56 meals standard, prorated for mid-month joins).
+      - Track Dues & record cash/UPI payments.
+   5. WhatsApp Automated Broadcasts:
+      - Send bill payment reminders with dynamic UPI deep links.
+      - Daily special menu announcements.
+   6. Walk-In POS Counter:
+      - Quick token generation for non-monthly guest diners with instant bill receipts.
+   7. Official Posters & Standee Generator:
+      - Generate & download 300 DPI A4 Registration Posters and UPI Payment Standees.
+
+================================================================================
+MODULE 2: MEMBERS PORTAL (सभासद पोर्टल - सुट्टी, बिल व टोकन)
+================================================================================
+👤 Test Member 1 (Non-Veg Full Plan):
+   - Name: राहुल देशमुख (Rahul Deshmukh)
+   - Login: 9822011111  |  rahul@messmitra.com
+   - Password: password123 (or PIN: 1111)
+   - Plan: Full Month (Both Meals - 56 meals) | Diet: Non-Veg | Rate: ₹3,200/mo
+   - Test Scenario: Submit weekend leave request, check balance dues, view digital meal pass.
+
+👤 Test Member 2 (Pure Veg Full Plan):
+   - Name: प्रिया कुलकर्णी (Priya Kulkarni)
+   - Login: 9822022222  |  priya@messmitra.com
+   - Password: password123 (or PIN: 2222)
+   - Plan: Full Month (Both Meals - 56 meals) | Diet: Pure Veg | Rate: ₹3,000/mo
+   - Test Scenario: View invoice history and copy UPI payment deep link.
+
+👤 Test Member 3 (Lunch Only Plan):
+   - Name: अमित जोशी (Amit Joshi)
+   - Login: 9822033333  |  amit@messmitra.com
+   - Password: password123 (or PIN: 3333)
+   - Plan: Lunch Only (28 meals) | Diet: Veg | Rate: ₹1,500/mo
+   - Test Scenario: Verify that dinner is not billed, test single-meal leave submission.
+
+================================================================================
+MODULE 3: KITCHEN FORECAST & EXPENSES MODULE (आचारी व खर्च व्यवस्थापन)
+================================================================================
+👤 Head Cook Account:
+   - Name: महादेव मामा (Mahadev Mama - Chief Cook)
+   - Login: 9822044444  |  cook@balajimess.com
+   - Password: password123 (or PIN: 4444)
+   - Role: staff / cook
+   - View: Dedicated Kitchen Headcount Display (Large text for kitchen visibility).
+
+📋 Staff Roster & Salary Ledger:
+   1. महादेव मामा (Chief Cook) - ₹16,000 / month
+   2. सुरेश कदम (Kitchen Helper) - ₹10,000 / month
+
+🛒 Test Expense Records:
+   - Recurring Monthly Expenses:
+     1) ताजा भाजीपाला (Fresh Vegetables) - ₹14,000 / month
+     2) किराणा व मसाले (Grocery & Spices) - ₹24,000 / month
+     3) दूध व पनीर (Milk & Dairy) - ₹8,500 / month
+     4) कमर्शियल गॅस (Commercial LPG 19kg) - ₹6,800 / month
+   - One-Off Expenses:
+     1) मिक्सर दुरुस्ती व नवीन भांडी खरेदी - ₹2,200
+
+================================================================================
+HOW TO TEST:
+1. Open http://localhost:3000 in your browser.
+2. Click "लॉगिन करा" (Sign In) in top navbar.
+3. Click any of the 3 module test accounts for 1-click instant login, OR enter the
+   Phone/Email and PIN/Password directly in the form.
+4. Test role switching, leave requests, P&L reports, and QR standee downloads.
+================================================================================

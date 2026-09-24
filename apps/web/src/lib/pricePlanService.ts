@@ -2,7 +2,7 @@
 // Allows owner to configure custom rates for 1-meal/day, 2-meals/day, Veg, Non-Veg, and Token packages.
 // Completely removes hardcoded prices and synchronizes across Admin, Add Member, Registration, and Billing.
 
-import { MessPricePlan, PlanType, DietPreference, Gender } from '@messmitra/types';
+import { MessPricePlan, PlanType, DietPreference } from '@messmitra/types';
 
 export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
   {
@@ -70,18 +70,18 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
-    id: 'plan-student-female-concession',
+    id: 'plan-student-concession',
     badge: '2 MEALS/DAY',
     badgeColor: 'purple',
-    name: '2-Meal Student Concession (Female Tier)',
-    nameMr: '२-वेळ विद्यार्थिनी सवलत दर',
+    name: '2-Meal Student Concession Pass',
+    nameMr: '२-वेळ विद्यार्थी सवलत दर',
     price: 3000,
     priceUnit: '/ month (~₹50/meal)',
-    description: 'Concessional daily 2-meal plan for female college students nearby.',
-    descriptionMr: 'कॉलेज व स्पर्धा परीक्षा विद्यार्थिनींसाठी विशेष सवलतीचा मासिक दर.',
+    description: 'Concessional daily 2-meal plan for college students & exam aspirants.',
+    descriptionMr: 'कॉलेज व स्पर्धा परीक्षा विद्यार्थ्यांसाठी विशेष सवलतीचा मासिक दर.',
     tags: [
       { label: 'Pure Veg', type: 'veg' },
-      { label: 'Female Rate', type: 'female' },
+      { label: 'Student Concession', type: 'concession' },
     ],
     planCategory: 'concession',
     mealsPerDay: 2,
@@ -178,18 +178,10 @@ export const updatePlanPrice = (planId: string, newPrice: number) => {
 // Dynamically compute the rate for a given plan selection based on Owner's configured rates
 export const getDynamicRateForPlan = (
   planType: PlanType,
-  dietPreference: DietPreference,
-  gender?: Gender
+  dietPreference: DietPreference
 ): number => {
   const plans = getStoredPlans();
   const isOneMeal = planType === 'lunch' || planType === 'dinner';
-  const isTwoMeal = planType === 'both';
-
-  // Check Female Concession Tier if gender is female and 2-meal veg
-  if (gender === 'female' && isTwoMeal && dietPreference === 'veg') {
-    const femalePlan = plans.find((p) => p.id === 'plan-student-female-concession' && p.isActive);
-    if (femalePlan) return femalePlan.price;
-  }
 
   if (isOneMeal) {
     if (dietPreference === 'veg') {
@@ -210,3 +202,4 @@ export const getDynamicRateForPlan = (
     return p ? p.price : 3950;
   }
 };
+

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { QrCode, Copy, Check, Sparkles } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface UpiQrCodeProps {
   upiId: string;
@@ -19,6 +20,7 @@ export const UpiQrCode: React.FC<UpiQrCodeProps> = ({
   note = 'Mess Subscription Bill',
   size = 180,
 }) => {
+  const { language } = useI18n();
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
@@ -60,7 +62,7 @@ export const UpiQrCode: React.FC<UpiQrCodeProps> = ({
     <div className="flex flex-col items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm text-center">
       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
         <QrCode className="w-4 h-4 text-brand-500" />
-        <span>स्कॅन करून थेट पैसे भरा (Scan & Pay)</span>
+        <span>{language === 'en' ? 'Scan & Pay via UPI' : 'स्कॅन करून थेट पैसे भरा'}</span>
       </div>
 
       {/* QR Code Canvas */}
@@ -78,7 +80,7 @@ export const UpiQrCode: React.FC<UpiQrCodeProps> = ({
             style={{ width: size, height: size }}
             className="flex items-center justify-center bg-slate-100 text-slate-400 text-xs"
           >
-            QR तयार होत आहे...
+            {language === 'en' ? 'Generating QR...' : 'QR तयार होत आहे...'}
           </div>
         )}
       </div>
@@ -93,8 +95,8 @@ export const UpiQrCode: React.FC<UpiQrCodeProps> = ({
         <span>{upiId}</span>
         <button
           onClick={copyUpiId}
-          className="p-1 hover:text-brand-500 transition"
-          title="Copy UPI ID"
+          className="p-1 hover:text-brand-500 transition cursor-pointer"
+          title={language === 'en' ? 'Copy UPI ID' : 'UPI ID कॉपी करा'}
         >
           {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
         </button>

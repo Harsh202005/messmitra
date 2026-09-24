@@ -28,7 +28,7 @@ export const CloudDatabaseSyncModal: React.FC<CloudDatabaseSyncModalProps> = ({
   onClose,
   onReloadAllData,
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
 
   const [supabaseUrl, setSupabaseUrl] = useState(
     typeof window !== 'undefined' ? localStorage.getItem('messmitra_supabase_url') || '' : ''
@@ -72,26 +72,191 @@ export const CloudDatabaseSyncModal: React.FC<CloudDatabaseSyncModalProps> = ({
   };
 
   const copySqlSchema = () => {
-    const sql = `-- Run this in your free Supabase SQL Editor:
--- https://supabase.com/dashboard/project/_/sql
+    const sql = `-- ==============================================================================
+-- MessMitra — Feature Tables & Constraint Alignment Migration
+-- Run this in your Supabase SQL Editor:
+-- https://supabase.com/dashboard/project/usaksgxvhogqorijgowp/sql/new
+-- ==============================================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS public.mess (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+-- 1. Align MEMBERS table columns & constraints
+ALTER TABLE public.members ALTER COLUMN gender DROP NOT NULL;
+ALTER TABLE public.members ALTER COLUMN gender SET DEFAULT 'other';
+ALTER TABLE public.members ADD COLUMN IF NOT EXISTS diet_preference VARCHAR(20) NOT NULL DEFAULT 'veg' CHECK (diet_preference IN ('veg', 'nonveg'));
+
+-- 2. Align BILLING_CYCLES table
+ALTER TABLE public.billing_cycles ADD COLUMN IF NOT EXISTS per_meal_rate NUMERIC(10, 4) NOT NULL DEFAULT 53.57;
+
+-- 3. Align STAFF table
+ALTER TABLE public.staff ADD COLUMN IF NOT EXISTS upi_id VARCHAR(255), ADD COLUMN IF NOT EXISTS join_date DATE DEFAULT CURRENT_DATE;
+
+-- 4. Align EXPENSE CATEGORY constraints
+ALTER TABLE public.expense_recurring DROP CONSTRAINT IF EXISTS expense_recurring_category_check;
+ALTER TABLE public.expense_recurring ADD CONSTRAINT expense_recurring_category_check CHECK (category IN ('salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'));
+
+ALTER TABLE public.expense_oneoff DROP CONSTRAINT IF EXISTS expense_oneoff_category_check;
+ALTER TABLE public.expense_oneoff ADD CONSTRAINT expense_oneoff_category_check CHECK (category IN ('salary', 'rent', 'gas', 'groceries', 'dairy', 'vegetables', 'maintenance', 'packaging', 'utilities', 'other'));
+
+-- 5. Align PENDING_REGISTRATIONS table
+CREATE TABLE IF NOT EXISTS public.pending_registrations (
+    id VARCHAR(100) PRIMARY KEY,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    area VARCHAR(255) NOT NULL,
-    city VARCHAR(255) NOT NULL,
-    daily_cutoff_time TIME NOT NULL DEFAULT '09:00:00',
-    owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    upi_id VARCHAR(255) NOT NULL,
-    default_male_rate NUMERIC(10, 2) NOT NULL DEFAULT 3200.00,
-    default_female_rate NUMERIC(10, 2) NOT NULL DEFAULT 2800.00,
+    phone VARCHAR(30) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('member', 'staff')),
+    diet_preference VARCHAR(20) DEFAULT 'veg',
+    plan_type VARCHAR(20) DEFAULT 'both',
+    rate NUMERIC(10, 2) DEFAULT 3000.00,
+    staff_role VARCHAR(100),
+    salary NUMERIC(10, 2),
+    password VARCHAR(255),
+    submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    status VARCHAR(30) NOT NULL DEFAULT 'pending_approval' CHECK (status IN ('pending_approval', 'approved', 'rejected')),
+    reviewed_at TIMESTAMPTZ,
+    reviewed_by VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-ALTER TABLE public.mess ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL USING (owner_id = auth.uid());`;
+-- 6. CREATE STAFF_SALARY_PAYMENTS table
+CREATE TABLE IF NOT EXISTS public.staff_salary_payments (
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
+    staff_id UUID NOT NULL REFERENCES public.staff(id) ON DELETE CASCADE,
+    staff_name VARCHAR(255) NOT NULL,
+    month VARCHAR(7) NOT NULL,
+    base_salary NUMERIC(10, 2) NOT NULL,
+    advance_deductions NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    bonus_amount NUMERIC(10, 2) DEFAULT 0.00,
+    net_paid NUMERIC(10, 2) NOT NULL,
+    payment_type VARCHAR(50) NOT NULL CHECK (payment_type IN ('advance', 'salary_settlement', 'bonus', 'monthly_approval')),
+    payment_method VARCHAR(30) NOT NULL CHECK (payment_method IN ('cash', 'upi', 'bank_transfer')),
+    paid_date DATE NOT NULL DEFAULT CURRENT_DATE,
+    note TEXT,
+    voucher_number VARCHAR(100) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 7. CREATE STAFF_ATTENDANCE table
+CREATE TABLE IF NOT EXISTS public.staff_attendance (
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
+    staff_id UUID NOT NULL REFERENCES public.staff(id) ON DELETE CASCADE,
+    date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('present', 'half_day', 'absent')),
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT unique_staff_attendance_date UNIQUE (staff_id, date)
+);
+
+-- 8. CREATE MEAL_TOKENS table
+CREATE TABLE IF NOT EXISTS public.meal_tokens (
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    token_number VARCHAR(50) NOT NULL,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_phone VARCHAR(30),
+    member_id UUID REFERENCES public.members(id) ON DELETE SET NULL,
+    plan_id VARCHAR(100),
+    token_type VARCHAR(50) NOT NULL,
+    token_name VARCHAR(255) NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    diet_preference VARCHAR(20) DEFAULT 'veg',
+    meal_slot VARCHAR(20) NOT NULL DEFAULT 'both' CHECK (meal_slot IN ('lunch', 'dinner', 'both')),
+    payment_method VARCHAR(30) NOT NULL DEFAULT 'cash',
+    status VARCHAR(20) NOT NULL DEFAULT 'issued' CHECK (status IN ('issued', 'redeemed', 'expired')),
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    redeemed_at TIMESTAMPTZ,
+    expires_at TIMESTAMPTZ,
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 9. CREATE MESS_PRICE_PLANS table
+CREATE TABLE IF NOT EXISTS public.mess_price_plans (
+    id VARCHAR(100) PRIMARY KEY,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
+    badge VARCHAR(100) NOT NULL,
+    badge_color VARCHAR(30) DEFAULT 'purple',
+    name VARCHAR(255) NOT NULL,
+    name_mr VARCHAR(255),
+    price NUMERIC(10, 2) NOT NULL,
+    price_unit VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
+    description_mr TEXT,
+    tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+    plan_category VARCHAR(50) NOT NULL CHECK (plan_category IN ('monthly', 'token_bundle', 'concession')),
+    meals_per_day INT DEFAULT 2,
+    token_count INT,
+    validity_days INT,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 10. CREATE WALKIN_ORDERS table
+CREATE TABLE IF NOT EXISTS public.walkin_orders (
+    id VARCHAR(100) PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    order_number VARCHAR(50) NOT NULL,
+    mess_id UUID NOT NULL REFERENCES public.mess(id) ON DELETE CASCADE,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    total_amount NUMERIC(10, 2) NOT NULL,
+    payment_method VARCHAR(30) NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'upi', 'card', 'owner_pass')),
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'paid' CHECK (payment_status IN ('paid', 'pending')),
+    customer_name VARCHAR(255),
+    customer_phone VARCHAR(30),
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 11. CREATE MENU_CATALOG_ITEMS table
+CREATE TABLE IF NOT EXISTS public.menu_catalog_items (
+    id VARCHAR(100) PRIMARY KEY,
+    mess_id UUID REFERENCES public.mess(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    name_mr VARCHAR(255) NOT NULL,
+    price NUMERIC(10, 2) NOT NULL,
+    diet VARCHAR(20) NOT NULL DEFAULT 'veg' CHECK (diet IN ('veg', 'nonveg')),
+    category VARCHAR(30) NOT NULL DEFAULT 'thali' CHECK (category IN ('thali', 'parcel', 'extra')),
+    is_parcel BOOLEAN NOT NULL DEFAULT false,
+    icon VARCHAR(50) DEFAULT '🍛',
+    badge VARCHAR(100),
+    available BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 12. Enable RLS and create open policies
+ALTER TABLE public.staff_salary_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.staff_attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meal_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.mess_price_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.walkin_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.menu_catalog_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.pending_registrations ENABLE ROW LEVEL SECURITY;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access StaffSalaries') THEN
+    CREATE POLICY "Public Full Access StaffSalaries" ON public.staff_salary_payments FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access StaffAttendance') THEN
+    CREATE POLICY "Public Full Access StaffAttendance" ON public.staff_attendance FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access MealTokens') THEN
+    CREATE POLICY "Public Full Access MealTokens" ON public.meal_tokens FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access PricePlans') THEN
+    CREATE POLICY "Public Full Access PricePlans" ON public.mess_price_plans FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access WalkInOrders') THEN
+    CREATE POLICY "Public Full Access WalkInOrders" ON public.walkin_orders FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access MenuCatalog') THEN
+    CREATE POLICY "Public Full Access MenuCatalog" ON public.menu_catalog_items FOR ALL USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public Full Access PendingRegistrations') THEN
+    CREATE POLICY "Public Full Access PendingRegistrations" ON public.pending_registrations FOR ALL USING (true);
+  END IF;
+END $$;`;
 
     navigator.clipboard.writeText(sql);
     setCopiedSql(true);
@@ -138,8 +303,14 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base">क्लाउड डेटाबेस व सिंक (Free Supabase Cloud)</h3>
-              <p className="text-xs text-white/80">मोफत ऑनलाइन डेटाबेस जोडा किंवा लोकल ऑफलाइन मोड वापरा</p>
+              <h3 className="font-bold text-base">
+                {language === 'en' ? 'Cloud Database & Sync' : 'क्लाउड डेटाबेस व सिंक'}
+              </h3>
+              <p className="text-xs text-white/80">
+                {language === 'en'
+                  ? 'Connect free cloud database or use offline mode'
+                  : 'मोफत ऑनलाइन डेटाबेस जोडा किंवा लोकल ऑफलाइन मोड वापरा'}
+              </p>
             </div>
           </div>
 
@@ -166,12 +337,14 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
                 rel="noopener noreferrer"
                 className="text-[11px] text-brand-600 dark:text-brand-400 font-bold hover:underline flex items-center gap-1"
               >
-                <span>खाते उघडा (Sign Up)</span>
+                <span>{language === 'en' ? 'Sign Up' : 'खाते उघडा'}</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
-              तुमचा डेटा सुरक्षित ठेवण्यासाठी मोफत Supabase प्रोजेक्ट तयार करून खालील कळा (Credentials) प्रविष्ट करा:
+              {language === 'en'
+                ? 'Create a free Supabase project to secure your data and enter the credentials below:'
+                : 'तुमचा डेटा सुरक्षित ठेवण्यासाठी मोफत Supabase प्रोजेक्ट तयार करून खालील कळा प्रविष्ट करा:'}
             </p>
 
             <div className="space-y-2 pt-2">
@@ -205,24 +378,45 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
                 className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow transition cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${connectionStatus === 'testing' ? 'animate-spin' : ''}`} />
-                <span>कनेक्शन तपासा (Test Connection)</span>
+                <span>{language === 'en' ? 'Test Connection' : 'कनेक्शन तपासा'}</span>
               </button>
 
               <div>
                 {connectionStatus === 'success' && (
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>कनेक्ट झाले ✅</span>
+                    <span>{language === 'en' ? 'Connected ✅' : 'कनेक्ट झाले ✅'}</span>
                   </span>
                 )}
                 {connectionStatus === 'failed' && (
                   <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    <span>ऑफलाइन लोकल मोड सक्रिय</span>
+                    <span>{language === 'en' ? 'Not Connected' : 'कनेक्ट नाही'}</span>
                   </span>
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Sync Button */}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={isSyncing || !supabaseUrl || !supabaseAnonKey}
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer min-h-[44px]"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>
+                {isSyncing
+                  ? language === 'en'
+                    ? 'Syncing...'
+                    : 'सिंक होत आहे...'
+                  : language === 'en'
+                  ? 'Save & Sync Data'
+                  : 'डेटा सेव्ह व सिंक करा'}
+              </span>
+            </button>
           </div>
 
           {/* Quick Actions (Copy SQL Schema / Load Demo Dataset) */}
@@ -233,20 +427,43 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
             >
               {copiedSql ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
               <div>
-                <strong className="block text-slate-800 dark:text-slate-200">Supabase SQL कॉपी करा</strong>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">1-क्लिक RLS स्कीमा DDL</span>
+                <strong className="block text-slate-800 dark:text-slate-200">
+                  {language === 'en' ? 'Copy Supabase SQL' : 'Supabase SQL कॉपी करा'}
+                </strong>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {language === 'en' ? '1-Click RLS Schema DDL' : '1-क्लिक RLS स्कीमा DDL'}
+                </span>
               </div>
             </button>
 
             <button
-              onClick={handleLoadDemoData}
+              onClick={async () => {
+                localStorage.removeItem('messmitra_members');
+                localStorage.removeItem('messmitra_leaves');
+                localStorage.removeItem('messmitra_expenses_recurring');
+                localStorage.removeItem('messmitra_expenses_oneoff');
+                localStorage.removeItem('messmitra_staff');
+                localStorage.removeItem('messmitra_payments');
+                localStorage.removeItem('messmitra_staff_salaries');
+                localStorage.removeItem('messmitra_staff_attendance');
+                localStorage.removeItem('messmitra_walkin_orders');
+                localStorage.removeItem('messmitra_meal_tokens');
+                localStorage.removeItem('messmitra_notifications');
+                await onReloadAllData();
+                setToast(language === 'en' ? 'Local storage wiped clean' : 'सर्व स्थानिक डेटा साफ झाला');
+                setTimeout(() => setToast(null), 3000);
+              }}
               disabled={isSyncing}
               className="flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 transition text-left cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-amber-500" />
               <div>
-                <strong className="block text-slate-800 dark:text-slate-200">डेमो डेटा रीलोड करा</strong>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">श्री बालाजी मेस (12 सभासद)</span>
+                <strong className="block text-slate-800 dark:text-slate-200">
+                  {language === 'en' ? 'Reset Clean State' : 'डेटा साफ करा / रिसेट'}
+                </strong>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {language === 'en' ? 'Wipe temporary cache' : 'कॅश डेटा रिसेट करा'}
+                </span>
               </div>
             </button>
           </div>
@@ -258,7 +475,7 @@ CREATE POLICY "Owners can view and update their own mess" ON public.mess FOR ALL
             onClick={onClose}
             className="px-5 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-xs transition cursor-pointer"
           >
-            बंद करा (Close)
+            {language === 'en' ? 'Close' : 'बंद करा'}
           </button>
         </div>
       </div>

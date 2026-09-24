@@ -83,10 +83,18 @@ export class MessService {
         area: dto.area,
         city: dto.city,
         daily_cutoff_time: dto.dailyCutoffTime,
+        lunch_cutoff_time: dto.lunchCutoffTime || '09:00',
+        dinner_cutoff_time: dto.dinnerCutoffTime || '18:00',
         owner_id: user.userId,
+        owner_name: dto.ownerName || user.name,
+        contact_number: dto.contactNumber,
         upi_id: dto.upiId,
-        default_male_rate: dto.defaultMaleRate,
-        default_female_rate: dto.defaultFemaleRate,
+        default_veg_rate: dto.defaultVegRate || dto.defaultFemaleRate || 3000,
+        default_nonveg_rate: dto.defaultNonVegRate || dto.defaultMaleRate || 3200,
+        default_male_rate: dto.defaultMaleRate || dto.defaultNonVegRate || 3200,
+        default_female_rate: dto.defaultFemaleRate || dto.defaultVegRate || 3000,
+        tagline: dto.tagline,
+        established_years: dto.establishedYears,
       })
       .select()
       .single();
@@ -102,8 +110,7 @@ export class MessService {
         id: user.userId,
         mess_id: data.id,
         role: 'owner',
-        full_name: user.name || 'Mess Owner',
-        phone: '9822012345',
+        full_name: dto.ownerName || user.name || 'Mess Owner',
       });
 
     return this.mapFromDb(data);
@@ -128,7 +135,15 @@ export class MessService {
         ...(dto.area && { area: dto.area }),
         ...(dto.city && { city: dto.city }),
         ...(dto.dailyCutoffTime && { daily_cutoff_time: dto.dailyCutoffTime }),
+        ...(dto.lunchCutoffTime && { lunch_cutoff_time: dto.lunchCutoffTime }),
+        ...(dto.dinnerCutoffTime && { dinner_cutoff_time: dto.dinnerCutoffTime }),
         ...(dto.upiId && { upi_id: dto.upiId }),
+        ...(dto.ownerName && { owner_name: dto.ownerName }),
+        ...(dto.contactNumber && { contact_number: dto.contactNumber }),
+        ...(dto.tagline && { tagline: dto.tagline }),
+        ...(dto.establishedYears !== undefined && { established_years: dto.establishedYears }),
+        ...(dto.defaultVegRate !== undefined && { default_veg_rate: dto.defaultVegRate }),
+        ...(dto.defaultNonVegRate !== undefined && { default_nonveg_rate: dto.defaultNonVegRate }),
         ...(dto.defaultMaleRate !== undefined && { default_male_rate: dto.defaultMaleRate }),
         ...(dto.defaultFemaleRate !== undefined && { default_female_rate: dto.defaultFemaleRate }),
         updated_at: new Date().toISOString(),

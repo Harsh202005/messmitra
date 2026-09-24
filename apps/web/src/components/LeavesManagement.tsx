@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useI18n } from '../lib/i18n';
-import { LeaveRequest, Member, Mess, LeaveStatus, isLeaveSubmissionLate } from '@messmitra/types';
+import { LeaveRequest, Member, Mess, LeaveStatus, isLeaveSubmissionLate, formatTime12Hour } from '@messmitra/types';
 import {
   CalendarDays,
   CheckCircle,
@@ -32,7 +32,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
   onSubmitLeave,
   onReviewLeave,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState(members[0]?.id || '');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
@@ -80,7 +80,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
             <CheckCircle className="w-3 h-3" />
-            <span>वेळेत मंजूर (Auto-Valid)</span>
+            <span>{language === 'en' ? 'Auto-Valid' : 'वेळेत मंजूर'}</span>
           </span>
         );
       case 'pending_approval':
@@ -94,14 +94,14 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/30">
             <CheckCircle className="w-3 h-3" />
-            <span>मंजूर (Approved)</span>
+            <span>{language === 'en' ? 'Approved' : 'मंजूर'}</span>
           </span>
         );
       case 'rejected':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/30">
             <XCircle className="w-3 h-3" />
-            <span>नामंजूर (Rejected)</span>
+            <span>{language === 'en' ? 'Rejected' : 'नामंजूर'}</span>
           </span>
         );
     }
@@ -114,10 +114,10 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
         <div>
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-brand-500" />
-            <span>सुट्टी व्यवस्थापन (Leave Management)</span>
+            <span>{language === 'en' ? 'Leave Management' : 'सुट्टी व्यवस्थापन'}</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            दुपार कटऑफ: <strong className="text-slate-800 dark:text-slate-200">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-slate-800 dark:text-slate-200">06:00 PM</strong>
+            दुपार कटऑफ: <strong className="text-slate-800 dark:text-slate-200">{formatTime12Hour(mess?.lunchCutoffTime || '09:00')}</strong> • रात्र कटऑफ: <strong className="text-slate-800 dark:text-slate-200">{formatTime12Hour(mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00')}</strong>
           </p>
         </div>
 
@@ -197,7 +197,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
         <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>सुट्टी नोंदवही (Leave Audit Ledger)</span>
+            <span>{language === 'en' ? 'Leave Audit Ledger' : 'सुट्टी नोंदवही'}</span>
           </h4>
           <span className="text-xs text-slate-400">एकूण {leaves.length} नोंदी</span>
         </div>
@@ -257,7 +257,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-brand-500" />
-                <span>सुट्टी अर्ज दाखल करा (Submit Leave)</span>
+                <span>{language === 'en' ? 'Submit Leave Request' : 'सुट्टी अर्ज दाखल करा'}</span>
               </h3>
               <button
                 onClick={() => setIsSubmitModalOpen(false)}
@@ -326,16 +326,20 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
                   <div className="flex items-start gap-2">
                     <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-amber-700 dark:text-amber-300">उशिरा दाखल (Late Submission):</strong>
-                      कटऑफ वेळेनंतर (दुपार ०९:०० AM / रात्र ०६:०० PM) दाखल होत असल्यामुळे ही सुट्टी मालकाच्या मंजुरीसाठी प्रलंबित राहील.
+                      <strong className="block text-amber-700 dark:text-amber-300">{language === 'en' ? 'Late Submission:' : 'उशिरा दाखल:'}</strong>
+                      {language === 'en'
+                        ? 'Submitted after cutoff time (Lunch 09:00 AM / Dinner 06:00 PM), so this requires owner approval.'
+                        : 'कटऑफ वेळेनंतर (दुपार ०९:०० AM / रात्र ०६:०० PM) दाखल होत असल्यामुळे ही सुट्टी मालकाच्या मंजुरीसाठी प्रलंबित राहील.'}
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <strong className="block text-emerald-700 dark:text-emerald-300">वेळेत दाखल (Auto-Valid):</strong>
-                      सुट्टी कटऑफ वेळेच्या आधी असल्यामुळे ती तात्काळ आपोआप मंजूर होईल.
+                      <strong className="block text-emerald-700 dark:text-emerald-300">{language === 'en' ? 'Auto-Valid Submission:' : 'वेळेत दाखल:'}</strong>
+                      {language === 'en'
+                        ? 'Submitted before cutoff time, so it will be approved automatically.'
+                        : 'सुट्टी कटऑफ वेळेच्या आधी असल्यामुळे ती तात्काळ आपोआप मंजूर होईल.'}
                     </div>
                   </div>
                 )}
@@ -344,7 +348,7 @@ export const LeavesManagement: React.FC<LeavesManagementProps> = ({
               {/* Reason */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  कारण (Reason - Optional)
+                  {language === 'en' ? 'Reason (Optional)' : 'सुट्टीचे कारण (ऐच्छिक)'}
                 </label>
                 <input
                   type="text"

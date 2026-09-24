@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Member, BillingCycle, Mess } from '@messmitra/types';
+import { Member, BillingCycle, Mess, formatTime12Hour } from '@messmitra/types';
 import {
   MessageSquare,
   Send,
@@ -30,6 +30,7 @@ import {
   requestPushPermission,
   showSystemPushNotification,
 } from '../lib/notificationService';
+import { useI18n } from '../lib/i18n';
 
 interface WhatsAppBroadcastModalProps {
   isOpen: boolean;
@@ -49,6 +50,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
   billingCycles,
   mess,
 }) => {
+  const { language } = useI18n();
   const [activeMainTab, setActiveMainTab] = useState<MainTab>('whatsapp');
   const [broadcastType, setBroadcastType] = useState<BroadcastType>('dues');
   const [filterMode, setFilterMode] = useState<'all' | 'unpaid' | 'veg' | 'nonveg'>('unpaid');
@@ -97,42 +99,48 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
 
     if (broadcastType === 'sunday_special') {
       return BALAJI_WHATSAPP_TEMPLATES.sundaySpecialAnnouncement({
-        date: 'या रविवारी (This Sunday)',
-        specialMenuVeg: 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका',
-        specialMenuNonVeg: 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी',
-        timeSlot: 'दुपारी १२:३० ते ०३:३०',
+        date: language === 'en' ? 'This Sunday' : 'या रविवारी',
+        specialMenuVeg: language === 'en' ? 'Gulab Jamun, Puri, Matar Paneer, Jeera Rice, Dal Tadka' : 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका',
+        specialMenuNonVeg: language === 'en' ? 'Sukka Chicken / Tambda Pandhra Rassa, Chicken Biryani' : 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी',
+        timeSlot: language === 'en' ? '12:30 PM to 03:30 PM' : 'दुपारी १२:३० ते ०३:३०',
       });
     }
 
     if (broadcastType === 'cutoff') {
+      const lunchFormatted = formatTime12Hour(mess?.lunchCutoffTime || '09:00', '09:00 AM');
+      const dinnerFormatted = formatTime12Hour(mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00', '06:00 PM');
       return BALAJI_WHATSAPP_TEMPLATES.dailyCutoffReminder({
         mealType: cutoffMeal,
-        cutoffTime: cutoffMeal === 'lunch' ? 'सकाळी 09:00 AM' : 'संध्याकाळी 06:00 PM',
+        cutoffTime: cutoffMeal === 'lunch' ? (language === 'en' ? `Morning ${lunchFormatted}` : `सकाळी ${lunchFormatted}`) : (language === 'en' ? `Evening ${dinnerFormatted}` : `संध्याकाळी ${dinnerFormatted}`),
       });
     }
 
-    return customText || `नमस्कार ${m.name}, श्री बालाजी मेस कडून महत्त्वाची सूचना.`;
+    return customText || (language === 'en' ? `Hello ${m.name}, important notice from Shree Balaji Mess.` : `नमस्कार ${m.name}, श्री बालाजी मेस कडून महत्त्वाची सूचना.`);
   };
 
   const getGenericBroadcastMessage = (): string => {
     if (broadcastType === 'dues') {
-      return `📢 *श्री बालाजी मेस - मासिक फी स्मरणपत्र*\n\nसर्व सभासदांना विनंती आहे की चालू महिन्याची मेस फी कृपया लवकरात लवकर जमा करावी.\n\n💳 *UPI ID:* \`${mess?.upiId || '9822338975@upi'}\`\n📞 *संपर्क:* 9822338975\n\n_धन्यवाद! - श्री बालाजी मेस (२१ वर्षांची अखंड परंपरा)_`;
+      return language === 'en'
+        ? `📢 *Shree Balaji Mess - Monthly Fee Reminder*\n\nAll members are requested to pay their current month mess fee as soon as possible.\n\n💳 *UPI ID:* \`${mess?.upiId || '9822338975@upi'}\`\n📞 *Contact:* 9822338975\n\n_Thank you! - Shree Balaji Mess_`
+        : `📢 *श्री बालाजी मेस - मासिक फी स्मरणपत्र*\n\nसर्व सभासदांना विनंती आहे की चालू महिन्याची मेस फी कृपया लवकरात लवकर जमा करावी.\n\n💳 *UPI ID:* \`${mess?.upiId || '9822338975@upi'}\`\n📞 *संपर्क:* 9822338975\n\n_धन्यवाद! - श्री बालाजी मेस (२१ वर्षांची अखंड परंपरा)_`;
     }
     if (broadcastType === 'sunday_special') {
       return BALAJI_WHATSAPP_TEMPLATES.sundaySpecialAnnouncement({
-        date: 'या रविवारी (This Sunday)',
-        specialMenuVeg: 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका',
-        specialMenuNonVeg: 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी',
-        timeSlot: 'दुपारी १२:३० ते ०३:३०',
+        date: language === 'en' ? 'This Sunday' : 'या रविवारी',
+        specialMenuVeg: language === 'en' ? 'Gulab Jamun, Puri, Matar Paneer, Jeera Rice, Dal Tadka' : 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका',
+        specialMenuNonVeg: language === 'en' ? 'Sukka Chicken / Tambda Pandhra Rassa, Chicken Biryani' : 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी',
+        timeSlot: language === 'en' ? '12:30 PM to 03:30 PM' : 'दुपारी १२:३० ते ०३:३०',
       });
     }
     if (broadcastType === 'cutoff') {
+      const lunchFormatted = formatTime12Hour(mess?.lunchCutoffTime || '09:00', '09:00 AM');
+      const dinnerFormatted = formatTime12Hour(mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00', '06:00 PM');
       return BALAJI_WHATSAPP_TEMPLATES.dailyCutoffReminder({
         mealType: cutoffMeal,
-        cutoffTime: cutoffMeal === 'lunch' ? 'सकाळी 09:00 AM' : 'संध्याकाळी 06:00 PM',
+        cutoffTime: cutoffMeal === 'lunch' ? (language === 'en' ? `Morning ${lunchFormatted}` : `सकाळी ${lunchFormatted}`) : (language === 'en' ? `Evening ${dinnerFormatted}` : `संध्याकाळी ${dinnerFormatted}`),
       });
     }
-    return customText || 'श्री बालाजी मेस कडून महत्त्वाची सूचना.';
+    return customText || (language === 'en' ? 'Important update from Shree Balaji Mess.' : 'श्री बालाजी मेस कडून महत्त्वाची सूचना.');
   };
 
   // 1-Click Send All Queue Stepper Handler
@@ -219,10 +227,10 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
             <div>
               <div className="flex items-center gap-1.5 text-xs text-emerald-200 font-bold uppercase tracking-wider">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>१००% मोफत ब्रॉडकास्ट व मोबाईल सूचना केंद्र</span>
+                <span>{language === 'en' ? 'Free Broadcast & Mobile Alerts' : '१००% मोफत ब्रॉडकास्ट व मोबाईल सूचना'}</span>
               </div>
               <h3 className="font-bold text-base sm:text-lg">
-                Broadcast & Mobile Notifications Center
+                {language === 'en' ? 'Broadcast & Mobile Notifications' : 'ब्रॉडकास्ट व मोबाईल सूचना केंद्र'}
               </h3>
             </div>
           </div>
@@ -246,7 +254,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
             }`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span>💬 WhatsApp ब्रॉडकास्ट (Send to All)</span>
+            <span>{language === 'en' ? 'WhatsApp Broadcast' : 'WhatsApp ब्रॉडकास्ट'}</span>
           </button>
 
           <button
@@ -258,7 +266,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
             }`}
           >
             <Bell className="w-4 h-4" />
-            <span>🔔 मोफत इन-ॲप व मोबाईल पुश (Free-Tier)</span>
+            <span>{language === 'en' ? 'Mobile Push Notifications' : 'मोबाईल पुश सूचना'}</span>
           </button>
         </div>
 
@@ -270,7 +278,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               {/* Broadcast Type Selector */}
               <div className="space-y-2.5">
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-400 block">
-                  मेसेजचा विषय निवडा (Template):
+                  {language === 'en' ? 'Select Template:' : 'मेसेजचा विषय निवडा:'}
                 </span>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
                   <button
@@ -285,7 +293,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                     }`}
                   >
                     <DollarSign className="w-4 h-4" />
-                    <span>💰 फी स्मरणपत्र (Pending Dues)</span>
+                    <span>{language === 'en' ? 'Pending Dues' : 'फी स्मरणपत्र'}</span>
                   </button>
 
                   <button
@@ -300,7 +308,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                     }`}
                   >
                     <Utensils className="w-4 h-4" />
-                    <span>🍛 रविवार स्पेशल बेत (Special Feast)</span>
+                    <span>{language === 'en' ? 'Sunday Special' : 'रविवार स्पेशल बेत'}</span>
                   </button>
 
                   <button
@@ -315,7 +323,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                     }`}
                   >
                     <Clock className="w-4 h-4" />
-                    <span>⏰ सुट्टी कटऑफ सूचना (Cutoff Notice)</span>
+                    <span>{language === 'en' ? 'Cutoff Notice' : 'सुट्टी कटऑफ सूचना'}</span>
                   </button>
                 </div>
               </div>
@@ -324,7 +332,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-2 text-xs bg-slate-50 dark:bg-slate-850 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-semibold">
                   <Filter className="w-3.5 h-3.5" />
-                  <span>कोणाला पाठवायचे:</span>
+                  <span>{language === 'en' ? 'Recipients:' : 'कोणाला पाठवायचे:'}</span>
                 </div>
 
                 <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
@@ -339,7 +347,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    बाकी फी असलेले
+                    {language === 'en' ? 'Pending Dues' : 'बाकी फी असलेले'}
                   </button>
                   <button
                     onClick={() => {
@@ -352,7 +360,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    सर्व ({members.length})
+                    {language === 'en' ? `All (${members.length})` : `सर्व (${members.length})`}
                   </button>
                   <button
                     onClick={() => {
@@ -365,7 +373,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    🟢 व्हेज
+                    {language === 'en' ? 'Veg' : 'व्हेज'}
                   </button>
                   <button
                     onClick={() => {
@@ -378,7 +386,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    🔴 नॉनव्हेज
+                    {language === 'en' ? 'Non-Veg' : 'नॉनव्हेज'}
                   </button>
                 </div>
               </div>
@@ -389,17 +397,21 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/30">
-                        १-क्लिक व्हॉट्सअ‍ॅप सेंड-टू-ऑल
+                        {language === 'en' ? '1-Click Send to All' : '१-क्लिक व्हॉट्सअ‍ॅप सेंड-टू-ऑल'}
                       </span>
                       <span className="text-xs text-slate-300 font-mono">
-                        {sentMemberIds.size} / {filteredMembers.length} पाठवले
+                        {sentMemberIds.size} / {filteredMembers.length} {language === 'en' ? 'sent' : 'पाठवले'}
                       </span>
                     </div>
                     <h4 className="font-black text-sm sm:text-base text-white mt-1">
-                      📢 सर्व {filteredMembers.length} सभासदांना एका मागोमाग १-क्लिकने पाठवा
+                      {language === 'en'
+                        ? `📢 Send to all ${filteredMembers.length} members with 1-click`
+                        : `📢 सर्व ${filteredMembers.length} सभासदांना एका मागोमाग १-क्लिकने पाठवा`}
                     </h4>
                     <p className="text-xs text-slate-300 mt-0.5">
-                      ब्राउझर ब्लॉक न होता प्रत्येक सभासदास त्यांच्या अचूक बाकीसह थेट मेसेज जातो.
+                      {language === 'en'
+                        ? 'Personalized direct WhatsApp message sent without browser blocking.'
+                        : 'ब्राउझर ब्लॉक न होता प्रत्येक सभासदास त्यांच्या अचूक बाकीसह थेट मेसेज जातो.'}
                     </p>
                   </div>
 
@@ -407,17 +419,17 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                     <button
                       onClick={handleCopyGroupMessage}
                       className="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-xl font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition cursor-pointer shrink-0 min-h-[44px]"
-                      title="ग्रुप किंवा ब्रॉडकास्ट लिस्टसाठी मेसेज कॉपी करा"
+                      title={language === 'en' ? 'Copy message for group' : 'ग्रुप किंवा ब्रॉडकास्ट लिस्टसाठी मेसेज कॉपी करा'}
                     >
                       {copiedGroupMessage ? (
                         <>
                           <Check className="w-4 h-4 text-emerald-400" />
-                          <span>कॉपी झाले!</span>
+                          <span>{language === 'en' ? 'Copied!' : 'कॉपी झाले!'}</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-4 h-4" />
-                          <span>ग्रुप मेसेज कॉपी</span>
+                          <span>{language === 'en' ? 'Copy Group Msg' : 'ग्रुप मेसेज कॉपी'}</span>
                         </>
                       )}
                     </button>
@@ -433,8 +445,8 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                       <Play className="w-4 h-4 fill-slate-950" />
                       <span>
                         {isQueueRunning
-                          ? `पुढील पाठवा (${currentQueueIndex + 1}/${filteredMembers.length})`
-                          : `🚀 सर्वांना पाठवणे सुरू करा`}
+                          ? (language === 'en' ? `Send Next (${currentQueueIndex + 1}/${filteredMembers.length})` : `पुढील पाठवा (${currentQueueIndex + 1}/${filteredMembers.length})`)
+                          : (language === 'en' ? '🚀 Send to All' : '🚀 सर्वांना पाठवणे सुरू करा')}
                       </span>
                     </button>
                   </div>
@@ -456,9 +468,9 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               {/* Members List with individual launch buttons */}
               <div className="space-y-2">
                 <div className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-between pb-1">
-                  <span>निवडलेले सभासद ({filteredMembers.length})</span>
+                  <span>{language === 'en' ? `Selected Members (${filteredMembers.length})` : `निवडलेले सभासद (${filteredMembers.length})`}</span>
                   <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                    हिरव्या बटनावर टॅप करून WhatsApp उघडा
+                    {language === 'en' ? 'Tap green button to open WhatsApp' : 'हिरव्या बटनावर टॅप करून WhatsApp उघडा'}
                   </span>
                 </div>
 
@@ -504,7 +516,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                                   : 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
                               }`}
                             >
-                              {m.dietPreference === 'veg' ? 'व्हेज' : 'नॉनव्हेज'}
+                              {m.dietPreference === 'veg' ? (language === 'en' ? 'Veg' : 'व्हेज') : (language === 'en' ? 'Non-Veg' : 'नॉनव्हेज')}
                             </span>
                           </div>
 
@@ -512,7 +524,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                             <span className="font-mono">{m.phone}</span>
                             {broadcastType === 'dues' && (
                               <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">
-                                बाकी: ₹{outstanding}
+                                {language === 'en' ? 'Due:' : 'बाकी:'} ₹{outstanding}
                               </span>
                             )}
                           </div>
@@ -534,7 +546,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         }`}
                       >
                         <Send className="w-3.5 h-3.5" />
-                        <span>{isSent ? 'पुन्हा पाठवा' : 'WhatsApp'}</span>
+                        <span>{isSent ? (language === 'en' ? 'Resend' : 'पुन्हा पाठवा') : 'WhatsApp'}</span>
                       </a>
                     </div>
                   );
@@ -561,13 +573,15 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                 </div>
                 <div className="text-xs text-slate-700 dark:text-slate-300 space-y-1">
                   <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>१००% मोफत वेब व मोबाईल पुश अलर्ट सिस्टीम</span>
+                    <span>{language === 'en' ? 'Free Web & Mobile Push Alert System' : '१००% मोफत वेब व मोबाईल पुश अलर्ट सिस्टीम'}</span>
                     <span className="px-2 py-0.2 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[10px] font-black border border-emerald-300">
                       FREE TIER
                     </span>
                   </div>
                   <p className="leading-relaxed text-slate-600 dark:text-slate-400">
-                    कोणतेही शुल्क किंवा API फी न लागता सर्व सभासदांच्या मोबाईलवर, मेस ॲपवर आणि ब्राउझरवर लगेच पुश नोटिफिकेशन व आवाज बेल जाते!
+                    {language === 'en'
+                      ? 'Push notifications sent directly to all members mobile screens and app with sound chime without any external API charges!'
+                      : 'कोणतेही शुल्क किंवा API फी न लागता सर्व सभासदांच्या मोबाईलवर, मेस ॲपवर आणि ब्राउझरवर लगेच पुश नोटिफिकेशन व आवाज बेल जाते!'}
                   </p>
                 </div>
               </div>
@@ -575,7 +589,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               {/* Audience Selector */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  कोणाच्या मोबाईलवर सूचना पाठवायची (Target Audience):
+                  {language === 'en' ? 'Send Notification To:' : 'कोणाच्या मोबाईलवर सूचना पाठवायची:'}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <button
@@ -587,7 +601,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    सर्व सभासद ({members.length})
+                    {language === 'en' ? `All Members (${members.length})` : `सर्व सभासद (${members.length})`}
                   </button>
 
                   <button
@@ -599,7 +613,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    बाकी फी असलेले
+                    {language === 'en' ? 'Pending Dues' : 'बाकी फी असलेले'}
                   </button>
 
                   <button
@@ -611,7 +625,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    🟢 फक्त व्हेज
+                    {language === 'en' ? '🟢 Veg' : '🟢 फक्त व्हेज'}
                   </button>
 
                   <button
@@ -623,7 +637,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
                     }`}
                   >
-                    🔴 फक्त नॉनव्हेज
+                    {language === 'en' ? '🔴 Non-Veg' : '🔴 फक्त नॉनव्हेज'}
                   </button>
                 </div>
               </div>
@@ -631,46 +645,52 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               {/* Quick Presets for Push Notification */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  तयार टेम्पलेट (Quick Templates):
+                  {language === 'en' ? 'Quick Templates:' : 'तयार टेम्पलेट:'}
                 </label>
                 <div className="flex flex-wrap gap-1.5 text-xs">
                   <button
                     type="button"
                     onClick={() => {
-                      setPushTitle('श्री बालाजी मेस - रविवार स्पेशल बेत 🍛');
+                      setPushTitle(language === 'en' ? 'Shree Balaji Mess - Sunday Special Feast 🍛' : 'श्री बालाजी मेस - रविवार स्पेशल बेत 🍛');
                       setPushBody(
-                        'या रविवारी स्पेशल मेनू: गुलाबजाम, पुरी, मटार पनीर व चिकन बिर्याणी! वेळ: दुपारी १२:३० ते ०३:३०.'
+                        language === 'en'
+                          ? 'This Sunday special menu: Gulab Jamun, Puri, Matar Paneer & Chicken Biryani! Time: 12:30 PM to 03:30 PM.'
+                          : 'या रविवारी स्पेशल मेनू: गुलाबजाम, पुरी, मटार पनीर व चिकन बिर्याणी! वेळ: दुपारी १२:३० ते ०३:३०.'
                       );
                     }}
                     className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                   >
-                    🍛 रविवार स्पेशल मेनू
+                    {language === 'en' ? '🍛 Sunday Special Menu' : '🍛 रविवार स्पेशल मेनू'}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setPushTitle('श्री बालाजी मेस - मासिक फी स्मरणपत्र 💳');
+                      setPushTitle(language === 'en' ? 'Shree Balaji Mess - Monthly Fee Reminder 💳' : 'श्री बालाजी मेस - मासिक फी स्मरणपत्र 💳');
                       setPushBody(
-                        'चालू महिन्याची मेस फी कृपया लवकरात लवकर जमा करावी. UPI ID: 9822338975@upi'
+                        language === 'en'
+                          ? `Please pay current month mess fee as soon as possible. UPI ID: ${mess?.upiId || '9822338975@upi'}`
+                          : 'चालू महिन्याची मेस फी कृपया लवकरात लवकर जमा करावी. UPI ID: 9822338975@upi'
                       );
                     }}
                     className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                   >
-                    💰 फी स्मरणपत्र
+                    {language === 'en' ? '💰 Fee Reminder' : '💰 फी स्मरणपत्र'}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setPushTitle('श्री बालाजी मेस - सुट्टी कटऑफ सूचना ⏰');
+                      setPushTitle(language === 'en' ? 'Shree Balaji Mess - Leave Cutoff Notice ⏰' : 'श्री बालाजी मेस - सुट्टी कटऑफ सूचना ⏰');
                       setPushBody(
-                        'दुपारच्या जेवणाची सुट्टी नोंद सकाळी ९:०० च्या आधी व रात्रीच्या जेवणाची संध्याकाळी ६:०० च्या आधी नोंदवा.'
+                        language === 'en'
+                          ? 'Submit lunch leave before 09:00 AM and dinner leave before 06:00 PM.'
+                          : 'दुपारच्या जेवणाची सुट्टी नोंद सकाळी ९:०० च्या आधी व रात्रीच्या जेवणाची संध्याकाळी ६:०० च्या आधी नोंदवा.'
                       );
                     }}
                     className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 transition cursor-pointer"
                   >
-                    ⏰ सुट्टी कटऑफ
+                    {language === 'en' ? '⏰ Cutoff Notice' : '⏰ सुट्टी कटऑफ'}
                   </button>
                 </div>
               </div>
@@ -679,28 +699,28 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               <div className="space-y-3 bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    सूचना शीर्षक (Notification Title) *
+                    {language === 'en' ? 'Notification Title *' : 'सूचना शीर्षक *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={pushTitle}
                     onChange={(e) => setPushTitle(e.target.value)}
-                    placeholder="उदा. श्री बालाजी मेस - रविवार स्पेशल बेत 🍛"
+                    placeholder={language === 'en' ? 'e.g. Shree Balaji Mess - Sunday Special 🍛' : 'उदा. श्री बालाजी मेस - रविवार स्पेशल बेत 🍛'}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    सूचनेचा तपशील (Notification Body Message) *
+                    {language === 'en' ? 'Notification Message *' : 'सूचनेचा तपशील *'}
                   </label>
                   <textarea
                     rows={3}
                     required
                     value={pushBody}
                     onChange={(e) => setPushBody(e.target.value)}
-                    placeholder="सभासदांच्या मोबाईलवर दिसावयाचा मेसेज..."
+                    placeholder={language === 'en' ? 'Message to show on members mobile screen...' : 'सभासदांच्या मोबाईलवर दिसावयाचा मेसेज...'}
                     className="w-full px-3.5 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none leading-relaxed"
                   />
                 </div>
@@ -709,7 +729,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
               {/* Mobile Notification Live Preview Mockup */}
               <div>
                 <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block mb-2">
-                  मोबाईल स्क्रीनवर असे दिसेल (Mobile Push Preview):
+                  {language === 'en' ? 'Mobile Screen Preview:' : 'मोबाईल स्क्रीनवर असे दिसेल:'}
                 </span>
                 <div className="bg-slate-950 text-white p-4 rounded-2xl border border-amber-500/40 shadow-xl space-y-2">
                   <div className="flex items-center justify-between text-[10px] text-slate-400">
@@ -717,9 +737,9 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                       <div className="w-3.5 h-3.5 rounded-full overflow-hidden border border-amber-400 flex-shrink-0">
                         <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
                       </div>
-                      <span>श्री बालाजी मेस</span>
+                      <span>{language === 'en' ? 'Shree Balaji Mess' : 'श्री बालाजी मेस'}</span>
                     </div>
-                    <span>आत्ताच (Just now)</span>
+                    <span>{language === 'en' ? 'Just now' : 'आत्ताच'}</span>
                   </div>
                   <div className="font-bold text-xs sm:text-sm text-white">{pushTitle}</div>
                   <div className="text-xs text-slate-300 leading-relaxed">{pushBody}</div>
@@ -734,7 +754,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                   className="w-full sm:w-auto px-4 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs rounded-xl border border-slate-300 dark:border-slate-700 transition cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   <Smartphone className="w-4 h-4" />
-                  <span>📲 स्वतःच्या फोनवर टेस्ट करा</span>
+                  <span>{language === 'en' ? '📲 Test on Phone' : '📲 स्वतःच्या फोनवर टेस्ट करा'}</span>
                 </button>
 
                 <button
@@ -743,7 +763,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
                   className="w-full flex-1 px-5 py-3 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   <Bell className="w-4 h-4 fill-white" />
-                  <span>🚀 सर्व सभासदांना मोबाईल सूचना पाठवा (Broadcast Now)</span>
+                  <span>{language === 'en' ? '🚀 Send Mobile Notification' : '🚀 सर्व सभासदांना मोबाईल सूचना पाठवा'}</span>
                 </button>
               </div>
             </div>
@@ -756,7 +776,7 @@ export const WhatsAppBroadcastModal: React.FC<WhatsAppBroadcastModalProps> = ({
             onClick={onClose}
             className="px-5 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold rounded-xl text-xs transition cursor-pointer min-h-[44px]"
           >
-            बंद करा (Close)
+            {language === 'en' ? 'Close' : 'बंद करा'}
           </button>
         </div>
       </div>

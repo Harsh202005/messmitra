@@ -30,7 +30,7 @@ export const PnLDashboard: React.FC<PnLDashboardProps> = ({
   onExportBillingCsv,
   onExportExpensesCsv,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedMonth, setSelectedMonth] = useState(pnlData.month || '2026-09');
 
   const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,7 +142,7 @@ export const PnLDashboard: React.FC<PnLDashboardProps> = ({
           </div>
 
           <div className="text-[11px] text-amber-700 dark:text-amber-400 border-t border-slate-150 dark:border-slate-800 pt-3">
-            येणे बाकी (Unpaid Dues): ₹{pnlData.totalPendingDues.toLocaleString('en-IN')}
+            {language === 'en' ? 'Unpaid Dues:' : 'येणे बाकी:'} ₹{pnlData.totalPendingDues.toLocaleString('en-IN')}
           </div>
         </div>
 

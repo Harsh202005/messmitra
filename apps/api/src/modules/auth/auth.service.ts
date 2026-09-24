@@ -10,17 +10,18 @@ const DEMO_USERS: Record<string, { user: AuthUser; passwordHash: string }> = {
       id: 'usr-owner-001',
       email: 'owner@balajimess.com',
       role: 'owner',
-      name: 'Ganesh Balaji Patil (मेस मालक)',
+      name: 'शंकर गिरी (मेस मालक)',
       messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     },
   },
-  'admin': {
-    passwordHash: 'admin123',
+  // Alias — 'admin@balajimess.com' maps to the same owner account
+  'admin@balajimess.com': {
+    passwordHash: 'password123',
     user: {
       id: 'usr-owner-001',
       email: 'owner@balajimess.com',
       role: 'owner',
-      name: 'Ganesh Balaji Patil (मेस मालक)',
+      name: 'शंकर गिरी (मेस मालक)',
       messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     },
   },

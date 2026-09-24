@@ -17,7 +17,7 @@ const DEFAULT_OWNER_USER: AuthUser = {
   id: 'usr-owner-001',
   email: 'shankargiri@balajimess.com',
   role: 'owner',
-  name: 'Shankar Giri (शंकर गिरी - ९८२२३३८९७५)',
+  name: 'Shankar Giri',
   messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   token: 'token-owner-demo',
 };
@@ -26,7 +26,7 @@ const DEFAULT_MEMBER_USER: AuthUser = {
   id: 'usr-member-001',
   email: 'rahul@messmitra.com',
   role: 'member',
-  name: 'Rahul Deshmukh (सभासद)',
+  name: 'Rahul Deshmukh',
   messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   memberId: '11111111-1111-1111-1111-111111111111',
   token: 'token-member-demo',
@@ -36,7 +36,7 @@ const DEFAULT_STAFF_USER: AuthUser = {
   id: 'usr-staff-001',
   email: 'cook@balajimess.com',
   role: 'staff',
-  name: 'Mahadev Mama (आचारी महाराज)',
+  name: 'Mahadev Mama',
   messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
   token: 'token-staff-demo',
 };
@@ -44,7 +44,9 @@ const DEFAULT_STAFF_USER: AuthUser = {
 export const DEMO_CREDENTIALS = [
   {
     role: 'owner' as UserRole,
-    title: 'श्री शंकर गिरी (Owner / चालक)',
+    title: 'श्री शंकर गिरी',
+    titleMr: 'श्री शंकर गिरी',
+    titleEn: 'Shri Shankar Giri (Owner)',
     subtitle: 'Full Admin & Financial Access • 9822338975',
     email: 'shankargiri@balajimess.com',
     password: 'password123',
@@ -53,7 +55,9 @@ export const DEMO_CREDENTIALS = [
   },
   {
     role: 'member' as UserRole,
-    title: 'मेस सभासद (Member / Rahul)',
+    title: 'राहुल देशमुख',
+    titleMr: 'राहुल देशमुख',
+    titleEn: 'Rahul Deshmukh (Member)',
     subtitle: 'Personal Dues & Leave Submissions',
     email: 'rahul@messmitra.com',
     password: 'password123',
@@ -62,7 +66,9 @@ export const DEMO_CREDENTIALS = [
   },
   {
     role: 'staff' as UserRole,
-    title: 'आचारी महाराज (Cook / Kitchen)',
+    title: 'आचारी महाराज',
+    titleMr: 'आचारी महाराज',
+    titleEn: 'Head Cook / Kitchen',
     subtitle: 'Kitchen Headcount Display Only',
     email: 'cook@balajimess.com',
     password: 'password123',
@@ -159,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return response;
     }
 
-    throw new Error('अवैध आयडी किंवा पासवर्ड (Invalid ID or Password). Demo Password: password123');
+    throw new Error('अवैध आयडी किंवा पासवर्ड. Demo Password: password123');
   };
 
   const logout = () => {

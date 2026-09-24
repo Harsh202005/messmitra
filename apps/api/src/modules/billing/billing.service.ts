@@ -4,6 +4,7 @@ import {
   Payment,
   calculateProratedMeals,
   calculateMonthlyBill,
+  calculateLeaveDaysInMonth,
   STANDARD_BASE_MEALS,
 } from '@messmitra/types';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -14,96 +15,8 @@ import { AuthenticatedUser } from '../../common/decorators/current-user.decorato
 
 @Injectable()
 export class BillingService {
-  private inMemoryBilling: BillingCycle[] = [
-    {
-      id: 'b1111111-1111-1111-1111-111111111111',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm1111111-1111-1111-1111-111111111111',
-      memberName: 'Rahul Deshmukh',
-      memberPhone: '+91 98901 23456',
-      month: '2026-09',
-      baseMeals: 56,
-      approvedLeaveDays: 3,
-      rate: 3200,
-      perMealRate: 57.14,
-      amountDue: 2857,
-      amountPaid: 2857,
-      status: 'paid',
-      generatedAt: '2026-09-01T00:00:00Z',
-    },
-    {
-      id: 'b2222222-2222-2222-2222-222222222222',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm2222222-2222-2222-2222-222222222222',
-      memberName: 'Priya Kulkarni',
-      memberPhone: '+91 98902 34567',
-      month: '2026-09',
-      baseMeals: 56,
-      approvedLeaveDays: 0,
-      rate: 2800,
-      perMealRate: 50.0,
-      amountDue: 2800,
-      amountPaid: 0,
-      status: 'unpaid',
-      generatedAt: '2026-09-01T00:00:00Z',
-    },
-    {
-      id: 'b3333333-3333-3333-3333-333333333333',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm3333333-3333-3333-3333-333333333333',
-      memberName: 'Amit Joshi',
-      memberPhone: '+91 98903 45678',
-      month: '2026-09',
-      baseMeals: 56,
-      approvedLeaveDays: 1,
-      rate: 3200,
-      perMealRate: 57.14,
-      amountDue: 3086,
-      amountPaid: 0,
-      status: 'unpaid',
-      generatedAt: '2026-09-01T00:00:00Z',
-    },
-    {
-      id: 'b4444444-4444-4444-4444-444444444444',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm4444444-4444-4444-4444-444444444444',
-      memberName: 'Sneha Shinde',
-      memberPhone: '+91 98904 56789',
-      month: '2026-09',
-      baseMeals: 56,
-      approvedLeaveDays: 0,
-      rate: 2800,
-      perMealRate: 50.0,
-      amountDue: 2800,
-      amountPaid: 1400,
-      status: 'partially_paid',
-      generatedAt: '2026-09-01T00:00:00Z',
-    },
-  ];
-
-  private inMemoryPayments: Payment[] = [
-    {
-      id: 'p1111111-1111-1111-1111-111111111111',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      billingCycleId: 'b1111111-1111-1111-1111-111111111111',
-      amount: 2857,
-      method: 'upi_link',
-      transactionRef: 'UPI/982200112233',
-      isAdjustment: false,
-      paidAt: '2026-09-05T11:20:00Z',
-      createdBy: '00000000-0000-0000-0000-000000000001',
-    },
-    {
-      id: 'p2222222-2222-2222-2222-222222222222',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      billingCycleId: 'b4444444-4444-4444-4444-444444444444',
-      amount: 1400,
-      method: 'cash',
-      isAdjustment: false,
-      paidAt: '2026-09-08T18:40:00Z',
-      createdBy: '00000000-0000-0000-0000-000000000001',
-    },
-  ];
+  private inMemoryBilling: BillingCycle[] = [];
+  private inMemoryPayments: Payment[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
@@ -160,7 +73,7 @@ export class BillingService {
       baseMeals: row.base_meals,
       approvedLeaveDays: Number(row.approved_leave_days),
       rate: Number(row.rate),
-      perMealRate: Number(row.amount_due) / (row.base_meals || 56),
+      perMealRate: Number(row.per_meal_rate) || Math.round((Number(row.rate) / (row.base_meals || 56)) * 100) / 100,
       amountDue: Number(row.amount_due),
       amountPaid: Number(row.amount_paid),
       status: row.status,
@@ -194,20 +107,16 @@ export class BillingService {
       // 1. Calculate prorated meals if joined mid-cycle
       const baseMeals = calculateProratedMeals(member.joinDate, year, monthNum, member.planType);
 
-      // 2. Count approved leave days in this month
-      const memberLeaves = leaves.filter(
-        (l) =>
-          l.memberId === member.id &&
-          (l.status === 'auto_valid' || l.status === 'approved') &&
-          l.startDate.startsWith(month)
-      );
-
+      // 2. Count approved leave days strictly in this month (with boundary clamping)
       let approvedLeaveDays = 0;
-      for (const l of memberLeaves) {
-        const start = new Date(l.startDate);
-        const end = new Date(l.endDate);
-        const diffDays = Math.round((end.getTime() - start.getTime()) / 86400000) + 1;
-        approvedLeaveDays += Math.max(1, diffDays);
+      for (const l of leaves) {
+        if (
+          l.memberId === member.id &&
+          (l.status === 'auto_valid' || l.status === 'approved')
+        ) {
+          const daysInThisMonth = calculateLeaveDaysInMonth(l.startDate, l.endDate, year, monthNum);
+          approvedLeaveDays += daysInThisMonth;
+        }
       }
 
       // 3. Compute itemized monthly bill
@@ -251,9 +160,11 @@ export class BillingService {
         base_meals: cycle.baseMeals,
         approved_leave_days: cycle.approvedLeaveDays,
         rate: cycle.rate,
+        per_meal_rate: cycle.perMealRate,
         amount_due: cycle.amountDue,
         amount_paid: cycle.amountPaid,
         status: cycle.status,
+        generated_at: cycle.generatedAt,
       }, { onConflict: 'member_id,month' });
     }
 
@@ -315,19 +226,33 @@ export class BillingService {
       .update({ amount_paid: newPaid, status: newStatus })
       .eq('id', billingCycleId);
 
-    const { data: payment, error: payErr } = await client
+    const isDemoUser = !user.userId || user.userId.startsWith('00000000');
+    const insertPayload: any = {
+      mess_id: user.messId,
+      billing_cycle_id: billingCycleId,
+      amount: dto.amount,
+      method: dto.method,
+      transaction_ref: dto.transactionRef,
+      is_adjustment: false,
+      created_by: isDemoUser ? null : user.userId,
+    };
+
+    let { data: payment, error: payErr } = await client
       .from('payments')
-      .insert({
-        mess_id: user.messId,
-        billing_cycle_id: billingCycleId,
-        amount: dto.amount,
-        method: dto.method,
-        transaction_ref: dto.transactionRef,
-        is_adjustment: false,
-        created_by: user.userId,
-      })
+      .insert(insertPayload)
       .select()
       .single();
+
+    if (payErr && payErr.message.includes('foreign key constraint "payments_created_by_fkey"')) {
+      insertPayload.created_by = null;
+      const retry = await client
+        .from('payments')
+        .insert(insertPayload)
+        .select()
+        .single();
+      payment = retry.data;
+      payErr = retry.error;
+    }
 
     if (payErr) throw new Error(`Payment failed: ${payErr.message}`);
 

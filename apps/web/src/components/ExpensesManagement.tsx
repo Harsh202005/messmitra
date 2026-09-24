@@ -52,7 +52,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
   onAddStaff,
   onExportCsv,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [activeTab, setActiveTab] = useState<'recurring' | 'oneoff' | 'staff'>('recurring');
 
   // Modals
@@ -81,7 +81,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
   const [staffForm, setStaffForm] = useState({
     name: '',
-    role: 'Head Cook (महाराज)',
+    role: 'मुख्य आचारी',
     monthlySalary: 18000,
     phone: '',
   });
@@ -135,7 +135,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
     setIsAddStaffOpen(false);
     setStaffForm({
       name: '',
-      role: 'Head Cook (महाराज)',
+      role: 'मुख्य आचारी',
       monthlySalary: 18000,
       phone: '',
     });
@@ -175,10 +175,12 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
         <div>
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
             <TrendingDown className="w-5 h-5 text-red-500" />
-            <span>खर्च व्यवस्थापन (Expenses Management)</span>
+            <span>{language === 'en' ? 'Expenses Management' : 'खर्च व्यवस्थापन'}</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            नियमित मासिक खर्च • दैनंदिन भाजीपाला/किराणा • कर्मचारी मानधन
+            {language === 'en'
+              ? 'Monthly recurring expenses • Daily groceries & vegetables • Staff salary'
+              : 'नियमित मासिक खर्च • दैनंदिन भाजीपाला/किराणा • कर्मचारी मानधन'}
           </p>
         </div>
 
@@ -212,7 +214,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
         </div>
       </div>
 
-      {/* Primary USP Feature: 8 Category Budget vs Actual Expense Comparison (बजेट आणि प्रत्यक्ष खर्च तुलना) */}
+      {/* Primary USP Feature: 8 Category Budget vs Actual Expense Comparison */ }
       <ExpenseBudgetCategoryCards
         recurringExpenses={recurringExpenses}
         oneOffExpenses={oneOffExpenses}
@@ -328,7 +330,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                     <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                       ₹{expense.amount.toLocaleString('en-IN')}
                     </div>
-                    <span className="text-[10px] text-slate-400">दरमहा (Monthly)</span>
+                    <span className="text-[10px] text-slate-400">{language === 'en' ? 'Monthly' : 'दरमहा'}</span>
                   </div>
 
                   <button
@@ -336,7 +338,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                     className="min-h-[40px] px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold border border-emerald-300 dark:border-emerald-700/50 transition flex items-center gap-1 cursor-pointer"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>ह्या महिन्याचा खर्च निश्चित करा</span>
+                    <span>{language === 'en' ? 'Confirm this month' : 'ह्या महिन्याचा खर्च निश्चित करा'}</span>
                   </button>
                 </div>
               </div>
@@ -459,7 +461,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <form onSubmit={handleRecurringSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  खर्चाचा प्रकार (Category) *
+                  {language === 'en' ? 'Expense Category *' : 'खर्चाचा प्रकार *'}
                 </label>
                 <select
                   value={recurringForm.category}
@@ -468,16 +470,16 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   }
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="rent">🏠 मेस गाळा भाडे (Mess Space Rent)</option>
-                  <option value="gas">🔥 कमर्शियल गॅस सिलिंडर / इंधन (Gas/Fuel)</option>
-                  <option value="utilities">⚡ लाईट बिल आणि पाणी बिल (Electricity & Water)</option>
-                  <option value="salary">👨‍🍳 कर्मचारी मानधन व पगार (Staff Salary)</option>
-                  <option value="maintenance">🔧 किचन दुरुस्ती व देखभाल (Kitchen Maintenance)</option>
-                  <option value="packaging">📦 डबा पॅकिंग साहित्य व बॉक्सेस (Packaging Material)</option>
-                  <option value="groceries">🌾 किराणा माल व इतर धान्य (Groceries)</option>
-                  <option value="vegetables">🥬 भाजीपाला व फळे (Vegetables)</option>
-                  <option value="dairy">🥛 दूध, दही व ताक (Dairy)</option>
-                  <option value="other">🏷️ इतर नियमित खर्च (Other Regular Expense)</option>
+                  <option value="rent">{language === 'en' ? '🏠 Mess Space Rent' : '🏠 मेस गाळा भाडे'}</option>
+                  <option value="gas">{language === 'en' ? '🔥 Commercial Gas Cylinder / Fuel' : '🔥 कमर्शियल गॅस सिलिंडर / इंधन'}</option>
+                  <option value="utilities">{language === 'en' ? '⚡ Electricity & Water Bill' : '⚡ लाईट बिल आणि पाणी बिल'}</option>
+                  <option value="salary">{language === 'en' ? '👨‍🍳 Staff Salary & Honorarium' : '👨‍🍳 कर्मचारी मानधन व पगार'}</option>
+                  <option value="maintenance">{language === 'en' ? '🔧 Kitchen Maintenance & Repairs' : '🔧 किचन दुरुस्ती व देखभाल'}</option>
+                  <option value="packaging">{language === 'en' ? '📦 Tiffin Packaging Material' : '📦 डबा पॅकिंग साहित्य व बॉक्सेस'}</option>
+                  <option value="groceries">{language === 'en' ? '🌾 Groceries & Grains' : '🌾 किराणा माल व इतर धान्य'}</option>
+                  <option value="vegetables">{language === 'en' ? '🥬 Vegetables & Fruits' : '🥬 भाजीपाला व फळे'}</option>
+                  <option value="dairy">{language === 'en' ? '🥛 Milk, Curd & Buttermilk' : '🥛 दूध, दही व ताक'}</option>
+                  <option value="other">{language === 'en' ? '🏷️ Other Regular Expense' : '🏷️ इतर नियमित खर्च'}</option>
                 </select>
               </div>
 
@@ -485,7 +487,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
               {recurringForm.category === 'other' && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl space-y-1 animate-fadeIn">
                   <label className="block font-bold text-amber-900 dark:text-amber-200 text-xs">
-                    🏷️ इतर खर्चाचा कस्टम टॅग (Custom Expense Tag) *
+                    {language === 'en' ? '🏷️ Custom Expense Tag *' : '🏷️ इतर खर्चाचा कस्टम टॅग *'}
                   </label>
                   <input
                     type="text"
@@ -517,7 +519,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मासिक रक्कम (Amount in ₹) *
+                  {language === 'en' ? 'Monthly Amount (₹) *' : 'मासिक रक्कम (₹) *'}
                 </label>
                 <input
                   type="number"
@@ -568,7 +570,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <ShoppingBag className="w-4 h-4 text-brand-500" />
-                <span>दैनंदिन खर्च नोंद (Daily Expense)</span>
+                <span>{language === 'en' ? 'Daily Expense Entry' : 'दैनंदिन खर्च नोंद'}</span>
               </h3>
               <button
                 onClick={() => setIsAddOneOffOpen(false)}
@@ -581,7 +583,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <form onSubmit={handleOneOffSubmit} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  खर्च प्रकार (Category) *
+                  {language === 'en' ? 'Expense Category *' : 'खर्च प्रकार *'}
                 </label>
                 <select
                   value={oneOffForm.category}
@@ -590,15 +592,15 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
                   }
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="vegetables">🥬 ताजी भाजी मंडी व फळे (Fresh Vegetables)</option>
-                  <option value="groceries">🌾 किराणा माल व तेल/मसाले (Groceries & Spices)</option>
-                  <option value="dairy">🥛 ताजे दूध, ताक व दही (Fresh Dairy Products)</option>
-                  <option value="gas">🔥 कमर्शियल गॅस सिलिंडर रिफिल (Gas Refill)</option>
-                  <option value="packaging">📦 डबा पॅकिंग साहित्य / पार्सल बॉक्सेस (Packaging Material)</option>
-                  <option value="maintenance">🔧 स्वयंपाक भांडी, स्वच्छता व मेंटेनन्स (Utensils & Maintenance)</option>
-                  <option value="salary">👨‍🍳 कर्मचारी उचल / रोजंदारी (Staff Advance)</option>
-                  <option value="utilities">⚡ लाईट बिल / पाणी कॅन खर्च (Electricity / Water Jars)</option>
-                  <option value="other">🏷️ इतर किरकोळ खर्च (Other Custom Expense)</option>
+                  <option value="vegetables">{language === 'en' ? '🥬 Fresh Vegetables & Fruits' : '🥬 ताजी भाजी मंडी व फळे'}</option>
+                  <option value="groceries">{language === 'en' ? '🌾 Groceries, Oil & Spices' : '🌾 किराणा माल व तेल/मसाले'}</option>
+                  <option value="dairy">{language === 'en' ? '🥛 Fresh Dairy Products' : '🥛 ताजे दूध, ताक व दही'}</option>
+                  <option value="gas">{language === 'en' ? '🔥 Commercial Gas Refill' : '🔥 कमर्शियल गॅस सिलिंडर रिफिल'}</option>
+                  <option value="packaging">{language === 'en' ? '📦 Tiffin Parcel Packaging' : '📦 डबा पॅकिंग साहित्य / पार्सल बॉक्सेस'}</option>
+                  <option value="maintenance">{language === 'en' ? '🔧 Utensils & Maintenance' : '🔧 स्वयंपाक भांडी, स्वच्छता व मेंटेनन्स'}</option>
+                  <option value="salary">{language === 'en' ? '👨‍🍳 Staff Advance / Daily Wages' : '👨‍🍳 कर्मचारी उचल / रोजंदारी'}</option>
+                  <option value="utilities">{language === 'en' ? '⚡ Electricity / Water Jars' : '⚡ लाईट बिल / पाणी कॅन खर्च'}</option>
+                  <option value="other">{language === 'en' ? '🏷️ Other Custom Expense' : '🏷️ इतर किरकोळ खर्च'}</option>
                 </select>
               </div>
 
@@ -606,7 +608,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
               {oneOffForm.category === 'other' && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/60 rounded-xl space-y-1 animate-fadeIn">
                   <label className="block font-bold text-amber-900 dark:text-amber-200 text-xs">
-                    🏷️ इतर खर्चाचा कस्टम टॅग (Custom Expense Tag) *
+                    {language === 'en' ? '🏷️ Custom Expense Tag *' : '🏷️ इतर खर्चाचा कस्टम टॅग *'}
                   </label>
                   <input
                     type="text"
@@ -624,7 +626,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  खर्चाची रक्कम (Amount in ₹) *
+                  {language === 'en' ? 'Expense Amount (₹) *' : 'खर्चाची रक्कम (₹) *'}
                 </label>
                 <input
                   type="number"
@@ -652,7 +654,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  तपशील / टिपण (Note)
+                  {language === 'en' ? 'Note / Description' : 'तपशील / टिपण'}
                 </label>
                 <input
                   type="text"
@@ -685,7 +687,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <Users className="w-4 h-4 text-brand-500" />
-                <span>नवीन कर्मचारी जोडा (Add Staff)</span>
+                <span>{language === 'en' ? 'Add Staff Member' : 'नवीन कर्मचारी जोडा'}</span>
               </h3>
               <button
                 onClick={() => setIsAddStaffOpen(false)}
@@ -712,12 +714,12 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  पद / काम (Role) *
+                  {language === 'en' ? 'Role / Designation *' : 'पद / काम *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="उदा. Head Cook (महाराज)"
+                  placeholder={language === 'en' ? 'e.g. Head Cook' : 'उदा. मुख्य आचारी / महाराज'}
                   value={staffForm.role}
                   onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
                   className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
@@ -726,7 +728,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मासिक मानधन (Salary in ₹) *
+                  {language === 'en' ? 'Monthly Salary (₹) *' : 'मासिक मानधन (₹) *'}
                 </label>
                 <input
                   type="number"
@@ -744,7 +746,7 @@ export const ExpensesManagement: React.FC<ExpensesManagementProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मोबाइल नंबर (Phone)
+                  {language === 'en' ? 'Mobile Number' : 'मोबाइल नंबर'}
                 </label>
                 <input
                   type="tel"

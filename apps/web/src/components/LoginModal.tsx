@@ -39,7 +39,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   initialMode = 'login',
 }) => {
   const { login, switchDemoRole } = useAuth();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const [activeMode, setActiveMode] = useState<'login' | 'register'>(initialMode);
   const [registerRole, setRegisterRole] = useState<'member' | 'staff'>('member');
@@ -62,7 +62,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [regPhone, setRegPhone] = useState('');
   const [regDiet, setRegDiet] = useState<DietPreference>('veg');
   const [regPlan, setRegPlan] = useState<PlanType>('both');
-  const [regStaffRole, setRegStaffRole] = useState('मुख्य आचारी (Head Maharaj)');
+  const [regStaffRole, setRegStaffRole] = useState('मुख्य आचारी');
   const [regSalary, setRegSalary] = useState(15000);
   const [regPassword, setRegPassword] = useState('');
   const [regSuccessMsg, setRegSuccessMsg] = useState<string | null>(null);
@@ -184,7 +184,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }`}
             >
               <LogIn className="w-4 h-4" />
-              <span>लॉगिन करा (Login)</span>
+              <span>{language === 'en' ? 'Sign In' : 'लॉगिन करा'}</span>
             </button>
             <button
               type="button"
@@ -200,7 +200,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               }`}
             >
               <UserPlus className="w-4 h-4" />
-              <span>नवीन नोंदणी (Register)</span>
+              <span>{language === 'en' ? 'Register' : 'नवीन नोंदणी'}</span>
             </button>
           </div>
         </div>
@@ -243,7 +243,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               <div>
                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 mb-2">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>१-क्लिक चाचणी खाती (Quick Demo Roles):</span>
+                  <span>{language === 'en' ? '1-Click Quick Demo Roles:' : '१-क्लिक चाचणी खाती:'}</span>
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -332,7 +332,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     disabled={isSubmitting}
                     className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    <span>{isSubmitting ? 'लॉगिन होत आहे...' : 'लॉगिन करा (Sign In)'}</span>
+                    <span>{isSubmitting ? (language === 'en' ? 'Signing in...' : 'लॉगिन होत आहे...') : (language === 'en' ? 'Sign In' : 'लॉगिन करा')}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -345,7 +345,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5 animate-fadeIn">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  नोंदणी प्रकार (I am registering as):
+                  {language === 'en' ? 'Registering as:' : 'नोंदणी प्रकार:'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -358,7 +358,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     }`}
                   >
                     <User className="w-4 h-4" />
-                    <span>मेस सभासद (Member)</span>
+                    <span>{language === 'en' ? 'Mess Member' : 'मेस सभासद'}</span>
                   </button>
 
                   <button
@@ -371,7 +371,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     }`}
                   >
                     <ChefHat className="w-4 h-4" />
-                    <span>आचारी / कर्मचारी (Cook)</span>
+                    <span>{language === 'en' ? 'Cook / Staff' : 'आचारी / कर्मचारी'}</span>
                   </button>
                 </div>
               </div>
@@ -392,7 +392,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मोबाइल नंबर (WhatsApp) *
+                  {language === 'en' ? 'Mobile Number *' : 'मोबाइल नंबर *'}
                 </label>
                 <input
                   type="tel"
@@ -504,7 +504,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                   disabled={isSubmitting}
                   className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition text-sm cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmitting ? 'नोंदणी सुरू आहे...' : 'नोंदणी अर्ज पाठवा (Submit for Approval)'}
+                  {isSubmitting
+                    ? (language === 'en' ? 'Submitting registration...' : 'नोंदणी सुरू आहे...')
+                    : (language === 'en' ? 'Submit Registration' : 'नोंदणी अर्ज पाठवा')}
                 </button>
               </div>
             </form>

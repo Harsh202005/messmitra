@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 export interface ExpenseBudgetCategoryItem {
   id: string;
@@ -52,6 +53,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
   staffList = [],
   onAddExpensePrompt,
 }) => {
+  const { language } = useI18n();
   const [budgetCaps, setBudgetCaps] = useState<Record<string, number>>(DEFAULT_BUDGET_CAPS);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCapValue, setNewCapValue] = useState<number>(0);
@@ -99,7 +101,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
   };
 
   // Compute spending per category
-  // 1. किराणा व भाजीपाला (Groceries & Veg)
+  // 1. Groceries & Veg
   const spentGroceriesVeg = oneOffExpenses
     .filter((o) => ['groceries', 'vegetables', 'dairy'].includes(o.category))
     .reduce((a, b) => a + b.amount, 0) +
@@ -107,7 +109,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       .filter((r) => r.isActive && ['groceries', 'vegetables', 'dairy'].includes(r.category))
       .reduce((a, b) => a + b.amount, 0);
 
-  // 2. कमर्शियल गॅस सिलिंडर / इंधन (Gas Cylinder)
+  // 2. Commercial Gas Cylinder / Fuel
   const spentGas = recurringExpenses
     .filter((r) => r.isActive && r.category === 'gas')
     .reduce((a, b) => a + b.amount, 0) +
@@ -115,7 +117,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       .filter((o) => o.category === 'gas')
       .reduce((a, b) => a + b.amount, 0);
 
-  // 3. लाईट बिल आणि पाणी (Electricity & Water)
+  // 3. Electricity & Water
   const spentElectricityWater = recurringExpenses
     .filter((r) => {
       if (!r.isActive) return false;
@@ -144,7 +146,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       })
       .reduce((a, b) => a + b.amount, 0);
 
-  // 4. मेस गाळा भाडे (Rent)
+  // 4. Rent
   const spentRent = recurringExpenses
     .filter((r) => r.isActive && r.category === 'rent')
     .reduce((a, b) => a + b.amount, 0) +
@@ -152,7 +154,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       .filter((o) => o.category === 'rent')
       .reduce((a, b) => a + b.amount, 0);
 
-  // 5. किचन दुरुस्ती व देखभाल (Maintenance & Repairs)
+  // 5. Kitchen Maintenance & Repairs
   const spentMaintenance = recurringExpenses
     .filter((r) => {
       if (!r.isActive || r.category !== 'maintenance') return false;
@@ -169,7 +171,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       })
       .reduce((a, b) => a + b.amount, 0);
 
-  // 6. कर्मचारी उचल व पगार (Staff Advance & Salary)
+  // 6. Staff Advance & Salary
   const staffSalarySum = staffList
     .filter((s) => s.isActive)
     .reduce((a, b) => a + b.monthlySalary, 0);
@@ -181,7 +183,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       .filter((o) => o.category === 'salary')
       .reduce((a, b) => a + b.amount, 0);
 
-  // 7. डबा पॅकिंग साहित्य (Tiffin Packaging Material)
+  // 7. Tiffin Packaging Material
   const spentPackaging = oneOffExpenses
     .filter((o) => {
       if (o.category === 'packaging') return true;
@@ -193,7 +195,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
       .filter((r) => r.isActive && r.category === 'packaging')
       .reduce((a, b) => a + b.amount, 0);
 
-  // 8. इतर किरकोळ खर्च (Other Miscellaneous)
+  // 8. Other Miscellaneous
   const spentOther = oneOffExpenses
     .filter((o) => o.category === 'other')
     .reduce((a, b) => a + b.amount, 0) +
@@ -279,10 +281,12 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
           </div>
           <div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
-              बजेट आणि प्रत्यक्ष खर्च तुलना
+              {language === 'en' ? 'Budget vs. Actual Expense' : 'बजेट आणि प्रत्यक्ष खर्च तुलना'}
             </h3>
             <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
-              प्रत्येक श्रेणीनुसार मासिक बजेट मर्यादा (Budget Cap) व प्रत्यक्ष झालेला खर्च
+              {language === 'en'
+                ? 'Monthly category budget caps and actual expenditure comparison'
+                : 'प्रत्येक श्रेणीनुसार मासिक बजेट मर्यादा व प्रत्यक्ष झालेला खर्च'}
             </p>
           </div>
         </div>
@@ -293,7 +297,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
             className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-stone-700 dark:text-slate-200 border border-stone-300/80 dark:border-slate-700 flex items-center gap-1.5 transition cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>कॅप्स व्यवस्थापन (Manage Caps)</span>
+            <span>{language === 'en' ? 'Manage Budget Caps' : 'कॅप्स व्यवस्थापन'}</span>
           </button>
         </div>
       </div>
@@ -384,7 +388,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
                   ✎
                 </div>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                  बजेट मर्यादा बदला (Edit Cap)
+                  {language === 'en' ? 'Edit Budget Cap' : 'बजेट मर्यादा बदला'}
                 </h4>
               </div>
               <button
@@ -398,16 +402,18 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
             <form onSubmit={handleSaveSingleCap} className="p-5 space-y-4">
               <div>
                 <span className="text-xs text-slate-500 dark:text-slate-400 block mb-1">
-                  खर्च श्रेणी:
+                  {language === 'en' ? 'Expense Category:' : 'खर्च श्रेणी:'}
                 </span>
                 <div className="font-bold text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                  {categories.find((c) => c.id === editingCategory)?.nameMr}
+                  {language === 'en'
+                    ? categories.find((c) => c.id === editingCategory)?.nameEn
+                    : categories.find((c) => c.id === editingCategory)?.nameMr}
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  नवीन मासिक मर्यादा (Monthly Cap in ₹) *
+                  {language === 'en' ? 'New Monthly Cap (₹) *' : 'नवीन मासिक मर्यादा (₹) *'}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
@@ -428,7 +434,7 @@ export const ExpenseBudgetCategoryCards: React.FC<ExpenseBudgetCategoryCardsProp
 
               {/* Quick Preset Buttons */}
               <div>
-                <span className="text-[11px] text-slate-400 block mb-1.5">द्रुत मूल्ये (Quick Presets):</span>
+                <span className="text-[11px] text-slate-400 block mb-1.5">{language === 'en' ? 'Quick Presets:' : 'द्रुत मूल्ये:'}</span>
                 <div className="flex flex-wrap gap-1.5">
                   {[3000, 5000, 7500, 12000, 22000, 42000, 45000].map((preset) => (
                     <button

@@ -35,6 +35,7 @@ export class AuthController {
         role: 'owner',
         title: 'मेस चालक (Mess Owner / Admin)',
         email: 'owner@balajimess.com',
+        emailAlias: 'admin@balajimess.com',
         password: 'password123',
         description: 'Full admin access: Mess rules, member management, leaves approval, 56-meal billing, expenses, and P&L ledger.',
       },

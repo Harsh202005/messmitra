@@ -8,36 +8,7 @@ import { AuthenticatedUser } from '../../common/decorators/current-user.decorato
 
 @Injectable()
 export class LeavesService {
-  private inMemoryLeaves: LeaveRequest[] = [
-    {
-      id: 'l1111111-1111-1111-1111-111111111111',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm1111111-1111-1111-1111-111111111111',
-      memberName: 'Rahul Deshmukh',
-      memberPhone: '+91 98901 23456',
-      startDate: '2026-09-12',
-      endDate: '2026-09-14',
-      submittedAt: '2026-09-10T14:30:00Z',
-      status: 'auto_valid',
-      isLate: false,
-      reason: 'Home visit for weekend',
-      createdAt: '2026-09-10T14:30:00Z',
-    },
-    {
-      id: 'l2222222-2222-2222-2222-222222222222',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      memberId: 'm3333333-3333-3333-3333-333333333333',
-      memberName: 'Amit Joshi',
-      memberPhone: '+91 98903 45678',
-      startDate: '2026-09-11',
-      endDate: '2026-09-11',
-      submittedAt: '2026-09-11T09:45:00Z',
-      status: 'pending_approval',
-      isLate: true,
-      reason: 'Urgent college exam prep',
-      createdAt: '2026-09-11T09:45:00Z',
-    },
-  ];
+  private inMemoryLeaves: LeaveRequest[] = [];
 
   constructor(
     private supabaseService: SupabaseService,
@@ -94,7 +65,14 @@ export class LeavesService {
     const member = await this.membersService.getMemberById(dto.memberId, user);
 
     const now = new Date();
-    const isLate = isLeaveSubmissionLate(now, dto.startDate, mess.dailyCutoffTime || '09:00');
+    const isLate = isLeaveSubmissionLate(
+      now,
+      dto.startDate,
+      mess.dailyCutoffTime || '09:00',
+      member.planType,
+      mess.lunchCutoffTime || '09:00',
+      mess.dinnerCutoffTime || '18:00'
+    );
     const status: LeaveStatus = isLate ? 'pending_approval' : 'auto_valid';
 
     const client = this.supabaseService.getClient();

@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { generateDirectWhatsAppUrl, BALAJI_WHATSAPP_TEMPLATES } from '../lib/whatsappTemplates';
+import { useI18n } from '../lib/i18n';
 
 interface RegistrationApprovalsQueueProps {
   registrations: PendingRegistration[];
@@ -28,6 +29,7 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
   registrations,
   onReview,
 }) => {
+  const { language } = useI18n();
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const pendingList = registrations.filter((r) => r.status === 'pending_approval');
@@ -63,16 +65,18 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                नवीन नोंदणी मंजुरी (Registration Approvals Queue)
+                {language === 'en' ? 'New Registration Approvals' : 'नवीन नोंदणी मंजुरी'}
               </h3>
               {pendingList.length > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white font-black text-xs animate-pulse">
-                  {pendingList.length} नवीन
+                  {pendingList.length} {language === 'en' ? 'New' : 'नवीन'}
                 </span>
               )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              नवीन सभासद आणि कर्मचाऱ्यांचे खाते मंजुरीनंतरच सक्रिय होईल (शंकर गिरी)
+              {language === 'en'
+                ? 'Member and cook accounts are activated upon owner approval'
+                : 'नवीन सभासद आणि कर्मचाऱ्यांचे खाते मंजुरीनंतरच सक्रिय होईल'}
             </p>
           </div>
         </div>
@@ -110,7 +114,9 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                     </span>
                     <div>
                       <strong className="text-sm sm:text-base text-slate-900 dark:text-white block font-black">
-                        {reg.name}
+                        {reg.name.includes('(')
+                          ? (language === 'en' ? reg.name.split('(')[1].replace(')', '').trim() || reg.name : reg.name.split('(')[0].trim())
+                          : reg.name}
                       </strong>
                       <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                         {reg.phone}
@@ -119,7 +125,7 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                   </div>
 
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 border border-amber-300">
-                    प्रलंबित
+                    {language === 'en' ? 'Pending' : 'प्रलंबित'}
                   </span>
                 </div>
 
@@ -128,37 +134,45 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                   {reg.role === 'member' ? (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">आहार प्रकार:</span>
+                        <span className="text-slate-500">{language === 'en' ? 'Diet:' : 'आहार प्रकार:'}</span>
                         <strong className={reg.dietPreference === 'veg' ? 'text-emerald-600' : 'text-rose-600'}>
-                          {reg.dietPreference === 'veg' ? '🟢 शाकाहारी (₹3,000)' : '🔴 मांसाहारी (₹3,200)'}
+                          {reg.dietPreference === 'veg'
+                            ? (language === 'en' ? '🟢 Pure Veg (₹3,000)' : '🟢 शाकाहारी (₹3,000)')
+                            : (language === 'en' ? '🔴 Non-Veg (₹3,200)' : '🔴 मांसाहारी (₹3,200)')}
                         </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">प्लॅन प्रकार:</span>
+                        <span className="text-slate-500">{language === 'en' ? 'Plan Type:' : 'प्लॅन प्रकार:'}</span>
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {reg.planType === 'both'
-                            ? 'दोन्ही वेळ (दुपार + रात्र)'
+                            ? (language === 'en' ? 'Both Meals' : 'दोन्ही वेळ')
                             : reg.planType === 'lunch'
-                            ? 'फक्त दुपार'
-                            : 'फक्त रात्र'}
+                            ? (language === 'en' ? 'Lunch Only' : 'फक्त दुपार')
+                            : (language === 'en' ? 'Dinner Only' : 'फक्त रात्र')}
                         </span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">पद / भूमिका:</span>
-                        <strong className="text-slate-800 dark:text-slate-200">{reg.staffRole || 'आचारी'}</strong>
+                        <span className="text-slate-500">{language === 'en' ? 'Role:' : 'पद / भूमिका:'}</span>
+                        <strong className="text-slate-800 dark:text-slate-200">
+                          {reg.staffRole
+                            ? (reg.staffRole.includes('(')
+                                ? (language === 'en' ? reg.staffRole.split('(')[1].replace(')', '').trim() || reg.staffRole : reg.staffRole.split('(')[0].trim())
+                                : reg.staffRole)
+                            : (language === 'en' ? 'Cook' : 'आचारी')}
+                        </strong>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">अपेक्षित वेतन:</span>
-                        <span className="font-bold text-emerald-600 font-mono">₹{reg.salary?.toLocaleString('en-IN')}/महिना</span>
+                        <span className="text-slate-500">{language === 'en' ? 'Expected Salary:' : 'अपेक्षित वेतन:'}</span>
+                        <span className="font-bold text-emerald-600 font-mono">₹{reg.salary?.toLocaleString('en-IN')}{language === 'en' ? '/mo' : '/महिना'}</span>
                       </div>
                     </>
                   )}
 
                   <div className="flex justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-100 dark:border-slate-800">
-                    <span>दाखल वेळ:</span>
+                    <span>{language === 'en' ? 'Submitted On:' : 'दाखल वेळ:'}</span>
                     <span>{new Date(reg.submittedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -174,7 +188,7 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                     className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer disabled:opacity-50"
                   >
                     <Check className="w-4 h-4" />
-                    <span>मंजूर करा (Approve)</span>
+                    <span>{language === 'en' ? 'Approve' : 'मंजूर करा'}</span>
                   </button>
 
                   <button
@@ -184,7 +198,7 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                     className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition cursor-pointer disabled:opacity-50"
                   >
                     <X className="w-4 h-4" />
-                    <span>नामंजूर (Reject)</span>
+                    <span>{language === 'en' ? 'Reject' : 'नामंजूर'}</span>
                   </button>
                 </div>
 
@@ -194,7 +208,7 @@ export const RegistrationApprovalsQueue: React.FC<RegistrationApprovalsQueueProp
                   className="w-full min-h-[40px] flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold border border-emerald-300 dark:border-emerald-700/50 transition cursor-pointer"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
-                  <span>WhatsApp वर संपर्क / पडताळणी करा</span>
+                  <span>{language === 'en' ? 'Contact / Verify on WhatsApp' : 'WhatsApp वर संपर्क / पडताळणी करा'}</span>
                 </button>
               </div>
             </div>

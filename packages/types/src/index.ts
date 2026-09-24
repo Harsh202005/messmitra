@@ -55,10 +55,10 @@ export interface Mess {
   ownerName?: string;
   contactNumber?: string;
   upiId: string;
-  defaultMaleRate?: number; // legacy fallback
-  defaultFemaleRate?: number; // legacy fallback
-  defaultVegRate: number; // ₹3000 for 56 veg meals
-  defaultNonVegRate: number; // ₹3200 for 56 non-veg meals
+  defaultVegRate: number; // ₹3000 for pure veg (2-meals/day)
+  defaultNonVegRate: number; // ₹3200 for non-veg / special (2-meals/day)
+  defaultMaleRate?: number; // legacy fallback for backward compatibility
+  defaultFemaleRate?: number; // legacy fallback for backward compatibility
   tagline?: string;
   establishedYears?: number; // 21 years
   createdAt: string;
@@ -189,7 +189,73 @@ export interface Staff {
   role: string;
   monthlySalary: number;
   phone?: string;
+  joinDate?: string;
+  upiId?: string;
   isActive: boolean;
+  createdAt: string;
+}
+
+export interface StaffSalaryPayment {
+  id: string;
+  messId: string;
+  staffId: string;
+  staffName: string;
+  month: string; // "YYYY-MM"
+  baseSalary: number;
+  advanceDeductions: number;
+  bonusAmount?: number;
+  netPaid: number;
+  paymentType: 'advance' | 'salary_settlement' | 'bonus' | 'monthly_approval';
+  paymentMethod: 'cash' | 'upi' | 'bank_transfer';
+  paidDate: string; // "YYYY-MM-DD"
+  note?: string;
+  voucherNumber: string; // e.g. "SAL-2026-09-01"
+  createdAt: string;
+}
+
+export interface StaffAttendanceRecord {
+  id: string;
+  messId: string;
+  staffId: string;
+  date: string; // "YYYY-MM-DD"
+  status: 'present' | 'half_day' | 'absent';
+  notes?: string;
+}
+
+export interface MenuCatalogItem {
+  id: string;
+  name: string;
+  nameMr: string;
+  price: number;
+  diet: 'veg' | 'nonveg';
+  category: 'thali' | 'parcel' | 'extra';
+  isParcel?: boolean;
+  icon: string;
+  badge?: string;
+  available?: boolean;
+}
+
+export interface WalkInOrderItem {
+  itemId: string;
+  name: string;
+  nameMr: string;
+  price: number;
+  quantity: number;
+  diet: 'veg' | 'nonveg';
+  isParcel?: boolean;
+}
+
+export interface WalkInOrder {
+  id: string;
+  orderNumber: string; // e.g. "POS-101"
+  messId: string;
+  items: WalkInOrderItem[];
+  totalAmount: number;
+  paymentMethod: 'cash' | 'upi' | 'card' | 'owner_pass';
+  paymentStatus: 'paid' | 'pending';
+  customerName?: string;
+  customerPhone?: string;
+  notes?: string;
   createdAt: string;
 }
 
@@ -353,6 +419,40 @@ export function calculateProratedMeals(
 }
 
 /**
+ * Accurately calculates approved leave days that fall strictly within a given calendar month (1-12).
+ * Correctly clamps leaves spanning across month boundaries (e.g. Aug 28 to Sep 04 -> 4 days in Sep).
+ */
+export function calculateLeaveDaysInMonth(
+  startDateStr: string,
+  endDateStr: string,
+  year: number,
+  month: number // 1-12
+): number {
+  if (!startDateStr || !endDateStr) return 0;
+  const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+  const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const monthEnd = new Date(Date.UTC(year, month - 1, daysInMonth));
+
+  const leaveStart = new Date(Date.UTC(sYear, sMonth - 1, sDay));
+  const leaveEnd = new Date(Date.UTC(eYear, eMonth - 1, eDay));
+
+  if (leaveEnd < monthStart || leaveStart > monthEnd) {
+    return 0;
+  }
+
+  const effectiveStart = leaveStart < monthStart ? monthStart : leaveStart;
+  const effectiveEnd = leaveEnd > monthEnd ? monthEnd : leaveEnd;
+
+  const diffMs = effectiveEnd.getTime() - effectiveStart.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+  return Math.max(0, diffDays);
+}
+
+/**
  * Calculates itemized monthly bill:
  * Monthly Bill = Base Amount - (Approved Leave Days * Per Meal Rate)
  */
@@ -455,7 +555,7 @@ export function generateExpensesCsv(recurring: ExpenseRecurring[], oneOff: Expen
  */
 export interface PlanTag {
   label: string;
-  type: 'veg' | 'nonveg' | 'token' | 'concession' | 'female' | 'custom';
+  type: 'veg' | 'nonveg' | 'token' | 'concession' | 'custom';
 }
 
 export interface MessPricePlan {
@@ -500,4 +600,27 @@ export interface MealToken {
   expiresAt?: string;
   notes?: string;
 }
+
+/**
+ * Formats a 24-hour time string ("09:00", "18:00", "10:30") to 12-hour format ("09:00 AM", "06:00 PM")
+ */
+export function formatTime12Hour(timeStr?: string, defaultFallback: string = '09:00 AM'): string {
+  if (!timeStr) return defaultFallback;
+  // If already contains AM/PM
+  if (timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) {
+    return timeStr;
+  }
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  const hour = parseInt(parts[0], 10);
+  const min = parseInt(parts[1], 10);
+  if (isNaN(hour) || isNaN(min)) return timeStr;
+  
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const formattedHour = hour12 < 10 ? `0${hour12}` : `${hour12}`;
+  const formattedMin = min < 10 ? `0${min}` : `${min}`;
+  return `${formattedHour}:${formattedMin} ${period}`;
+}
+
 

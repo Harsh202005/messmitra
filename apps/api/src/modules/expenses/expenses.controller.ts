@@ -82,4 +82,46 @@ export class ExpensesController {
   ) {
     return this.expensesService.createStaff(dto, user);
   }
+
+  @Get('staff/salaries')
+  @ApiOperation({ summary: 'List staff salary ledger payments and vouchers' })
+  @ApiQuery({ name: 'staffId', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  async getStaffSalaries(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('staffId') staffId?: string,
+    @Query('month') month?: string
+  ) {
+    return this.expensesService.getStaffSalaryHistory(user, staffId, month);
+  }
+
+  @Post('staff/salaries')
+  @ApiOperation({ summary: 'Record staff salary advance, settlement, or bonus payment' })
+  async recordStaffSalary(
+    @Body() payment: any,
+    @CurrentUser() user: AuthenticatedUser
+  ) {
+    return this.expensesService.recordStaffSalaryPayment(payment, user);
+  }
+
+  @Get('staff/attendance')
+  @ApiOperation({ summary: 'Get staff attendance records' })
+  @ApiQuery({ name: 'staffId', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  async getStaffAttendance(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('staffId') staffId?: string,
+    @Query('month') month?: string
+  ) {
+    return this.expensesService.getStaffAttendance(user, staffId, month);
+  }
+
+  @Post('staff/attendance')
+  @ApiOperation({ summary: 'Record or update staff attendance' })
+  async recordStaffAttendance(
+    @Body() record: any,
+    @CurrentUser() user: AuthenticatedUser
+  ) {
+    return this.expensesService.recordStaffAttendance(record, user);
+  }
 }

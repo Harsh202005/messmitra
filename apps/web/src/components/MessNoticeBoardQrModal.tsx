@@ -23,6 +23,8 @@ import {
   CreditCard,
   Trash2,
 } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
+import { MessMitraApi } from '../lib/api';
 
 interface MessNoticeBoardQrModalProps {
   isOpen: boolean;
@@ -35,7 +37,9 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
   onClose,
   mess,
 }) => {
+  const { t, language } = useI18n();
   const [qrType, setQrType] = useState<'register' | 'payment'>('register');
+  const [registerPosterStyle, setRegisterPosterStyle] = useState<'clean' | 'template'>('clean');
   const [paymentQrSource, setPaymentQrSource] = useState<'generate' | 'upload'>('generate');
 
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
@@ -74,16 +78,23 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
     if (isOpen) {
       setLiveAppUrl(getInitialPublicUrl());
 
-      // Load saved UPI details and uploaded QR image
-      const savedUpi = localStorage.getItem('messmitra_custom_upi_id');
-      if (savedUpi) setUpiId(savedUpi);
+      if (mess?.upiId) {
+        setUpiId(mess.upiId);
+      } else {
+        const savedUpi = localStorage.getItem('messmitra_custom_upi_id');
+        if (savedUpi) setUpiId(savedUpi);
+      }
+
+      if (mess?.name) {
+        setPayeeName(mess.name);
+      }
 
       const savedQrImg = localStorage.getItem('messmitra_uploaded_upi_qr');
       if (savedQrImg) {
         setUploadedQrImage(savedQrImg);
       }
     }
-  }, [isOpen]);
+  }, [isOpen, mess?.upiId, mess?.name]);
 
   const handleSaveCustomUrl = (url: string) => {
     let cleanUrl = url.trim();
@@ -99,10 +110,18 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
     }
   };
 
-  const handleSaveUpiId = (newUpi: string) => {
+  const handleSaveUpiId = async (newUpi: string) => {
     setUpiId(newUpi);
+    const clean = newUpi.trim();
     if (typeof window !== 'undefined') {
-      localStorage.setItem('messmitra_custom_upi_id', newUpi);
+      localStorage.setItem('messmitra_custom_upi_id', clean);
+    }
+    if (clean) {
+      try {
+        await MessMitraApi.saveMess({ upiId: clean });
+      } catch (e) {
+        console.warn('Failed to sync UPI with database:', e);
+      }
     }
   };
 
@@ -172,38 +191,146 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
       if (!ctx) return;
 
       if (qrType === 'register') {
-        // MODE 1: Registration Poster Template
-        const templateImg = new Image();
-        templateImg.crossOrigin = 'anonymous';
-        templateImg.src = '/poster_template.jpg';
+        if (registerPosterStyle === 'template') {
+          // MODE 1A: Graphic Flyer Template with calibrated coordinates
+          const templateImg = new Image();
+          templateImg.crossOrigin = 'anonymous';
+          templateImg.src = '/poster_template.jpg';
 
-        await new Promise((resolve, reject) => {
-          templateImg.onload = resolve;
-          templateImg.onerror = reject;
-        });
+          await new Promise((resolve, reject) => {
+            templateImg.onload = resolve;
+            templateImg.onerror = reject;
+          });
 
-        canvas.width = templateImg.naturalWidth || 720;
-        canvas.height = templateImg.naturalHeight || 1080;
+          canvas.width = templateImg.naturalWidth || 682;
+          canvas.height = templateImg.naturalHeight || 1024;
 
-        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
 
-        const qrX = canvas.width * 0.622;
-        const qrY = canvas.height * 0.338;
-        const qrSize = canvas.width * 0.315;
+          const qrX = canvas.width * 0.638;
+          const qrY = canvas.height * 0.342;
+          const qrW = canvas.width * 0.295;
+          const qrH = canvas.height * 0.180;
 
-        const qrImg = new Image();
-        qrImg.src = qrDataUrl;
-        await new Promise((resolve, reject) => {
-          qrImg.onload = resolve;
-          qrImg.onerror = reject;
-        });
+          const qrImg = new Image();
+          qrImg.src = qrDataUrl;
+          await new Promise((resolve, reject) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = reject;
+          });
 
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.roundRect(qrX, qrY, qrSize, qrSize, 12);
-        ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.roundRect(qrX, qrY, qrW, qrH, 6);
+          ctx.fill();
 
-        ctx.drawImage(qrImg, qrX + 6, qrY + 6, qrSize - 12, qrSize - 12);
+          ctx.drawImage(qrImg, qrX + 2, qrY + 2, qrW - 4, qrH - 4);
+        } else {
+          // MODE 1B: Official High-Res A4 Registration Notice Poster (Vector Sizing)
+          canvas.width = 800;
+          canvas.height = 1180;
+
+          // Background Gradient
+          const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.12, '#fffaf0');
+          grad.addColorStop(1, '#f8fafc');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Top Saffron Bar
+          ctx.fillStyle = '#ea580c';
+          ctx.fillRect(0, 0, canvas.width, 24);
+
+          // Border Frame
+          ctx.strokeStyle = '#ea580c';
+          ctx.lineWidth = 8;
+          ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+          // Header Brand Title
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 38px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText('श्री बालाजी मेस (पुणे)', canvas.width / 2, 95);
+
+          ctx.fillStyle = '#c2410c';
+          ctx.font = 'bold 20px sans-serif';
+          ctx.fillText('🚩 २१ वर्षांची अखंड परंपरा • घरगुती रुचकर जेवण व टिफिन सेवा 🚩', canvas.width / 2, 135);
+
+          // Header Pill: SCAN TO REGISTER
+          ctx.fillStyle = '#059669';
+          ctx.beginPath();
+          ctx.roundRect(canvas.width / 2 - 230, 165, 460, 48, 24);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.fillText('📱 ऑनलाईन नोंदणी • SCAN TO REGISTER', canvas.width / 2, 197);
+
+          // Draw QR Container Card
+          const qrBoxSize = 460;
+          const qrBoxX = (canvas.width - qrBoxSize) / 2;
+          const qrBoxY = 240;
+
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = 'rgba(0,0,0,0.12)';
+          ctx.shadowBlur = 24;
+          ctx.beginPath();
+          ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 28);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          ctx.strokeStyle = '#e2e8f0';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // Draw QR Image
+          const qrImg = new Image();
+          qrImg.src = qrDataUrl;
+          await new Promise((resolve, reject) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = reject;
+          });
+
+          ctx.drawImage(qrImg, qrBoxX + 24, qrBoxY + 24, qrBoxSize - 48, qrBoxSize - 48);
+
+          // Feature Highlights Box
+          const infoY = 740;
+          ctx.fillStyle = '#f8fafc';
+          ctx.beginPath();
+          ctx.roundRect(60, infoY, canvas.width - 120, 240, 20);
+          ctx.fill();
+
+          ctx.strokeStyle = '#cbd5e1';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 22px sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('✨ मेस मित्र वैशिष्ट्ये:', 90, infoY + 45);
+
+          ctx.font = '19px sans-serif';
+          ctx.fillStyle = '#334155';
+          ctx.fillText('🍲  घरगुती रुचकर व ताजे जेवण (दुपारी व रात्री)', 90, infoY + 85);
+          ctx.fillText('📅  मोबाईल ॲपवरून सुट्टी (Leave) नोंदवण्याची सोय', 90, infoY + 125);
+          ctx.fillText('📊  पारदर्शक मासिक बिलिंग व त्वरित UPI पेमेंट', 90, infoY + 165);
+          ctx.fillText('🎫  डिजिटल मील टोकन व डाएट निवड (व्हेज / नॉन-व्हेज)', 90, infoY + 205);
+
+          // Contact Box
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#0f172a';
+          ctx.font = 'bold 24px sans-serif';
+          ctx.fillText('चालक: शंकर गिरी • मो. ९८२२३३८९७५', canvas.width / 2, 1040);
+
+          ctx.fillStyle = '#64748b';
+          ctx.font = '16px monospace';
+          ctx.fillText(liveAppUrl, canvas.width / 2, 1080);
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '14px sans-serif';
+          ctx.fillText('Powered by MessMitra (मेस मित्र)', canvas.width / 2, 1120);
+        }
       } else {
         // MODE 2: Dedicated Official UPI Merchant Standee Poster
         canvas.width = 800;
@@ -333,26 +460,28 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full sm:max-w-xl md:max-w-2xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[94vh] flex flex-col">
+      <div className="relative w-full sm:max-w-4xl lg:max-w-5xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[94vh] flex flex-col">
         {/* Mobile Drag Handle */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center bg-slate-100 dark:bg-slate-900">
           <div className="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
         </div>
 
         {/* Modal Header Controls */}
-        <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-slate-900 dark:text-white">
+        <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-slate-900 dark:text-white shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl overflow-hidden border border-brand-500/40 shadow-sm shrink-0 bg-white">
               <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="font-bold text-sm sm:text-base leading-tight">
-                {qrType === 'register' ? 'अधिकृत मेस नोंदणी पोस्टर' : 'अधिकृत UPI पेमेंट क्यूआर स्टँडी'}
+                {qrType === 'register'
+                  ? (language === 'en' ? 'Official Mess Registration Poster' : 'अधिकृत मेस नोंदणी पोस्टर')
+                  : (language === 'en' ? 'Official UPI Payment Standee' : 'अधिकृत UPI पेमेंट क्यूआर स्टँडी')}
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {qrType === 'register'
-                  ? 'नवीन सदस्यांच्या ऑनलाईन नोंदणीसाठी'
-                  : 'टेबल स्टँडी किंवा काउंटर पेमेंटसाठी स्वतंत्र पोस्टर'}
+                  ? (language === 'en' ? 'A4 Printable standee for member onboarding' : 'नवीन सदस्यांच्या ऑनलाईन नोंदणीसाठी A4 स्टँडी')
+                  : (language === 'en' ? 'Separate standee for counter / table payment' : 'काउंटर व टेबल पेमेंटसाठी स्वतंत्र स्टँडी')}
               </p>
             </div>
           </div>
@@ -361,20 +490,20 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer min-h-[38px]"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer min-h-[36px]"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>प्रिंट (Print)</span>
+              <span>{language === 'en' ? 'Print' : 'प्रिंट'}</span>
             </button>
 
             <button
               type="button"
               onClick={handleDownloadPoster}
               disabled={isGeneratingDownload || !qrDataUrl}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer min-h-[38px]"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer min-h-[36px]"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{isGeneratingDownload ? 'डाऊनलोड होत आहे...' : 'पोस्टर डाऊनलोड'}</span>
+              <span>{isGeneratingDownload ? (language === 'en' ? 'Downloading...' : 'डाऊनलोड...') : (language === 'en' ? 'Download Poster' : 'पोस्टर डाऊनलोड')}</span>
             </button>
 
             <button
@@ -387,368 +516,465 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
           </div>
         </div>
 
-        {/* Mode Selector Tabs */}
-        <div className="print:hidden px-5 py-2.5 bg-slate-100 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="flex items-center justify-between gap-2 text-xs flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setQrType('register')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[34px] flex items-center gap-1.5 ${
-                  qrType === 'register'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                <span>👥 नवीन नोंदणी पोस्टर</span>
-              </button>
+        {/* 2-COLUMN RESPONSIVE LAYOUT */}
+        <div className="grid grid-cols-1 md:grid-cols-12 overflow-y-auto flex-1 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
+          {/* LEFT 5 COLS: CONTROLS & CUSTOMIZATIONS */}
+          <div className="print:hidden md:col-span-5 p-4 sm:p-5 space-y-4 overflow-y-auto bg-slate-50 dark:bg-slate-900 text-xs">
+            {/* Mode Selector Tabs */}
+            <div className="space-y-1.5">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider">
+                {language === 'en' ? 'Poster Type' : 'पोस्टर प्रकार निवडा:'}
+              </label>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setQrType('register')}
+                  className={`py-2 px-2.5 rounded-xl font-bold transition cursor-pointer text-center flex items-center justify-center gap-1 text-xs ${
+                    qrType === 'register'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <span>👥 नवीन नोंदणी</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setQrType('payment')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer min-h-[34px] flex items-center gap-1.5 ${
-                  qrType === 'payment'
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
-                }`}
-              >
-                <span>💰 स्वतंत्र UPI पेमेंट स्टँडी</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setQrType('payment')}
+                  className={`py-2 px-2.5 rounded-xl font-bold transition cursor-pointer text-center flex items-center justify-center gap-1 text-xs ${
+                    qrType === 'payment'
+                      ? 'bg-brand-600 text-white shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
+                  }`}
+                >
+                  <span>💰 UPI पेमेंट</span>
+                </button>
+              </div>
             </div>
 
+            {/* Sub-Style Selector for Registration */}
             {qrType === 'register' && (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingUrl(!isEditingUrl)}
-                  className="flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
-                >
-                  <Edit3 className="w-3 h-3" />
-                  <span>{isEditingUrl ? 'लपवा' : 'लिंक बदला'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="flex items-center gap-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span>कॉपी झाली!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="w-3 h-3" />
-                      <span>कॉपी</span>
-                    </>
-                  )}
-                </button>
+              <div className="space-y-1.5">
+                <label className="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider">
+                  {language === 'en' ? 'Design Style' : 'डिझाईन लेआउट:'}
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setRegisterPosterStyle('clean')}
+                    className={`py-2 px-2 rounded-xl font-bold transition cursor-pointer text-center text-xs ${
+                      registerPosterStyle === 'clean'
+                        ? 'bg-white dark:bg-slate-800 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                        : 'bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    ✨ A4 स्टँडी नोटीस
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegisterPosterStyle('template')}
+                    className={`py-2 px-2 rounded-xl font-bold transition cursor-pointer text-center text-xs ${
+                      registerPosterStyle === 'template'
+                        ? 'bg-white dark:bg-slate-800 border-2 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                        : 'bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    🎨 फ्लायर टेम्पलेट
+                  </button>
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Registration Live URL Editor */}
-          {qrType === 'register' && (
-            <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-200">
-                <span className="flex items-center gap-1.5 font-bold">
-                  <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>QR स्कॅन लिंक:</span>
-                </span>
-                <span className="font-mono text-[10px] bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 truncate max-w-[240px]">
+            {/* Registration Live URL Editor */}
+            {qrType === 'register' && (
+              <div className="p-3 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-200">
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>QR स्कॅन लिंक:</span>
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-1 text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-500" />
+                        <span>कॉपी झाली!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-3 h-3" />
+                        <span>कॉपी करा</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="font-mono text-[11px] bg-white dark:bg-slate-900 p-2 rounded-xl border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-300 break-all select-all">
                   {liveAppUrl}
-                </span>
-              </div>
+                </div>
 
-              {isEditingUrl && (
-                <div className="space-y-1.5 pt-1 animate-fadeIn">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingUrl(!isEditingUrl)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-amber-800 dark:text-amber-300 hover:underline cursor-pointer"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>{isEditingUrl ? 'कस्टमाईझ लपवा' : 'कस्टम लिंक बदला'}</span>
+                  </button>
+                </div>
+
+                {isEditingUrl && (
+                  <div className="space-y-2 pt-1 animate-fadeIn">
                     <input
                       type="text"
                       value={liveAppUrl}
                       onChange={(e) => setLiveAppUrl(e.target.value)}
                       onBlur={(e) => handleSaveCustomUrl(e.target.value)}
                       placeholder="उदा. https://messmitra-web.vercel.app/register"
-                      className="flex-1 px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white font-mono focus:outline-none"
+                      className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-lg text-slate-900 dark:text-white font-mono focus:outline-none"
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleSaveCustomUrl(liveAppUrl)}
-                      className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-lg transition shrink-0"
-                    >
-                      सेव्ह
-                    </button>
-                  </div>
 
-                  <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-500 dark:text-slate-400">
-                    <span>जलद लिंक्स:</span>
-                    <button
-                      type="button"
-                      onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/register')}
-                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-brand-500 text-brand-600 font-bold cursor-pointer font-mono"
-                    >
-                      /register
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/?register=true')}
-                      className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 font-mono"
-                    >
-                      /?register=true
-                    </button>
+                    <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-500 dark:text-slate-400">
+                      <span>जलद शॉर्टकट:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/register')}
+                        className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-brand-500 text-brand-600 font-bold cursor-pointer font-mono"
+                      >
+                        /register
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveCustomUrl('https://messmitra-web.vercel.app/?register=true')}
+                        className="px-2 py-0.5 bg-white dark:bg-slate-800 rounded border border-slate-300 font-mono"
+                      >
+                        /?register=true
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          {/* UPI Payment Configuration Controls */}
-          {qrType === 'payment' && (
-            <div className="p-3 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-xs space-y-3">
-              {/* Payment Mode Selector: Generate vs Upload */}
-              <div className="flex items-center justify-between gap-2 flex-wrap">
+            {/* UPI Payment Configuration Controls */}
+            {qrType === 'payment' && (
+              <div className="p-3.5 rounded-2xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 space-y-3">
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setPaymentQrSource('generate')}
-                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer ${
+                    className={`flex-1 py-1.5 rounded-xl font-bold text-[11px] transition cursor-pointer text-center ${
                       paymentQrSource === 'generate'
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    ⚡ UPI आयडी वरून QR तयार करा
+                    ⚡ UPI ID वरून QR
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentQrSource('upload')}
-                    className={`px-3 py-1 rounded-lg font-bold text-[11px] transition cursor-pointer flex items-center gap-1 ${
+                    className={`flex-1 py-1.5 rounded-xl font-bold text-[11px] transition cursor-pointer text-center flex items-center justify-center gap-1 ${
                       paymentQrSource === 'upload'
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}
                   >
                     <Upload className="w-3 h-3" />
-                    <span>स्वतःचा QR फोटो अपलोड करा</span>
+                    <span>QR फोटो अपलोड</span>
                   </button>
                 </div>
-              </div>
 
-              {/* Option A: Generate from UPI ID */}
-              {paymentQrSource === 'generate' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 animate-fadeIn">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
-                      मेस UPI ID (PhonePe / GPay / Paytm) *
-                    </label>
-                    <input
-                      type="text"
-                      value={upiId}
-                      onChange={(e) => handleSaveUpiId(e.target.value)}
-                      placeholder="उदा. 9822338975@upi"
-                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
-                    />
+                {paymentQrSource === 'generate' && (
+                  <div className="space-y-2 pt-1 animate-fadeIn">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
+                        मेस UPI ID (PhonePe / GPay / Paytm) *
+                      </label>
+                      <input
+                        type="text"
+                        value={upiId}
+                        onChange={(e) => handleSaveUpiId(e.target.value)}
+                        placeholder="उदा. 9822338975@upi"
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-xl text-xs font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
+                        निश्चित रक्कम (ऐच्छिक ₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        placeholder="उदा. 3000 किंवा मोकळे ठेवा"
+                        className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-xl text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
-                      निश्चित रक्कम (ऐच्छिक / Optional ₹)
-                    </label>
+                {paymentQrSource === 'upload' && (
+                  <div className="space-y-2 pt-1 animate-fadeIn">
                     <input
-                      type="number"
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
-                      placeholder="उदा. 3000 किंवा मोकळे ठेवा"
-                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white focus:outline-none"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
-                  </div>
-                </div>
-              )}
 
-              {/* Option B: Upload Official Scanner Photo */}
-              {paymentQrSource === 'upload' && (
-                <div className="space-y-2 pt-1 animate-fadeIn">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-
-                  {uploadedQrImage ? (
-                    <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-700">
-                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                          <img src={uploadedQrImage} alt="Uploaded QR" className="w-full h-full object-contain" />
+                    {uploadedQrImage ? (
+                      <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-700">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                            <img src={uploadedQrImage} alt="Uploaded QR" className="w-full h-full object-contain" />
+                          </div>
+                          <div>
+                            <span className="font-bold text-xs text-emerald-600 block">
+                              QR फोटो लोड झाला ✔️
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="font-bold text-xs text-emerald-600 block">
-                            QR फोटो यशस्वीरित्या लोड झाला! ✔️
-                          </span>
-                          <span className="text-[10px] text-slate-400">हा QR थेट पेमेंट स्टँडीवर बसेल.</span>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold"
+                          >
+                            बदला
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleRemoveUploadedQr}
+                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full p-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl bg-white dark:bg-slate-900 hover:bg-blue-50/50 text-center flex flex-col items-center justify-center gap-1.5 cursor-pointer transition"
+                      >
+                        <Upload className="w-5 h-5 text-blue-500" />
+                        <span className="font-bold text-xs text-blue-700 dark:text-blue-300">
+                          QR फोटो निवडा (PNG / JPG)
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold"
-                        >
-                          बदला
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleRemoveUploadedQr}
-                          className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+            {/* Quick Notice Tip */}
+            <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-300/40 text-[11px] text-amber-900 dark:text-amber-200">
+              💡 <strong>टीप:</strong> हे पोस्टर डाऊनलोड करून A4 साईझवर कलर प्रिंट करा व मेस काउंटर किंवा टेबल स्टँडीवर लावा.
+            </div>
+          </div>
+
+          {/* RIGHT 7 COLS: PERFECTLY CENTERED & SCALED LIVE STANDEE PREVIEW */}
+          <div className="md:col-span-7 p-4 sm:p-6 bg-slate-200/90 dark:bg-slate-950 flex flex-col items-center justify-center overflow-y-auto min-h-[440px]">
+            {/* 1. REGISTRATION POSTER */}
+            {qrType === 'register' && (
+              <>
+                {registerPosterStyle === 'clean' ? (
+                  /* 1A. CLEAN PROPORTIONAL HIGH-RES A4 STANDEE */
+                  <div
+                    id="printable-notice-board"
+                    className="w-full max-w-[360px] sm:max-w-[380px] rounded-3xl overflow-hidden shadow-2xl bg-white border-4 border-emerald-600 text-slate-900 select-none p-4 sm:p-5 text-center space-y-3 relative"
+                  >
+                    {/* Top Saffron Badge */}
+                    <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white py-1 px-3 rounded-xl -mx-1 shadow-sm">
+                      <span className="font-extrabold text-[11px] tracking-wider uppercase">
+                        🚩 श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा 🚩
+                      </span>
+                    </div>
+
+                    {/* Header */}
+                    <div>
+                      <div className="w-12 h-12 mx-auto rounded-2xl overflow-hidden border-2 border-emerald-600 shadow-md mb-1.5 bg-white">
+                        <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                        श्री बालाजी मेस (पुणे)
+                      </h2>
+                      <p className="text-[11px] text-slate-600 font-semibold mt-0.5">
+                        घरगुती रुचकर जेवण व टिफिन सेवा
+                      </p>
+                    </div>
+
+                    {/* Header Pill */}
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white font-bold text-[11px] shadow-sm">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>📱 ऑनलाईन नोंदणी • SCAN TO REGISTER</span>
+                    </div>
+
+                    {/* QR Card Container */}
+                    <div className="w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white p-2.5 rounded-2xl shadow-md border-2 border-slate-200 flex items-center justify-center">
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="Registration QR Code"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-xs text-slate-400">QR तयार होत आहे...</div>
+                      )}
+                    </div>
+
+                    {/* Highlights Card */}
+                    <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] space-y-1 text-left font-medium">
+                      <div className="font-bold text-slate-900 text-[11px] pb-0.5 border-b border-slate-200">
+                        ✨ मेस मित्र वैशिष्ट्ये:
+                      </div>
+                      <div className="text-slate-700 flex items-center gap-1.5">
+                        <span>🍲</span>
+                        <span>घरगुती रुचकर व ताजे जेवण (दुपारी व रात्री)</span>
+                      </div>
+                      <div className="text-slate-700 flex items-center gap-1.5">
+                        <span>📅</span>
+                        <span>मोबाईल ॲपवरून सुट्टी (Leave) नोंदवण्याची सोय</span>
+                      </div>
+                      <div className="text-slate-700 flex items-center gap-1.5">
+                        <span>📊</span>
+                        <span>पारदर्शक मासिक बिलिंग व डिजिटल टोकन</span>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full p-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-2xl bg-white dark:bg-slate-900 hover:bg-blue-50/50 text-center flex flex-col items-center justify-center gap-1.5 cursor-pointer transition"
+
+                    {/* Owner Contact */}
+                    <div className="pt-1.5 border-t border-slate-100 text-slate-700 text-[11px] font-bold">
+                      <span>चालक: शंकर गिरी • मो. ९८२२३३८९७५</span>
+                    </div>
+                  </div>
+                ) : (
+                  /* 1B. GRAPHIC FLYER TEMPLATE WITH CALIBRATED QR */
+                  <div
+                    id="printable-notice-board"
+                    className="relative w-full max-w-[360px] sm:max-w-[380px] rounded-2xl overflow-hidden shadow-2xl bg-white border border-slate-300 select-none"
+                  >
+                    <img
+                      src="/poster_template.jpg"
+                      alt="श्री बालाजी मेस पोस्टर"
+                      className="w-full h-auto block"
+                    />
+
+                    {/* Embedded Calibrated Live QR Code */}
+                    <div
+                      className="absolute p-0.5 flex items-center justify-center bg-white rounded-lg pointer-events-none"
+                      style={{
+                        top: '34.2%',
+                        left: '63.8%',
+                        width: '29.5%',
+                        height: '18.0%',
+                      }}
                     >
-                      <Upload className="w-6 h-6 text-blue-500" />
-                      <span className="font-bold text-xs text-blue-700 dark:text-blue-300">
-                        PhonePe / Google Pay / Paytm चा QR फोटो अपलोड करा
-                      </span>
-                      <span className="text-[10px] text-slate-400">PNG, JPG किंवा WebP फॉरमॅट</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Scrollable Live Poster / Standee Preview */}
-        <div className="p-3 sm:p-5 overflow-y-auto bg-slate-200 dark:bg-slate-950 flex flex-col items-center">
-          {/* 1. REGISTRATION POSTER TEMPLATE */}
-          {qrType === 'register' && (
-            <div
-              id="printable-notice-board"
-              className="relative w-full max-w-[480px] rounded-2xl overflow-hidden shadow-2xl bg-white border border-slate-300 select-none"
-            >
-              <img
-                src="/poster_template.jpg"
-                alt="श्री बालाजी मेस पोस्टर"
-                className="w-full h-auto block"
-              />
-
-              {/* Embedded Live QR Code */}
-              <div
-                className="absolute bg-white rounded-xl shadow-md p-1.5 flex items-center justify-center"
-                style={{
-                  top: '33.8%',
-                  left: '62.2%',
-                  width: '31.5%',
-                  height: '21.5%',
-                }}
-              >
-                {qrDataUrl ? (
-                  <img
-                    src={qrDataUrl}
-                    alt="Registration QR Code"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-[10px] text-slate-400 text-center">QR तयार होत आहे...</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 2. DEDICATED OFFICIAL UPI PAYMENT STANDEE (Distinct Design) */}
-          {qrType === 'payment' && (
-            <div
-              id="printable-payment-standee"
-              className="w-full max-w-[440px] rounded-3xl overflow-hidden shadow-2xl bg-white border-4 border-amber-500 text-slate-900 select-none p-5 sm:p-6 text-center space-y-4 relative"
-            >
-              {/* Top Saffron Badge */}
-              <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white py-1.5 px-4 rounded-xl -mx-2 shadow-sm">
-                <span className="font-extrabold text-xs tracking-wider uppercase">
-                  🚩 श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा 🚩
-                </span>
-              </div>
-
-              {/* Header */}
-              <div>
-                <div className="w-14 h-14 mx-auto rounded-2xl overflow-hidden border-2 border-amber-500 shadow-md mb-2 bg-white">
-                  <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  श्री बालाजी मेस (पुणे)
-                </h2>
-                <p className="text-xs text-slate-600 font-semibold mt-0.5">
-                  अधिकृत UPI पेमेंट काउंटर स्टँडी (Official Payment Standee)
-                </p>
-              </div>
-
-              {/* UPI Pill Header */}
-              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-blue-600 text-white font-bold text-xs shadow-sm">
-                <QrCode className="w-4 h-4" />
-                <span>SCAN & PAY WITH ANY UPI APP</span>
-              </div>
-
-              {/* Standee QR Box */}
-              <div className="w-52 h-52 sm:w-56 sm:h-56 mx-auto bg-white p-3 rounded-2xl shadow-lg border-2 border-slate-200 flex items-center justify-center">
-                {qrDataUrl ? (
-                  <img
-                    src={qrDataUrl}
-                    alt="UPI Payment QR"
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  <div className="text-xs text-slate-400">QR तयार होत आहे...</div>
-                )}
-              </div>
-
-              {/* Payee Info Card */}
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1 font-mono">
-                <div className="font-black text-sm text-slate-900 truncate">
-                  UPI ID: <span className="text-blue-600 font-bold">{upiId}</span>
-                </div>
-                <div className="text-slate-700 font-bold">
-                  खातेदार: {payeeName}
-                </div>
-                <div className="text-[11px] text-slate-500">
-                  चालक: शंकर गिरी (९८२२३३८९७५)
-                </div>
-                {paymentAmount && (
-                  <div className="text-emerald-700 font-black text-sm pt-1">
-                    रक्कम: ₹{paymentAmount}
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="Registration QR Code"
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="text-[10px] text-slate-400 text-center">QR तयार होत आहे...</div>
+                      )}
+                    </div>
                   </div>
                 )}
-              </div>
+              </>
+            )}
 
-              {/* Accepted Apps Footer */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-3 text-slate-500 text-[11px] font-bold">
-                <span>Google Pay</span>
-                <span>•</span>
-                <span>PhonePe</span>
-                <span>•</span>
-                <span>Paytm</span>
-                <span>•</span>
-                <span>BHIM UPI</span>
-              </div>
-            </div>
-          )}
+            {/* 2. DEDICATED OFFICIAL UPI PAYMENT STANDEE */}
+            {qrType === 'payment' && (
+              <div
+                id="printable-payment-standee"
+                className="w-full max-w-[360px] sm:max-w-[380px] rounded-3xl overflow-hidden shadow-2xl bg-white border-4 border-amber-500 text-slate-900 select-none p-4 sm:p-5 text-center space-y-3 relative"
+              >
+                {/* Top Saffron Badge */}
+                <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white py-1 px-3 rounded-xl -mx-1 shadow-sm">
+                  <span className="font-extrabold text-[11px] tracking-wider uppercase">
+                    🚩 श्री बालाजी मेस • २१ वर्षांची अखंड परंपरा 🚩
+                  </span>
+                </div>
 
-          {/* Quick Notice Tip */}
-          <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mt-3 max-w-sm">
-            💡 हे पोस्टर थेट A4 किंवा टेबल स्टँडीवर प्रिंट करून मेस काउंटरवर लावा.
-          </p>
+                {/* Header */}
+                <div>
+                  <div className="w-12 h-12 mx-auto rounded-2xl overflow-hidden border-2 border-amber-500 shadow-md mb-1.5 bg-white">
+                    <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
+                    श्री बालाजी मेस (पुणे)
+                  </h2>
+                  <p className="text-[11px] text-slate-600 font-semibold mt-0.5">
+                    {language === 'en' ? 'Official UPI Payment Standee' : 'अधिकृत UPI पेमेंट काउंटर स्टँडी'}
+                  </p>
+                </div>
+
+                {/* UPI Pill Header */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600 text-white font-bold text-[11px] shadow-sm">
+                  <QrCode className="w-3.5 h-3.5" />
+                  <span>SCAN & PAY WITH ANY UPI APP</span>
+                </div>
+
+                {/* Standee QR Box */}
+                <div className="w-44 h-44 sm:w-48 sm:h-48 mx-auto bg-white p-2.5 rounded-2xl shadow-md border-2 border-slate-200 flex items-center justify-center">
+                  {qrDataUrl ? (
+                    <img
+                      src={qrDataUrl}
+                      alt="UPI Payment QR"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="text-xs text-slate-400">QR तयार होत आहे...</div>
+                  )}
+                </div>
+
+                {/* Payee Info Card */}
+                <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] space-y-0.5 font-mono">
+                  <div className="font-black text-xs text-slate-900 truncate">
+                    UPI ID: <span className="text-blue-600 font-bold">{upiId}</span>
+                  </div>
+                  <div className="text-slate-700 font-bold">
+                    खातेदार: {payeeName}
+                  </div>
+                  <div className="text-[10px] text-slate-500">
+                    चालक: शंकर गिरी (९८२२३३८९७५)
+                  </div>
+                  {paymentAmount && (
+                    <div className="text-emerald-700 font-black text-xs pt-0.5">
+                      रक्कम: ₹{paymentAmount}
+                    </div>
+                  )}
+                </div>
+
+                {/* Accepted Apps Footer */}
+                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-center gap-2 text-slate-500 text-[10px] font-bold">
+                  <span>GPay</span>
+                  <span>•</span>
+                  <span>PhonePe</span>
+                  <span>•</span>
+                  <span>Paytm</span>
+                  <span>•</span>
+                  <span>BHIM UPI</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Modal Bottom Action Buttons */}
-        <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+        <div className="print:hidden bg-slate-50 dark:bg-slate-900 px-5 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs shrink-0">
           <span className="text-slate-500 dark:text-slate-400 hidden sm:inline">
             चालक: शंकर गिरी (९८२२३३८९७५)
           </span>
@@ -758,7 +984,7 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
               type="button"
               onClick={handleDownloadPoster}
               disabled={isGeneratingDownload || !qrDataUrl}
-              className="flex-1 sm:flex-none px-4 py-2.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px]"
+              className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px]"
             >
               <Download className="w-4 h-4" />
               <span>JPG डाऊनलोड करा</span>
@@ -767,7 +993,7 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition cursor-pointer min-h-[40px]"
+              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-xl transition cursor-pointer min-h-[38px]"
             >
               बंद करा
             </button>

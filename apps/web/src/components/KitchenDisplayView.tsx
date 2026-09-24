@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DailyCookForecast, LeaveRequest, Member, isNonVegDay, getWeeklyDayScheduleMarathi } from '@messmitra/types';
+import { DailyCookForecast, LeaveRequest, Member, Mess, isNonVegDay, getWeeklyDayScheduleMarathi, formatTime12Hour } from '@messmitra/types';
 import { useI18n } from '../lib/i18n';
 import {
   ChefHat,
@@ -24,18 +24,24 @@ interface KitchenDisplayViewProps {
   forecast: DailyCookForecast;
   leaves: LeaveRequest[];
   members: Member[];
+  mess?: Mess | null;
   onDateChange: (date: string) => void;
   cutoffTime?: string;
+  lunchCutoffTime?: string;
+  dinnerCutoffTime?: string;
 }
 
 export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
   forecast,
   leaves,
   members,
+  mess,
   onDateChange,
   cutoffTime = '18:00',
+  lunchCutoffTime,
+  dinnerCutoffTime,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const todayStr = new Date().toISOString().split('T')[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -69,60 +75,103 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
 
   return (
     <div className="max-w-6xl mx-auto space-y-5 animate-fadeIn text-slate-900 dark:text-slate-100">
-      {/* Top Banner for Kitchen Staff */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-850 to-emerald-900 p-5 sm:p-7 border border-emerald-500/30 shadow-xl text-white">
-        <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+      {/* Top Banner for Kitchen Staff (Dynamic: Rich Crimson on Non-Veg Days, Emerald on Pure Veg Days) */}
+      <div
+        className={`relative overflow-hidden rounded-3xl p-5 sm:p-7 border shadow-xl text-white transition-all duration-300 ${
+          isNonVegToday
+            ? 'bg-gradient-to-r from-red-900 via-rose-900 to-amber-950 border-red-500/40 shadow-red-950/30'
+            : 'bg-gradient-to-r from-emerald-850 via-teal-900 to-emerald-950 border-emerald-500/30 shadow-emerald-950/30'
+        }`}
+      >
+        <div
+          className={`absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full blur-3xl pointer-events-none ${
+            isNonVegToday ? 'bg-red-500/20' : 'bg-emerald-500/15'
+          }`}
+        />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           <div className="flex items-center gap-3.5">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-xl shadow-emerald-600/30 border border-emerald-400/40 shrink-0">
+            <div
+              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-3xl flex items-center justify-center text-white shadow-xl border shrink-0 ${
+                isNonVegToday
+                  ? 'bg-gradient-to-br from-red-500 to-rose-700 shadow-red-600/40 border-red-400/50'
+                  : 'bg-gradient-to-br from-emerald-500 to-teal-700 shadow-emerald-600/30 border-emerald-400/40'
+              }`}
+            >
               <ChefHat className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap text-emerald-300 text-xs font-bold uppercase tracking-wider mb-1">
+              <div
+                className={`flex items-center gap-2 flex-wrap text-xs font-bold uppercase tracking-wider mb-1 ${
+                  isNonVegToday ? 'text-rose-200' : 'text-emerald-300'
+                }`}
+              >
                 <Sparkles className="w-4 h-4" />
                 <span>श्री बालाजी मेस • २१ वर्षांची परंपरा</span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
-                  isNonVegToday
-                    ? 'bg-rose-500/30 text-rose-200 border-rose-400/50'
-                    : 'bg-emerald-500/30 text-emerald-200 border-emerald-400/50'
-                }`}>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                    isNonVegToday
+                      ? 'bg-rose-500/50 text-white border-rose-300 shadow-sm'
+                      : 'bg-emerald-500/30 text-emerald-200 border-emerald-400/50'
+                  }`}
+                >
                   {scheduleInfo.badgeText}
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-                दैनिक स्वयंपाक अंदाज (Cooking Headcount)
+                {language === 'en' ? 'Daily Cooking Headcount' : 'दैनिक स्वयंपाक अंदाज'}
               </h1>
               <p className="text-xs text-slate-200 mt-0.5">
-                वार: <strong className="text-yellow-300">{scheduleInfo.dayName}</strong> • दुपार कटऑफ: <strong>09:00 AM</strong> • रात्र कटऑफ: <strong>06:00 PM</strong>
+                वार: <strong className="text-yellow-300">{scheduleInfo.dayName}</strong> • दुपार कटऑफ: <strong>{formatTime12Hour(lunchCutoffTime || mess?.lunchCutoffTime || '09:00')}</strong> • रात्र कटऑफ: <strong>{formatTime12Hour(dinnerCutoffTime || mess?.dinnerCutoffTime || mess?.dailyCutoffTime || cutoffTime || '18:00')}</strong>
               </p>
             </div>
           </div>
 
           {/* Date Selector Navigation */}
-          <div className="flex items-center gap-2 flex-wrap bg-emerald-950/70 p-2 rounded-2xl border border-emerald-500/30">
+          <div
+            className={`flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto p-1.5 sm:p-2 rounded-2xl border ${
+              isNonVegToday
+                ? 'bg-red-950/80 border-red-500/40'
+                : 'bg-emerald-950/70 border-emerald-500/30'
+            }`}
+          >
             <button
               onClick={() => onDateChange(todayStr)}
-              className={`px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-none justify-center px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 isToday
-                  ? 'bg-emerald-500 text-white shadow-md'
+                  ? isNonVegToday
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'bg-emerald-500 text-white shadow-md'
+                  : isNonVegToday
+                  ? 'bg-red-900/60 text-red-100 hover:text-white'
                   : 'bg-emerald-900/60 text-emerald-100 hover:text-white'
               }`}
             >
-              आज (Today)
+              {language === 'en' ? 'Today' : 'आज'}
             </button>
             <button
               onClick={() => onDateChange(tomorrowStr)}
-              className={`px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-none justify-center px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 isTomorrow
-                  ? 'bg-emerald-500 text-white shadow-md'
+                  ? isNonVegToday
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'bg-emerald-500 text-white shadow-md'
+                  : isNonVegToday
+                  ? 'bg-red-900/60 text-red-100 hover:text-white'
                   : 'bg-emerald-900/60 text-emerald-100 hover:text-white'
               }`}
             >
-              उद्या (Tomorrow)
+              {language === 'en' ? 'Tomorrow' : 'उद्या'}
             </button>
-            <div className="flex items-center gap-2 bg-emerald-900/80 px-3 py-1.5 min-h-[38px] rounded-xl border border-emerald-500/40 text-xs">
-              <CalendarDays className="w-4 h-4 text-emerald-300" />
+            {/* Custom Date Picker - Hidden on Mobile */}
+            <div
+              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 min-h-[38px] rounded-xl border text-xs ${
+                isNonVegToday
+                  ? 'bg-red-900/80 border-red-500/40'
+                  : 'bg-emerald-900/80 border-emerald-500/40'
+              }`}
+            >
+              <CalendarDays className={`w-4 h-4 ${isNonVegToday ? 'text-red-300' : 'text-emerald-300'}`} />
               <input
                 type="date"
                 value={forecast.date}
@@ -137,7 +186,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
       {/* Main Big Counters Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5 sm:gap-3.5">
         {/* Total Net Heads Cook For */}
-        <div className="col-span-2 sm:col-span-1 relative overflow-hidden bg-gradient-to-br from-emerald-50 to-teal-100/70 dark:from-emerald-950 dark:to-slate-900 rounded-2xl sm:rounded-3xl p-4 border border-emerald-300 dark:border-emerald-500/60 shadow-sm flex flex-col justify-between">
+        <div className="col-span-2 sm:col-span-1 relative overflow-hidden bg-gradient-to-br from-teal-50 via-emerald-50 to-teal-100/70 dark:from-emerald-950 dark:to-slate-900 rounded-2xl sm:rounded-3xl p-4 border-2 border-emerald-400 dark:border-emerald-500/60 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">एकूण स्वयंपाक</span>
             <div className="p-1 rounded-lg bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-300">
@@ -152,11 +201,11 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
           </div>
         </div>
 
-        {/* 🟢 Veg Count */}
-        <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl p-4 border border-emerald-300 dark:border-emerald-500/40 shadow-sm flex flex-col justify-between">
+        {/* 🟢 Veg Count - Pure Green styling */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-white dark:from-emerald-950/60 dark:to-slate-900 rounded-2xl sm:rounded-3xl p-4 border-2 border-emerald-400 dark:border-emerald-500/50 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-emerald-700 dark:text-emerald-400 mb-1">
             <span className="text-[11px] font-bold uppercase tracking-wider">🟢 शाकाहारी</span>
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.2 rounded">
+            <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-200/70 dark:bg-emerald-900/80 px-1.5 py-0.2 rounded border border-emerald-300 dark:border-emerald-700">
               {isNonVegToday ? 'व्हेज' : 'सर्व'}
             </span>
           </div>
@@ -164,32 +213,48 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             <div className="text-3xl font-black text-emerald-600 dark:text-emerald-300 tracking-tight font-mono">
               {actualVegHeads}
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">
+            <span className="text-[10px] text-emerald-800/80 dark:text-emerald-300/80 mt-0.5 block font-medium">
               {isNonVegToday ? 'शाकाहारी ताटे' : '१००% शाकाहारी भोजन'}
             </span>
           </div>
         </div>
 
-        {/* 🔴 Non-Veg Count */}
+        {/* 🔴 Non-Veg Count - Distinct Warm Crimson / Ruby Red styling */}
         <div
-          className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 border shadow-sm flex flex-col justify-between ${
+          className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-4 border-2 shadow-md flex flex-col justify-between transition-all ${
             isNonVegToday
-              ? 'bg-white dark:bg-slate-900/90 border-rose-300 dark:border-rose-500/40'
-              : 'bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-70'
+              ? 'bg-gradient-to-br from-rose-100 via-red-50 to-orange-50 dark:from-rose-950 dark:via-red-950 dark:to-slate-900 border-red-500 dark:border-red-500 ring-2 ring-red-400/20'
+              : 'bg-slate-50 dark:bg-slate-900/40 border-dashed border-slate-300 dark:border-slate-800 opacity-60'
           }`}
         >
-          <div className="flex items-center justify-between text-rose-700 dark:text-rose-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">🔴 मांसाहारी/अंडी</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 dark:bg-rose-950">
+          <div className="flex items-center justify-between text-red-700 dark:text-red-400 mb-1">
+            <span className="text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
+              <span>🍗 मांसाहारी/अंडी</span>
+            </span>
+            <span
+              className={`text-[10px] font-black px-1.5 py-0.2 rounded shadow-sm ${
+                isNonVegToday
+                  ? 'bg-red-600 text-white'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+              }`}
+            >
               {isNonVegToday ? '३ दिवस' : 'आज नाही'}
             </span>
           </div>
           <div>
-            <div className="text-3xl font-black text-rose-600 dark:text-rose-300 tracking-tight font-mono">
+            <div
+              className={`text-3xl font-black tracking-tight font-mono ${
+                isNonVegToday ? 'text-red-600 dark:text-red-400' : 'text-slate-400 dark:text-slate-600'
+              }`}
+            >
               {actualNonVegHeads}
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 block font-medium">
-              {isNonVegToday ? 'मांसाहारी ताटे (बुध/शुक्र/रवि)' : 'आज पूर्ण शाकाहारी'}
+            <span
+              className={`text-[10px] mt-0.5 block font-bold ${
+                isNonVegToday ? 'text-red-700 dark:text-red-300' : 'text-slate-400 dark:text-slate-500'
+              }`}
+            >
+              {isNonVegToday ? 'मांसाहारी ताटे (फक्त रात्री)' : 'आज पूर्ण शाकाहारी'}
             </span>
           </div>
         </div>
@@ -197,7 +262,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
         {/* Lunch Count */}
         <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl p-4 border border-amber-300 dark:border-amber-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-amber-700 dark:text-amber-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">दुपार (Lunch)</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">{language === 'en' ? 'Lunch' : 'दुपार'}</span>
             <Sun className="w-4 h-4 text-amber-600" />
           </div>
           <div>
@@ -211,7 +276,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
         {/* Dinner Count */}
         <div className="relative overflow-hidden bg-white dark:bg-slate-900/90 rounded-2xl sm:rounded-3xl p-4 border border-indigo-300 dark:border-indigo-500/40 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between text-indigo-700 dark:text-indigo-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider">रात्र (Dinner)</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">{language === 'en' ? 'Dinner' : 'रात्र'}</span>
             <Moon className="w-4 h-4 text-indigo-600" />
           </div>
           <div>
@@ -244,12 +309,14 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
           <div className="flex items-center justify-between pb-3 border-b border-slate-150 dark:border-slate-800">
             <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-sm sm:text-base">
               <Scale className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              <span>अंदाजे जिन्नस प्रमाण (Material Quantities)</span>
+              <span>{language === 'en' ? 'Estimated Material Quantities' : 'अंदाजे जिन्नस प्रमाण'}</span>
             </div>
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-              isNonVegToday ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
+            <span className={`text-[11px] font-black px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1 ${
+              isNonVegToday ? 'bg-gradient-to-r from-red-600 to-rose-600 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300'
             }`}>
-              {isNonVegToday ? '🍗 मांसाहारी मेनू दिवस' : '🥗 १००% शाकाहारी मेनू'}
+              {isNonVegToday 
+                ? (language === 'en' ? '🍗 Non-Veg Special Day' : '🍗 मांसाहारी मेनू दिवस')
+                : (language === 'en' ? '🥗 100% Pure Veg Menu' : '🥗 १००% शाकाहारी मेनू')}
             </span>
           </div>
 
@@ -257,7 +324,7 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             <div className="bg-slate-50 dark:bg-slate-850 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-750">
               <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 text-xs font-semibold mb-1">
                 <Soup className="w-4 h-4" />
-                <span>तांदूळ (Raw Rice)</span>
+                <span>{language === 'en' ? 'Raw Rice' : 'तांदूळ'}</span>
               </div>
               <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono">
                 ~ {estimatedRiceKg} <span className="text-xs font-normal text-slate-400">kg</span>
@@ -288,21 +355,23 @@ export const KitchenDisplayView: React.FC<KitchenDisplayViewProps> = ({
             </div>
 
             {isNonVegToday ? (
-              <div className="bg-rose-50 dark:bg-rose-950/40 p-3.5 rounded-2xl border border-rose-300 dark:border-rose-750">
-                <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 text-xs font-semibold mb-1">
-                  <Egg className="w-4 h-4" />
+              <div className="bg-gradient-to-br from-rose-100 via-orange-50 to-red-100 dark:from-rose-950 dark:via-red-950/80 dark:to-slate-900 p-3.5 rounded-2xl border-2 border-red-400 dark:border-red-500 shadow-md">
+                <div className="flex items-center gap-1.5 text-red-700 dark:text-red-400 text-xs font-bold mb-1">
+                  <Egg className="w-4 h-4 text-red-600" />
                   <span>अंडी / चिकन प्रमाण</span>
                 </div>
-                <div className="text-lg sm:text-xl font-black text-rose-700 dark:text-rose-300 font-mono">
+                <div className="text-lg sm:text-xl font-black text-red-700 dark:text-red-300 font-mono">
                   ~ {estimatedEggsCount} अंडी / {estimatedChickenKg}kg
                 </div>
-                <span className="text-[10px] text-rose-600 dark:text-rose-400">({actualNonVegHeads} मांसाहारी सभासद)</span>
+                <span className="text-[10px] font-bold text-red-700 dark:text-red-300 bg-red-200/80 dark:bg-red-900/60 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                  🍗 ({actualNonVegHeads} मांसाहारी सभासद)
+                </span>
               </div>
             ) : (
               <div className="bg-slate-50 dark:bg-slate-850 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-750">
                 <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-semibold mb-1">
                   <Flame className="w-4 h-4" />
-                  <span>भाजीपाला (Vegetables)</span>
+                  <span>{language === 'en' ? 'Vegetables' : 'भाजीपाला'}</span>
                 </div>
                 <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono">
                   ~ {estimatedVegetablesKg} <span className="text-xs font-normal text-slate-400">kg</span>

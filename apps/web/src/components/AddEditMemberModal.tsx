@@ -21,7 +21,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   mess,
   onSave,
 }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dynamic rates computed from Owner's Plan Manager
@@ -46,7 +46,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
       setFormData({
         name: member.name,
         phone: member.phone,
-        dietPreference: member.dietPreference || (member.gender === 'female' ? 'veg' : 'nonveg'),
+        dietPreference: member.dietPreference || 'veg',
         gender: member.gender || 'male',
         rate: member.rate,
         planType: member.planType,
@@ -73,7 +73,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   const handleDietChange = (dietPreference: DietPreference) => {
     let rate = formData.rate;
     if (!member) {
-      rate = getDynamicRateForPlan(formData.planType, dietPreference, formData.gender);
+      rate = getDynamicRateForPlan(formData.planType, dietPreference);
     }
     setFormData({ ...formData, dietPreference, rate });
   };
@@ -81,17 +81,13 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
   const handlePlanChange = (planType: PlanType) => {
     let rate = formData.rate;
     if (!member) {
-      rate = getDynamicRateForPlan(planType, formData.dietPreference, formData.gender);
+      rate = getDynamicRateForPlan(planType, formData.dietPreference);
     }
     setFormData({ ...formData, planType, rate });
   };
 
   const handleGenderChange = (gender: Gender) => {
-    let rate = formData.rate;
-    if (!member) {
-      rate = getDynamicRateForPlan(formData.planType, formData.dietPreference, gender);
-    }
-    setFormData({ ...formData, gender, rate });
+    setFormData({ ...formData, gender });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,7 +115,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
               <User className="w-4 h-4" />
             </div>
             <h3 className="font-bold text-base">
-              {member ? 'सभासद माहिती संपादित करा' : 'नवीन सभासद जोडा (Add Member)'}
+              {member ? (language === 'en' ? 'Edit Member Details' : 'सभासद माहिती संपादित करा') : (language === 'en' ? 'Add New Member' : 'नवीन सभासद जोडा')}
             </h3>
           </div>
           <button
@@ -135,7 +131,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Full Name */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              सभासदाचे पूर्ण नाव *
+              {language === 'en' ? 'Full Name *' : 'सभासदाचे पूर्ण नाव *'}
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
@@ -145,7 +141,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-sm bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                placeholder="उदा. राहुल देशमुख"
+                placeholder={language === 'en' ? 'e.g. Rahul Deshmukh' : 'उदा. राहुल देशमुख'}
               />
             </div>
           </div>
@@ -153,7 +149,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Phone Number */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              मोबाइल नंबर (WhatsApp) *
+              {language === 'en' ? 'WhatsApp Mobile Number *' : 'मोबाइल नंबर *'}
             </label>
             <div className="relative">
               <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
@@ -172,7 +168,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Gender Selection */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              लिंग (Gender) *
+              {language === 'en' ? 'Gender *' : 'लिंग *'}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -184,7 +180,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>👨 पुरुष (Male)</span>
+                <span>{language === 'en' ? '👨 Male' : '👨 पुरुष'}</span>
               </button>
 
               <button
@@ -196,7 +192,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>👩 विद्यार्थिनी / महिला (Female)</span>
+                <span>{language === 'en' ? '👩 Female' : '👩 विद्यार्थिनी / महिला'}</span>
               </button>
             </div>
           </div>
@@ -204,7 +200,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {/* Diet Preference */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              आहार प्रकार (Diet Preference) *
+              {language === 'en' ? 'Diet Preference *' : 'आहार प्रकार *'}
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -216,9 +212,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>🟢 शाकाहारी (Veg)</span>
+                <span>{language === 'en' ? '🟢 Veg' : '🟢 शाकाहारी'}</span>
                 <span className="text-[10px] opacity-90 font-mono">
-                  (१ वेळ: ₹{veg1Rate} / २ वेळ: ₹{veg2Rate})
+                  ({language === 'en' ? `1 Meal: ₹${veg1Rate} / 2 Meals: ₹${veg2Rate}` : `१ वेळ: ₹${veg1Rate} / २ वेळ: ₹${veg2Rate}`})
                 </span>
               </button>
 
@@ -231,21 +227,23 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>🔴 मांसाहारी (Non-Veg)</span>
+                <span>{language === 'en' ? '🔴 Non-Veg' : '🔴 मांसाहारी'}</span>
                 <span className="text-[10px] opacity-90 font-mono">
-                  (१ वेळ: ₹{nonveg1Rate} / २ वेळ: ₹{nonveg2Rate})
+                  ({language === 'en' ? `1 Meal: ₹${nonveg1Rate} / 2 Meals: ₹${nonveg2Rate}` : `१ वेळ: ₹${nonveg1Rate} / २ वेळ: ₹${nonveg2Rate}`})
                 </span>
               </button>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-              * मांसाहारी/अंडी: आठवड्यातून ३ दिवस (बुध, शुक्र, रविवार). इतर दिवस स्वादिष्ट शाकाहारी भोजन.
+              {language === 'en'
+                ? '* Non-Veg/Egg: 3 days a week (Wed, Fri, Sun). Delicious vegetarian meals on other days.'
+                : '* मांसाहारी/अंडी: आठवड्यातून ३ दिवस (बुध, शुक्र, रविवार). इतर दिवस स्वादिष्ट शाकाहारी भोजन.'}
             </p>
           </div>
 
           {/* Plan Type (1 meal vs 2 meals) */}
           <div>
             <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-              जेवणाचा वेळ व प्रकार (Plan Type) *
+              {language === 'en' ? 'Meal Plan *' : 'जेवणाचा वेळ व प्रकार *'}
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
@@ -257,9 +255,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>२-वेळ दोन्ही (Lunch+Dinner)</span>
+                <span>{language === 'en' ? '2 Meals Both' : '२-वेळ दोन्ही'}</span>
                 <span className="text-[10px] font-mono opacity-90">
-                  ₹{formData.dietPreference === 'veg' ? veg2Rate : nonveg2Rate}/महिना
+                  ₹{formData.dietPreference === 'veg' ? veg2Rate : nonveg2Rate}/{language === 'en' ? 'mo' : 'महिना'}
                 </span>
               </button>
 
@@ -272,9 +270,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>१-वेळ फक्त दुपार (Lunch)</span>
+                <span>{language === 'en' ? 'Lunch Only' : '१-वेळ फक्त दुपार'}</span>
                 <span className="text-[10px] font-mono opacity-90">
-                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/महिना
+                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/{language === 'en' ? 'mo' : 'महिना'}
                 </span>
               </button>
 
@@ -287,9 +285,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                 }`}
               >
-                <span>१-वेळ फक्त रात्र (Dinner)</span>
+                <span>{language === 'en' ? 'Dinner Only' : '१-वेळ फक्त रात्र'}</span>
                 <span className="text-[10px] font-mono opacity-90">
-                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/महिना
+                  ₹{formData.dietPreference === 'veg' ? veg1Rate : nonveg1Rate}/{language === 'en' ? 'mo' : 'महिना'}
                 </span>
               </button>
             </div>
@@ -300,10 +298,10 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="block font-bold text-slate-700 dark:text-slate-300">
-                  मासिक दर (₹ Rate) *
+                  {language === 'en' ? 'Monthly Rate (₹) *' : 'मासिक दर (₹) *'}
                 </label>
                 <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
-                  (मालक दर बदलू शकतात)
+                  {language === 'en' ? '(Customizable)' : '(मालक दर बदलू शकतात)'}
                 </span>
               </div>
               <div className="relative">
@@ -323,7 +321,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
 
             <div>
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                जोडणी तारीख (Join Date) *
+                {language === 'en' ? 'Join Date *' : 'जोडणी तारीख *'}
               </label>
               <div className="relative">
                 <input
@@ -341,7 +339,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
           {member && (
             <div>
               <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                स्थिती (Member Status)
+                {language === 'en' ? 'Member Status' : 'स्थिती'}
               </label>
               <select
                 value={formData.status}
@@ -350,9 +348,9 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
                 }
                 className="w-full px-3 py-2.5 min-h-[44px] text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
               >
-                <option value="active">सक्रिय (Active)</option>
-                <option value="suspended">तात्पुरते बंद (Suspended)</option>
-                <option value="left">सोडून गेले (Left)</option>
+                <option value="active">{language === 'en' ? 'Active' : 'सक्रिय'}</option>
+                <option value="suspended">{language === 'en' ? 'Suspended' : 'तात्पुरते बंद'}</option>
+                <option value="left">{language === 'en' ? 'Left' : 'सोडून गेले'}</option>
               </select>
             </div>
           )}
@@ -365,7 +363,7 @@ export const AddEditMemberModal: React.FC<AddEditMemberModalProps> = ({
               className="w-full min-h-[48px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isSubmitting ? 'जतन करत आहे...' : member ? 'बदल सेव्ह करा' : 'सभासद जोडा (Save Member)'}</span>
+              <span>{isSubmitting ? (language === 'en' ? 'Saving...' : 'जतन करत आहे...') : member ? (language === 'en' ? 'Save Changes' : 'बदल सेव्ह करा') : (language === 'en' ? 'Add Member' : 'सभासद जोडा')}</span>
             </button>
           </div>
         </form>

@@ -3,6 +3,8 @@ import {
   ExpenseRecurring,
   ExpenseOneOff,
   Staff,
+  StaffSalaryPayment,
+  StaffAttendanceRecord,
 } from '@messmitra/types';
 import { SupabaseService } from '../supabase/supabase.service';
 import {
@@ -14,100 +16,11 @@ import { AuthenticatedUser } from '../../common/decorators/current-user.decorato
 
 @Injectable()
 export class ExpensesService {
-  private inMemoryRecurring: ExpenseRecurring[] = [
-    {
-      id: 'er-1',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'rent',
-      payeeName: 'Mess Space Landlord (श्री कुलकर्णी)',
-      amount: 15000,
-      frequency: 'monthly',
-      nextDueDate: '2026-09-05',
-      isActive: true,
-      lastConfirmedMonth: '2026-09',
-      createdAt: '2026-06-01T00:00:00Z',
-    },
-    {
-      id: 'er-2',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'salary',
-      payeeName: 'Mahadev Mama (महाराज / Cook)',
-      amount: 18000,
-      frequency: 'monthly',
-      nextDueDate: '2026-09-07',
-      isActive: true,
-      lastConfirmedMonth: '2026-09',
-      createdAt: '2026-06-01T00:00:00Z',
-    },
-    {
-      id: 'er-3',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'gas',
-      payeeName: 'Commercial HP Gas Cylinder (2 cylinders/mo)',
-      amount: 3600,
-      frequency: 'monthly',
-      nextDueDate: '2026-09-10',
-      isActive: true,
-      lastConfirmedMonth: '2026-09',
-      createdAt: '2026-06-01T00:00:00Z',
-    },
-  ];
-
-  private inMemoryOneOff: ExpenseOneOff[] = [
-    {
-      id: 'eo-1',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'vegetables',
-      amount: 1450,
-      date: '2026-09-02',
-      note: 'Fresh market vegetables (मंडी खरेदी)',
-      createdBy: 'Ganesh Balaji Patil',
-      createdAt: '2026-09-02T08:00:00Z',
-    },
-    {
-      id: 'eo-2',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'dairy',
-      amount: 840,
-      date: '2026-09-05',
-      note: 'Milk, Curd, Paneer for feast day',
-      createdBy: 'Ganesh Balaji Patil',
-      createdAt: '2026-09-05T07:30:00Z',
-    },
-    {
-      id: 'eo-3',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      category: 'groceries',
-      amount: 4200,
-      date: '2026-09-08',
-      note: 'Kolam Rice & Toor Dal sack',
-      createdBy: 'Ganesh Balaji Patil',
-      createdAt: '2026-09-08T16:00:00Z',
-    },
-  ];
-
-  private inMemoryStaff: Staff[] = [
-    {
-      id: 's1111111-1111-1111-1111-111111111111',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      name: 'Mahadev Mama',
-      role: 'Head Cook (महाराज)',
-      monthlySalary: 18000,
-      phone: '+91 97654 32101',
-      isActive: true,
-      createdAt: '2026-06-01T00:00:00Z',
-    },
-    {
-      id: 's2222222-2222-2222-2222-222222222222',
-      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-      name: 'Santosh',
-      role: 'Helper & Cleaning',
-      monthlySalary: 10000,
-      phone: '+91 97654 32102',
-      isActive: true,
-      createdAt: '2026-06-01T00:00:00Z',
-    },
-  ];
+  private inMemoryRecurring: ExpenseRecurring[] = [];
+  private inMemoryOneOff: ExpenseOneOff[] = [];
+  private inMemoryStaff: Staff[] = [];
+  private inMemoryStaffSalaries: StaffSalaryPayment[] = [];
+  private inMemoryStaffAttendance: StaffAttendanceRecord[] = [];
 
   constructor(private supabaseService: SupabaseService) {}
 
@@ -192,10 +105,38 @@ export class ExpensesService {
     month: string,
     user: AuthenticatedUser
   ): Promise<ExpenseRecurring> {
-    const rec = this.inMemoryRecurring.find((r) => r.id === id);
-    if (!rec) throw new NotFoundException('Recurring expense not found');
-    rec.lastConfirmedMonth = month;
-    return rec;
+    const client = this.supabaseService.getClient();
+
+    if (!client || this.supabaseService.getIsMockMode()) {
+      const rec = this.inMemoryRecurring.find((r) => r.id === id);
+      if (!rec) throw new NotFoundException('Recurring expense not found');
+      rec.lastConfirmedMonth = month;
+      return rec;
+    }
+
+    // Persist confirmed month to Supabase
+    const { data, error } = await client
+      .from('expense_recurring')
+      .update({ last_confirmed_month: month })
+      .eq('id', id)
+      .eq('mess_id', user.messId)
+      .select()
+      .single();
+
+    if (error || !data) throw new NotFoundException('Recurring expense not found or update failed');
+
+    return {
+      id: data.id,
+      messId: data.mess_id,
+      category: data.category,
+      payeeName: data.payee_name,
+      amount: Number(data.amount),
+      frequency: data.frequency,
+      nextDueDate: data.next_due_date,
+      isActive: data.is_active,
+      lastConfirmedMonth: data.last_confirmed_month,
+      createdAt: data.created_at,
+    };
   }
 
   // 2. One-Off Expenses
@@ -217,7 +158,10 @@ export class ExpensesService {
       .order('date', { ascending: false });
 
     if (month) {
-      query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+      const [y, m] = month.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      const lastDateStr = `${month}-${String(lastDay).padStart(2, '0')}`;
+      query = query.gte('date', `${month}-01`).lte('date', lastDateStr);
     }
 
     const { data, error } = await query;
@@ -365,6 +309,184 @@ export class ExpensesService {
       phone: data.phone,
       isActive: data.is_active,
       createdAt: data.created_at,
+    };
+  }
+
+  // 4. Staff Salary Ledger
+  async getStaffSalaryHistory(user: AuthenticatedUser, staffId?: string, month?: string): Promise<StaffSalaryPayment[]> {
+    const client = this.supabaseService.getClient();
+
+    if (!client || this.supabaseService.getIsMockMode()) {
+      let list = this.inMemoryStaffSalaries.filter((s) => s.messId === user.messId || !user.messId);
+      if (staffId) list = list.filter((s) => s.staffId === staffId);
+      if (month) list = list.filter((s) => s.month === month);
+      return list;
+    }
+
+    let query = client
+      .from('staff_salary_payments')
+      .select('*')
+      .eq('mess_id', user.messId)
+      .order('paid_date', { ascending: false });
+
+    if (staffId) query = query.eq('staff_id', staffId);
+    if (month) query = query.eq('month', month);
+
+    const { data, error } = await query;
+    if (error) throw new Error(`Failed to fetch staff salary history: ${error.message}`);
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      messId: row.mess_id,
+      staffId: row.staff_id,
+      staffName: row.staff_name,
+      month: row.month,
+      baseSalary: Number(row.base_salary),
+      advanceDeductions: Number(row.advance_deductions || 0),
+      bonusAmount: Number(row.bonus_amount || 0),
+      netPaid: Number(row.net_paid),
+      paymentType: row.payment_type,
+      paymentMethod: row.payment_method,
+      paidDate: row.paid_date,
+      note: row.note,
+      voucherNumber: row.voucher_number,
+      createdAt: row.created_at,
+    }));
+  }
+
+  async recordStaffSalaryPayment(payment: StaffSalaryPayment, user: AuthenticatedUser): Promise<StaffSalaryPayment> {
+    const client = this.supabaseService.getClient();
+
+    const newPayment: StaffSalaryPayment = {
+      ...payment,
+      id: payment.id || `sp-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      messId: user.messId || payment.messId,
+      createdAt: payment.createdAt || new Date().toISOString(),
+    };
+
+    if (!client || this.supabaseService.getIsMockMode()) {
+      this.inMemoryStaffSalaries.unshift(newPayment);
+      return newPayment;
+    }
+
+    const { data, error } = await client
+      .from('staff_salary_payments')
+      .upsert({
+        id: newPayment.id,
+        mess_id: newPayment.messId,
+        staff_id: newPayment.staffId,
+        staff_name: newPayment.staffName,
+        month: newPayment.month,
+        base_salary: newPayment.baseSalary,
+        advance_deductions: newPayment.advanceDeductions,
+        bonus_amount: newPayment.bonusAmount || 0,
+        net_paid: newPayment.netPaid,
+        payment_type: newPayment.paymentType,
+        payment_method: newPayment.paymentMethod,
+        paid_date: newPayment.paidDate,
+        note: newPayment.note,
+        voucher_number: newPayment.voucherNumber,
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to record staff salary payment: ${error.message}`);
+
+    return {
+      id: data.id,
+      messId: data.mess_id,
+      staffId: data.staff_id,
+      staffName: data.staff_name,
+      month: data.month,
+      baseSalary: Number(data.base_salary),
+      advanceDeductions: Number(data.advance_deductions),
+      bonusAmount: Number(data.bonus_amount || 0),
+      netPaid: Number(data.net_paid),
+      paymentType: data.payment_type,
+      paymentMethod: data.payment_method,
+      paidDate: data.paid_date,
+      note: data.note,
+      voucherNumber: data.voucher_number,
+      createdAt: data.created_at,
+    };
+  }
+
+  // 5. Staff Attendance
+  async getStaffAttendance(user: AuthenticatedUser, staffId?: string, month?: string): Promise<StaffAttendanceRecord[]> {
+    const client = this.supabaseService.getClient();
+
+    if (!client || this.supabaseService.getIsMockMode()) {
+      let list = this.inMemoryStaffAttendance.filter((s) => s.messId === user.messId || !user.messId);
+      if (staffId) list = list.filter((s) => s.staffId === staffId);
+      if (month) list = list.filter((s) => s.date.startsWith(month));
+      return list;
+    }
+
+    let query = client
+      .from('staff_attendance')
+      .select('*')
+      .eq('mess_id', user.messId)
+      .order('date', { ascending: false });
+
+    if (staffId) query = query.eq('staff_id', staffId);
+    if (month) query = query.like('date', `${month}%`);
+
+    const { data, error } = await query;
+    if (error) throw new Error(`Failed to fetch staff attendance: ${error.message}`);
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      messId: row.mess_id,
+      staffId: row.staff_id,
+      date: row.date,
+      status: row.status,
+      notes: row.notes,
+    }));
+  }
+
+  async recordStaffAttendance(record: StaffAttendanceRecord, user: AuthenticatedUser): Promise<StaffAttendanceRecord> {
+    const client = this.supabaseService.getClient();
+
+    const newRec: StaffAttendanceRecord = {
+      ...record,
+      id: record.id || `att-${Date.now()}-${record.staffId.substring(0, 4)}`,
+      messId: user.messId || record.messId,
+    };
+
+    if (!client || this.supabaseService.getIsMockMode()) {
+      const idx = this.inMemoryStaffAttendance.findIndex(
+        (a) => a.staffId === newRec.staffId && a.date === newRec.date
+      );
+      if (idx >= 0) {
+        this.inMemoryStaffAttendance[idx] = newRec;
+      } else {
+        this.inMemoryStaffAttendance.push(newRec);
+      }
+      return newRec;
+    }
+
+    const { data, error } = await client
+      .from('staff_attendance')
+      .upsert({
+        id: newRec.id,
+        mess_id: newRec.messId,
+        staff_id: newRec.staffId,
+        date: newRec.date,
+        status: newRec.status,
+        notes: newRec.notes,
+      }, { onConflict: 'staff_id,date' })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to record staff attendance: ${error.message}`);
+
+    return {
+      id: data.id,
+      messId: data.mess_id,
+      staffId: data.staff_id,
+      date: data.date,
+      status: data.status,
+      notes: data.notes,
     };
   }
 }

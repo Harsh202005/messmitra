@@ -83,11 +83,38 @@ export const requestPushPermission = async (): Promise<NotificationPermission> =
   }
 };
 
-// Show system push notification
-export const showSystemPushNotification = (title: string, body: string, icon = '/logo.jpeg') => {
+// Show real system notification in Mobile Notification Drawer / Status Bar & Desktop Tray
+export const showSystemPushNotification = async (
+  title: string,
+  body: string,
+  icon = '/logo.jpeg',
+  url = '/'
+) => {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
 
+  // 1. Mobile Android & PWA method via ServiceWorkerRegistration (Required for phone notification drawer)
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg && typeof reg.showNotification === 'function') {
+        await reg.showNotification(title, {
+          body,
+          icon,
+          badge: icon,
+          vibrate: [200, 100, 200, 100, 200],
+          tag: 'balaji-alert-' + Date.now(),
+          renotify: true,
+          data: { url },
+        } as any);
+        return;
+      }
+    } catch (swErr) {
+      console.warn('ServiceWorker showNotification failed, trying desktop fallback', swErr);
+    }
+  }
+
+  // 2. Desktop Browser fallback (Note: throws illegal constructor error on Android Chrome)
   try {
     const notif = new Notification(title, {
       body,
@@ -101,7 +128,7 @@ export const showSystemPushNotification = (title: string, body: string, icon = '
       notif.close();
     };
   } catch (e) {
-    console.warn('System notification failed', e);
+    console.warn('Desktop Notification constructor failed', e);
   }
 };
 

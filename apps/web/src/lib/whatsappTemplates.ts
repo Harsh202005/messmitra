@@ -4,7 +4,7 @@
  */
 
 export const BALAJI_WHATSAPP_TEMPLATES = {
-  // 1. Monthly Dues Reminder (मासिक मेस फी स्मरणपत्र)
+  // 1. Monthly Dues Reminder
   monthlyDues: (params: {
     memberName: string;
     month: string;
@@ -25,7 +25,7 @@ export const BALAJI_WHATSAPP_TEMPLATES = {
     );
   },
 
-  // 2. Official Payment Receipt (अधिकृत पावती)
+  // 2. Official Payment Receipt
   paymentReceipt: (params: {
     memberName: string;
     receiptNo: string;
@@ -47,7 +47,7 @@ export const BALAJI_WHATSAPP_TEMPLATES = {
     );
   },
 
-  // 3. New Member Registration Approved (नवीन नोंदणी मंजुरी)
+  // 3. New Member Registration Approved
   registrationApproved: (params: {
     memberName: string;
     planType: string;
@@ -60,7 +60,7 @@ export const BALAJI_WHATSAPP_TEMPLATES = {
       `-----------------------------------------\n` +
       `नमस्कार *${params.memberName}*,\n` +
       `आपली श्री बालाजी मेसची नोंदणी मंजूर झाली आहे.\n\n` +
-      `📋 *योजना:* ${params.planType === 'veg' ? 'शाकाहारी (Veg ₹3,000)' : 'मांसाहारी (Non-Veg ₹3,200)'}\n` +
+      `📋 *योजना:* ${params.planType === 'veg' ? 'शाकाहारी (₹3,000)' : 'मांसाहारी (₹3,200)'}\n` +
       `💰 *मासिक दर:* ₹${params.rate}/महिना\n` +
       `⏰ *दुपारचे सुट्टी कटऑफ:* सकाळी ${params.cutoffLunch || '09:00 AM'}\n` +
       `⏰ *रात्रीचे सुट्टी कटऑफ:* संध्याकाळी ${params.cutoffDinner || '06:00 PM'}\n\n` +
@@ -69,7 +69,7 @@ export const BALAJI_WHATSAPP_TEMPLATES = {
     );
   },
 
-  // 4. Special Sunday Feast Announcement (रविवार विशेष बेत)
+  // 4. Special Sunday Feast Announcement
   sundaySpecialAnnouncement: (params: {
     date: string;
     specialMenuVeg: string;
@@ -80,15 +80,15 @@ export const BALAJI_WHATSAPP_TEMPLATES = {
       `*🍛 श्री बालाजी मेस - रविवार स्पेशल बेत (${params.date})*\n` +
       `-----------------------------------------\n` +
       `सर्व सभासदांना सूचित करण्यात येते की या रविवारी विशेष मेजवानीचे आयोजन केले आहे:\n\n` +
-      `🟢 *शाकाहारी (Veg):* ${params.specialMenuVeg || 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका'}\n` +
-      `🔴 *मांसाहारी (Non-Veg):* ${params.specialMenuNonVeg || 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी'}\n\n` +
+      `🟢 *शाकाहारी:* ${params.specialMenuVeg || 'गुलाबजाम, पुरी, मटार पनीर, जिरा राईस, डाळ तडका'}\n` +
+      `🔴 *मांसाहारी:* ${params.specialMenuNonVeg || 'सुक्का चिकन / तांबडा पांढरा रस्सा, चिकन बिर्याणी'}\n\n` +
       `⏰ *वेळ:* ${params.timeSlot || 'दुपारी १२:३० ते ०३:३०'}\n\n` +
       `सर्वांनी वेळेवर उपस्थित राहावे.\n` +
       `✨ _श्री बालाजी मेस • चालक: शंकर गिरी (9822338975)_`
     );
   },
 
-  // 5. Daily Cutoff Reminder (सुट्टी नोंद स्मरणपत्र)
+  // 5. Daily Cutoff Reminder
   dailyCutoffReminder: (params: {
     mealType: 'lunch' | 'dinner';
     cutoffTime: string;

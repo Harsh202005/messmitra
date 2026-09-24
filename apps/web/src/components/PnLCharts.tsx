@@ -3,12 +3,14 @@
 import React from 'react';
 import { ProfitAndLossSummary } from '@messmitra/types';
 import { BarChart3, PieChart, TrendingUp, DollarSign, Sparkles } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface PnLChartsProps {
   pnlData: ProfitAndLossSummary;
 }
 
 export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
+  const { language } = useI18n();
   const breakdown = Object.entries(pnlData.expenseBreakdownByCategory).filter(
     ([_, amount]) => amount > 0
   );
@@ -16,19 +18,17 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
   const totalExpense = pnlData.totalExpenses || 1;
   const totalRevenue = pnlData.totalDuesCollected || 1;
 
-  // Mock past 3 months trend for visual graph comparison
+  // Real monthly financial metrics
   const monthlyTrends = [
-    { month: 'Jul 2026', revenue: 24500, expenses: 21800, profit: 2700 },
-    { month: 'Aug 2026', revenue: 28800, expenses: 23400, profit: 5400 },
     {
-      month: 'Sep 2026 (Current)',
-      revenue: pnlData.totalDuesCollected,
-      expenses: pnlData.totalExpenses,
-      profit: pnlData.netProfit,
+      month: pnlData.month || 'Current',
+      revenue: pnlData.totalDuesCollected || 0,
+      expenses: pnlData.totalExpenses || 0,
+      profit: pnlData.netProfit || 0,
     },
   ];
 
-  const maxVal = Math.max(...monthlyTrends.map((m) => Math.max(m.revenue, m.expenses)), 40000);
+  const maxVal = Math.max(...monthlyTrends.map((m) => Math.max(m.revenue, m.expenses)), 1000);
 
   const colors = [
     '#f97316', // Orange
@@ -48,10 +48,12 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-brand-500" />
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-              मासिक उत्पन्न विरुद्ध खर्च आलेख (Trend Comparison)
+              {language === 'en' ? 'Monthly Revenue vs Expense Trends' : 'मासिक उत्पन्न विरुद्ध खर्च आलेख'}
             </h4>
           </div>
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">३ महिन्यांचा आढावा</span>
+          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+            {language === 'en' ? '3 Months Review' : '३ महिन्यांचा आढावा'}
+          </span>
         </div>
 
         {/* SVG Bars */}
@@ -94,11 +96,15 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
         <div className="flex items-center justify-center gap-6 pt-4 text-xs font-semibold">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-emerald-500 rounded-sm" />
-            <span className="text-slate-700 dark:text-slate-300">एकूण जमा (Revenue)</span>
+            <span className="text-slate-700 dark:text-slate-300">
+              {language === 'en' ? 'Total Revenue' : 'एकूण जमा'}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 bg-red-500 rounded-sm" />
-            <span className="text-slate-700 dark:text-slate-300">एकूण खर्च (Expenses)</span>
+            <span className="text-slate-700 dark:text-slate-300">
+              {language === 'en' ? 'Total Expenses' : 'एकूण खर्च'}
+            </span>
           </div>
         </div>
       </div>
@@ -109,11 +115,11 @@ export const PnLCharts: React.FC<PnLChartsProps> = ({ pnlData }) => {
           <div className="flex items-center gap-2">
             <PieChart className="w-5 h-5 text-amber-500" />
             <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-              खर्चाचे वर्गीकरण व टक्केवारी (Expense Distribution)
+              {language === 'en' ? 'Expense Breakdown by Category' : 'खर्चाचे वर्गीकरण व टक्केवारी'}
             </h4>
           </div>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-            एकूण: ₹{pnlData.totalExpenses.toLocaleString('en-IN')}
+            {language === 'en' ? 'Total:' : 'एकूण:'} ₹{pnlData.totalExpenses.toLocaleString('en-IN')}
           </span>
         </div>
 

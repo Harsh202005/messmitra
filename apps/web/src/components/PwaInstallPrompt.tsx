@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Download, Sparkles, X, Smartphone, Check } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 export const PwaInstallPrompt: React.FC = () => {
+  const { language } = useI18n();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(true); // show install banner / mobile app preview
   const [isInstalled, setIsInstalled] = useState(false);
@@ -53,10 +55,10 @@ export const PwaInstallPrompt: React.FC = () => {
           </div>
           <div>
             <strong className="text-xs font-bold block leading-tight">
-              श्री बालाजी मेस ॲप
+              {language === 'en' ? 'Shree Balaji Mess App' : 'श्री बालाजी मेस ॲप'}
             </strong>
             <span className="text-[10px] text-white/90 underline">
-              मोबाईल ॲप दृश्य पहा (App Preview)
+              {language === 'en' ? 'View App Preview' : 'मोबाईल ॲप दृश्य पहा'}
             </span>
           </div>
         </div>
@@ -66,12 +68,12 @@ export const PwaInstallPrompt: React.FC = () => {
             onClick={handleInstallClick}
             className="px-2.5 py-1.5 bg-white text-brand-700 font-extrabold text-xs rounded-xl shadow transition hover:bg-white/90 cursor-pointer"
           >
-            {deferredPrompt ? 'इन्स्टॉल' : 'ॲप पहा'}
+            {deferredPrompt ? (language === 'en' ? 'Install' : 'इन्स्टॉल') : (language === 'en' ? 'View App' : 'ॲप पहा')}
           </button>
           <button
             onClick={() => setIsVisible(false)}
             className="p-1 text-white/70 hover:text-white cursor-pointer"
-            title="लपवा"
+            title={language === 'en' ? 'Hide' : 'लपवा'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -84,19 +86,19 @@ export const PwaInstallPrompt: React.FC = () => {
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-white flex flex-col max-h-[92vh]">
             <div className="p-4 bg-gradient-to-r from-brand-600 to-amber-600 text-white flex items-center justify-between">
               <div>
-                <h3 className="font-black text-sm">श्री बालाजी मेस • मोबाईल ॲप</h3>
+                <h3 className="font-black text-sm">{language === 'en' ? 'Shree Balaji Mess • Mobile App' : 'श्री बालाजी मेस • मोबाईल ॲप'}</h3>
                 <p className="text-[11px] text-white/90">Android & iOS PWA App Interface</p>
               </div>
               <button
                 onClick={() => setShowPreviewModal(false)}
-                className="p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white cursor-pointer"
+                className="p-1.5 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto flex flex-col items-center space-y-3">
-              <div className="relative rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-xl max-w-[280px]">
+            <div className="p-4 space-y-4 overflow-y-auto">
+              <div className="rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex justify-center">
                 <img
                   src="/mobile_app_mockup.jpg"
                   alt="श्री बालाजी मेस Mobile App Preview"
@@ -106,10 +108,12 @@ export const PwaInstallPrompt: React.FC = () => {
 
               <div className="text-center space-y-1 text-xs">
                 <p className="font-bold text-slate-800 dark:text-slate-200">
-                  📱 कोणत्याही ॲप स्टोअर शिवाय थेट इन्स्टॉल करा
+                  {language === 'en' ? '📱 Install directly without any app store' : '📱 कोणत्याही ॲप स्टोअर शिवाय थेट इन्स्टॉल करा'}
                 </p>
                 <p className="text-[11px] text-slate-500">
-                  Chrome किंवा Safari मध्ये "Add to Home Screen" निवडून ॲप प्रमाणे वापरा.
+                  {language === 'en'
+                    ? 'In Chrome or Safari, tap "Add to Home Screen" to install and use like a native app.'
+                    : 'Chrome किंवा Safari मध्ये "Add to Home Screen" निवडून ॲप प्रमाणे वापरा.'}
                 </p>
               </div>
             </div>
@@ -119,7 +123,7 @@ export const PwaInstallPrompt: React.FC = () => {
                 onClick={() => setShowPreviewModal(false)}
                 className="w-full py-2 bg-gradient-to-r from-brand-600 to-amber-600 text-white font-bold rounded-xl text-xs shadow cursor-pointer"
               >
-                समजले (Close)
+                {language === 'en' ? 'Close' : 'समजले'}
               </button>
             </div>
           </div>

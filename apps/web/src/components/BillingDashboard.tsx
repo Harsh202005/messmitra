@@ -46,7 +46,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
   onExportCsv,
   onOpenWhatsAppBroadcast,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedMonth, setSelectedMonth] = useState(billingData.month || '2026-09');
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -102,10 +102,12 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
         <div>
           <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
             <IndianRupee className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
-            <span>मासिक बिलिंग व हिशोब (Billing Ledger)</span>
+            <span>{language === 'en' ? 'Monthly Billing & Ledger' : 'मासिक बिलिंग व हिशोब'}</span>
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            ५६ जेवण सूत्र • सुट्टी वजावट • WhatsApp बिल व QR पावत्या
+            {language === 'en'
+              ? '56-meal formula • Leave deductions • WhatsApp bill & UPI slips'
+              : '५६ जेवण सूत्र • सुट्टी वजावट • WhatsApp बिल व QR पावत्या'}
           </p>
         </div>
 
@@ -330,11 +332,11 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-600" />
-                <span>मेस फी जमा नोंद (Record Payment)</span>
+                <span>{language === 'en' ? 'Record Payment' : 'मेस फी जमा नोंद'}</span>
               </h3>
               <button
                 onClick={() => setSelectedCycleForPayment(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -346,16 +348,16 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   {selectedCycleForPayment.memberName}
                 </div>
                 <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                  <span>महिना: {selectedCycleForPayment.month}</span>
+                  <span>{language === 'en' ? 'Month:' : 'महिना:'} {selectedCycleForPayment.month}</span>
                   <span className="font-bold text-amber-600 dark:text-amber-400">
-                    शिल्लक बाकी: ₹{Math.max(0, selectedCycleForPayment.amountDue - selectedCycleForPayment.amountPaid)}
+                    {language === 'en' ? 'Pending Dues:' : 'शिल्लक बाकी:'} ₹{Math.max(0, selectedCycleForPayment.amountDue - selectedCycleForPayment.amountPaid)}
                   </span>
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  जमा रक्कम (Amount in ₹) *
+                  {language === 'en' ? 'Amount Received (₹) *' : 'जमा रक्कम (₹) *'}
                 </label>
                 <input
                   type="number"
@@ -370,13 +372,13 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  पेमेंट पद्धत (Payment Method) *
+                  {language === 'en' ? 'Payment Method *' : 'पेमेंट पद्धत *'}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('upi_link')}
-                    className={`min-h-[44px] rounded-xl font-bold border transition ${
+                    className={`min-h-[44px] rounded-xl font-bold border transition cursor-pointer ${
                       paymentMethod === 'upi_link'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                         : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
@@ -387,20 +389,20 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('cash')}
-                    className={`min-h-[44px] rounded-xl font-bold border transition ${
+                    className={`min-h-[44px] rounded-xl font-bold border transition cursor-pointer ${
                       paymentMethod === 'cash'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                         : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    रोख (Cash)
+                    {language === 'en' ? 'Cash' : 'रोख'}
                   </button>
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  रेफरन्स / UTR नंबर (Optional)
+                  {language === 'en' ? 'Reference / UTR (Optional)' : 'रेफरन्स / UTR नंबर'}
                 </label>
                 <input
                   type="text"
@@ -416,7 +418,7 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   type="submit"
                   className="w-full min-h-[48px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-emerald-600/30 transition text-sm cursor-pointer"
                 >
-                  रक्कम जमा नोंदवा व पावती बनवा
+                  {language === 'en' ? 'Record Payment & Issue Slip' : 'रक्कम जमा नोंदवा व पावती बनवा'}
                 </button>
               </div>
             </form>
@@ -433,11 +435,11 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-brand-500" />
-                <span>विशेष सवलत किंवा अडजस्टमेंट (Adjustment)</span>
+                <span>{language === 'en' ? 'Fee Adjustment / Discount' : 'विशेष सवलत किंवा अडजस्टमेंट'}</span>
               </h3>
               <button
                 onClick={() => setSelectedCycleForAdjustment(null)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -449,13 +451,13 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
                   {selectedCycleForAdjustment.memberName}
                 </div>
                 <div className="text-slate-500 dark:text-slate-400 mt-0.5">
-                  महिना: {selectedCycleForAdjustment.month} • सध्याचे बिल: ₹{selectedCycleForAdjustment.amountDue}
+                  {language === 'en' ? 'Month:' : 'महिना:'} {selectedCycleForAdjustment.month} • {language === 'en' ? 'Current Bill:' : 'सध्याचे बिल:'} ₹{selectedCycleForAdjustment.amountDue}
                 </div>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  सवलत रक्कम (वजा करा - Discount in ₹) *
+                  {language === 'en' ? 'Discount Amount (₹) *' : 'सवलत रक्कम (₹) *'}
                 </label>
                 <input
                   type="number"
@@ -471,12 +473,12 @@ export const BillingDashboard: React.FC<BillingDashboardProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  सवलतीचे कारण (Reason / Note) *
+                  {language === 'en' ? 'Reason / Note *' : 'सवलतीचे कारण *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="उदा. आजारपण सवलत / विशेष सूट"
+                  placeholder={language === 'en' ? 'e.g. Sickness leave discount / special waiver' : 'उदा. आजारपण सवलत / विशेष सूट'}
                   value={adjustmentNote}
                   onChange={(e) => setAdjustmentNote(e.target.value)}
                   className="w-full px-3 py-2.5 min-h-[44px] bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"

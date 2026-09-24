@@ -12,6 +12,7 @@ import {
   ProfitAndLossSummary,
   DailyCookForecast,
   PendingRegistration,
+  formatTime12Hour,
 } from '@messmitra/types';
 import { MessMitraApi, notifyDataChanged } from '../lib/api';
 import { subscribeToMessRealtime } from '../lib/supabaseClient';
@@ -26,6 +27,8 @@ import { ExpensesManagement } from '../components/ExpensesManagement';
 import { PnLDashboard } from '../components/PnLDashboard';
 import { PriceAndPlanManager } from '../components/PriceAndPlanManager';
 import { MealTokenSystem } from '../components/MealTokenSystem';
+import { StaffSalaryLedger } from '../components/StaffSalaryLedger';
+import { WalkInQuickPosCounter } from '../components/WalkInQuickPosCounter';
 import { MemberPortalView } from '../components/MemberPortalView';
 import { KitchenDisplayView } from '../components/KitchenDisplayView';
 import { RegistrationApprovalsQueue } from '../components/RegistrationApprovalsQueue';
@@ -46,10 +49,18 @@ import {
   QrCode,
   MessageSquare,
   FileSpreadsheet,
+  Utensils,
+  ChefHat,
+  CreditCard,
+  TrendingDown,
+  PieChart,
+  CalendarDays,
+  Tag,
+  Ticket,
 } from 'lucide-react';
 
 function DashboardContent() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user, role, switchDemoRole } = useAuth();
 
   // Navigation State
@@ -339,22 +350,28 @@ function DashboardContent() {
   // Member resolution for Member Portal View
   const [currentPortalMemberId, setCurrentPortalMemberId] = useState<string>('');
   const activeMemberId = user?.memberId || currentPortalMemberId;
-  const activeMember =
+  const activeMember: Member | null =
     members.find((m) => m.id === activeMemberId) ||
-    members[0] || {
-      id: 'm1111111-1111-1111-1111-111111111111',
-      messId: mess?.id || '',
-      name: 'Rahul Deshmukh',
-      phone: '+91 98901 23456',
-      gender: 'male',
-      rate: 3200,
-      planType: 'both',
-      joinDate: '2026-06-01',
-      status: 'active',
-      createdAt: '2026-06-01T00:00:00Z',
-    };
+    members[0] ||
+    (user?.role === 'member'
+      ? {
+          id: user.memberId || user.id,
+          messId: mess?.id || '',
+          name: user.name || 'सभासद',
+          phone: user.email || '',
+          gender: 'male' as const,
+          dietPreference: 'veg' as const,
+          rate: mess?.defaultVegRate || 3000,
+          planType: 'both' as const,
+          joinDate: new Date().toISOString().substring(0, 10),
+          status: 'active' as const,
+          createdAt: new Date().toISOString(),
+        }
+      : null);
 
-  const activeMemberBilling = billingData.cycles.find((c) => c.memberId === activeMember.id) || null;
+  const activeMemberBilling = activeMember
+    ? billingData.cycles.find((c) => c.memberId === activeMember.id) || null
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
@@ -385,12 +402,10 @@ function DashboardContent() {
 
       {/* Main Container with real mobile measures and safe area insets */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 space-y-4 sm:space-y-6">
-        {/* ROLE 1: MEMBER PORTAL VIEW */}
+        {/* ROLE 1: MEMBER PORTAL VIEW (100% Data Privacy - Only logged-in member data) */}
         {role === 'member' && (
           <MemberPortalView
             member={activeMember}
-            allMembers={members}
-            onSwitchMember={(m) => setCurrentPortalMemberId(m.id)}
             mess={mess}
             leaves={leaves}
             billingCycle={activeMemberBilling}
@@ -426,7 +441,7 @@ function DashboardContent() {
                   चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong> • चव हीच आमची ओळख
                 </p>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                  दुपार कटऑफ: <strong className="text-slate-800 dark:text-slate-200">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-slate-800 dark:text-slate-200">06:00 PM</strong> • UPI:{' '}
+                  दुपार कटऑफ: <strong className="text-slate-800 dark:text-slate-200">{formatTime12Hour(mess?.lunchCutoffTime || '09:00')}</strong> • रात्र कटऑफ: <strong className="text-slate-800 dark:text-slate-200">{formatTime12Hour(mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00')}</strong> • UPI:{' '}
                   <span className="font-mono text-brand-600 dark:text-brand-300 font-bold">{mess?.upiId || '9822338975@upi'}</span>
                 </p>
               </div>
@@ -437,7 +452,7 @@ function DashboardContent() {
                   <div className="bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[120px]">
                     <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
                       <IndianRupee className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>जमा फी ({selectedMonth})</span>
+                      <span>{language === 'en' ? 'Fees Collected' : 'जमा फी'} ({selectedMonth})</span>
                     </div>
                     <div className="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                       ₹{pnlData.totalDuesCollected.toLocaleString('en-IN')}
@@ -447,7 +462,7 @@ function DashboardContent() {
                   <div className="bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-700/60 min-w-[110px]">
                     <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px]">
                       <Users className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
-                      <span>सक्रिय सभासद</span>
+                      <span>{language === 'en' ? 'Active Members' : 'सक्रिय सभासद'}</span>
                     </div>
                     <div className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white">
                       {members.filter((m) => m.status === 'active').length}{' '}
@@ -459,12 +474,30 @@ function DashboardContent() {
                 {/* Quick Shortcut Buttons */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <button
+                    onClick={() => setActiveTab('pos')}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer min-h-[44px]"
+                    title="सुटे जेवण व पार्सल लाइव्ह बिलिंग काउंटर"
+                  >
+                    <Utensils className="w-4 h-4" />
+                    <span>{language === 'en' ? 'Walk-in POS' : 'सुटे जेवण POS'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('staff')}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-sm transition cursor-pointer min-h-[44px]"
+                    title="कर्मचारी पगार, उचल व हिशोब वही"
+                  >
+                    <ChefHat className="w-4 h-4" />
+                    <span>{language === 'en' ? 'Staff Payroll' : 'कर्मचारी पगार'}</span>
+                  </button>
+
+                  <button
                     onClick={() => setIsQrPosterOpen(true)}
                     className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-900 dark:text-amber-200 text-xs font-bold rounded-xl border border-amber-300 dark:border-amber-700 transition cursor-pointer min-h-[44px]"
                     title="टेबल किंवा नोटीस बोर्डासाठी QR कोड पोस्टर"
                   >
                     <QrCode className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span>QR पोस्टर</span>
+                    <span>{language === 'en' ? 'QR Poster' : 'QR पोस्टर'}</span>
                   </button>
 
                   <button
@@ -473,7 +506,7 @@ function DashboardContent() {
                     title="सर्व सभासदांना WhatsApp मेसेज पाठवा"
                   >
                     <MessageSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>ब्रॉडकास्ट</span>
+                    <span>{language === 'en' ? 'Broadcast' : 'ब्रॉडकास्ट'}</span>
                   </button>
 
                   <button
@@ -482,10 +515,42 @@ function DashboardContent() {
                     title="CSV / Excel फाईलवरून सभासद जोडा"
                   >
                     <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span>Excel इंपोर्ट</span>
+                    <span>{language === 'en' ? 'Excel Import' : 'Excel इंपोर्ट'}</span>
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* MOBILE QUICK MODULES BAR (Horizontal Swipeable Chips for 1-Tap Access to ALL Modules on Phones) */}
+            <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 -mx-2 px-2 scrollbar-none text-xs font-bold">
+              {[
+                { id: 'members', label: t('members'), icon: Users },
+                { id: 'billing', label: t('billing'), icon: CreditCard },
+                { id: 'expenses', label: t('expenses'), icon: TrendingDown },
+                { id: 'staff', label: t('staffTab'), icon: ChefHat },
+                { id: 'plans', label: t('plansTab'), icon: Tag },
+                { id: 'pnl', label: t('pnl'), icon: PieChart },
+                { id: 'leaves', label: t('leaves'), icon: CalendarDays },
+                { id: 'pos', label: t('posTab'), icon: Utensils },
+                { id: 'tokens', label: language === 'en' ? 'Tokens' : 'टोकन्स', icon: Ticket },
+              ].map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl whitespace-nowrap transition shrink-0 cursor-pointer min-h-[38px] ${
+                      isActive
+                        ? 'bg-brand-600 text-white shadow-md font-extrabold'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    <TabIcon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* TAB: MEMBERS */}
@@ -493,6 +558,7 @@ function DashboardContent() {
               <div className="space-y-4 sm:space-y-6 animate-fadeIn">
                 <DailyForecastCard
                   forecast={forecast}
+                  mess={mess}
                   cutoffTime={mess?.dailyCutoffTime}
                   onDateChange={handleForecastDateChange}
                 />
@@ -523,6 +589,7 @@ function DashboardContent() {
               <div className="space-y-4 sm:space-y-6 animate-fadeIn">
                 <DailyForecastCard
                   forecast={forecast}
+                  mess={mess}
                   cutoffTime={mess?.dailyCutoffTime}
                   onDateChange={handleForecastDateChange}
                 />
@@ -550,6 +617,16 @@ function DashboardContent() {
               </div>
             )}
 
+            {/* TAB: WALK-IN DAILY MEAL POS COUNTER */}
+            {activeTab === 'pos' && (
+              <div className="animate-fadeIn">
+                <WalkInQuickPosCounter
+                  mess={mess}
+                  onOrderCompleted={loadAllData}
+                />
+              </div>
+            )}
+
             {/* TAB: EXPENSES */}
             {activeTab === 'expenses' && (
               <div className="animate-fadeIn">
@@ -562,6 +639,17 @@ function DashboardContent() {
                   onAddOneOff={handleAddOneOff}
                   onAddStaff={handleAddStaff}
                   onExportCsv={handleExportExpensesCsv}
+                />
+              </div>
+            )}
+
+            {/* TAB: STAFF SALARY & ATTENDANCE LEDGER */}
+            {activeTab === 'staff' && (
+              <div className="animate-fadeIn">
+                <StaffSalaryLedger
+                  mess={mess}
+                  staffList={staffList}
+                  onStaffUpdated={loadAllData}
                 />
               </div>
             )}

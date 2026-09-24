@@ -10,14 +10,32 @@ export class SupabaseService {
 
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
-    const supabaseKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || this.configService.get<string>('SUPABASE_ANON_KEY');
+    const supabaseKey =
+      this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ||
+      this.configService.get<string>('SUPABASE_ANON_KEY');
 
     if (supabaseUrl && supabaseKey && !supabaseUrl.includes('your-supabase-url')) {
-      this.supabaseClient = createClient(supabaseUrl, supabaseKey);
-      this.logger.log('Connected to Supabase Postgres instance with RLS.');
+      try {
+        // Polyfill WebSocket for Node < 22 (uses the 'ws' npm package)
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const WebSocketImpl = require('ws');
+        if (typeof globalThis.WebSocket === 'undefined') {
+          (globalThis as any).WebSocket = WebSocketImpl;
+        }
+
+        this.supabaseClient = createClient(supabaseUrl, supabaseKey);
+        this.logger.log('✅ Connected to Supabase Postgres instance with RLS.');
+      } catch (err) {
+        this.logger.warn(
+          `⚠️ Supabase client init failed (${err.message}), falling back to In-Memory Demo Store.`
+        );
+        this.isMockMode = true;
+      }
     } else {
       this.isMockMode = true;
-      this.logger.warn('SUPABASE_URL not configured or using placeholders. Running in In-Memory Demo Store mode.');
+      this.logger.warn(
+        '⚠️ SUPABASE_URL not configured or using placeholders. Running in In-Memory Demo Store mode.'
+      );
     }
   }
 

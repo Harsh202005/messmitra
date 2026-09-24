@@ -38,7 +38,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
   onToggleStatus,
   onOpenBulkImport,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive' | 'veg' | 'nonveg'>('all');
 
@@ -51,7 +51,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
   };
 
   const isMemberVeg = (m: Member) => {
-    return (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+    return (m.dietPreference || 'veg') === 'veg';
   };
 
   // 1. Filter by Search Query
@@ -203,18 +203,30 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
         {searchQuery.trim() && (
           <div className="flex items-center justify-between text-xs bg-amber-50 dark:bg-amber-950/40 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-medium">
             <span>
-              🔍 &quot;<strong>{searchQuery}</strong>&quot; शोध परिणामामध्ये{' '}
-              <strong className="font-bold text-brand-600 dark:text-brand-400 font-mono">
-                {filteredMembers.length}
-              </strong>{' '}
-              सभासद सापडले
+              {language === 'en' ? (
+                <>
+                  🔍 Found{' '}
+                  <strong className="font-bold text-brand-600 dark:text-brand-400 font-mono">
+                    {filteredMembers.length}
+                  </strong>{' '}
+                  members for &quot;<strong>{searchQuery}</strong>&quot;
+                </>
+              ) : (
+                <>
+                  🔍 &quot;<strong>{searchQuery}</strong>&quot; शोध परिणामामध्ये{' '}
+                  <strong className="font-bold text-brand-600 dark:text-brand-400 font-mono">
+                    {filteredMembers.length}
+                  </strong>{' '}
+                  सभासद सापडले
+                </>
+              )}
             </span>
             <button
               type="button"
               onClick={() => setSearchQuery('')}
               className="text-[11px] font-bold text-amber-800 dark:text-amber-300 underline underline-offset-2 hover:text-brand-600 cursor-pointer"
             >
-              साफ करा (Clear)
+              {language === 'en' ? 'Clear' : 'साफ करा'}
             </button>
           </div>
         )}
@@ -284,11 +296,15 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800 space-y-3">
           <Utensils className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto" />
           <div>
-            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-              {searchQuery ? `"${searchQuery}" शोध परिणामामध्ये कोणताही सभासद सापडला नाही.` : 'कोणताही सभासद उपलब्ध नाही.'}
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              {language === 'en'
+                ? (searchQuery ? `No members found matching "${searchQuery}".` : 'No members available.')
+                : (searchQuery ? `"${searchQuery}" शोध परिणामामध्ये कोणताही सभासद सापडला नाही.` : 'कोणताही सभासद उपलब्ध नाही.')}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              कृपया नाव, फोन नंबर किंवा ID तपासा किंवा शोध साफ करा.
+              {language === 'en'
+                ? 'Please check name, phone number, or clear your search query.'
+                : 'कृपया नाव, फोन नंबर किंवा ID तपासा किंवा शोध साफ करा.'}
             </p>
           </div>
           {searchQuery && (
@@ -298,7 +314,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>सर्व सभासद दाखवा (Reset)</span>
+              <span>{language === 'en' ? 'Show All Members' : 'सर्व सभासद दाखवा'}</span>
             </button>
           )}
         </div>
@@ -497,7 +513,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
             <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800">
               <h3 className="font-bold text-base flex items-center gap-2">
                 <Utensils className="w-4 h-4 text-brand-500" />
-                <span>सभासद संपूर्ण माहिती (Member Profile)</span>
+                <span>{language === 'en' ? 'Member Profile' : 'सभासद संपूर्ण माहिती'}</span>
               </h3>
               <button
                 type="button"
@@ -527,33 +543,33 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
               {/* Data Rows */}
               <div className="space-y-2 divide-y divide-slate-100 dark:divide-slate-800">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-500 font-medium">आहार प्रकार (Diet):</span>
+                  <span className="text-slate-500 font-medium">{language === 'en' ? 'Diet:' : 'आहार प्रकार:'}</span>
                   <span className="font-bold text-sm">
                     {isMemberVeg(selectedMemberModal)
-                      ? '🟢 शाकाहारी (₹3,000)'
-                      : '🔴 मांसाहारी (₹3,200)'}
+                      ? (language === 'en' ? '🟢 Veg (₹3,000)' : '🟢 शाकाहारी (₹३,०००)')
+                      : (language === 'en' ? '🔴 Non-Veg (₹3,200)' : '🔴 मांसाहारी (₹३,२००)')}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-500 font-medium">जेवण वेळ (Plan):</span>
+                  <span className="text-slate-500 font-medium">{language === 'en' ? 'Meal Plan:' : 'जेवण वेळ:'}</span>
                   <span className="font-bold">{getPlanLabel(selectedMemberModal.planType)}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-500 font-medium">मासिक दर (Monthly Rate):</span>
+                  <span className="text-slate-500 font-medium">{language === 'en' ? 'Monthly Rate:' : 'मासिक दर:'}</span>
                   <span className="font-black text-sm font-mono text-emerald-600 dark:text-emerald-400">
-                    ₹{selectedMemberModal.rate}/महिना
+                    ₹{selectedMemberModal.rate}{language === 'en' ? '/mo' : '/महिना'}
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-500 font-medium">प्रवेश तारीख (Join Date):</span>
+                  <span className="text-slate-500 font-medium">{language === 'en' ? 'Join Date:' : 'प्रवेश तारीख:'}</span>
                   <span className="font-mono">{selectedMemberModal.joinDate}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-slate-500 font-medium">खाते स्थिती (Status):</span>
+                  <span className="text-slate-500 font-medium">{language === 'en' ? 'Account Status:' : 'खाते स्थिती:'}</span>
                   <span
                     className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                       selectedMemberModal.status === 'active'
@@ -561,7 +577,9 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                         : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                     }`}
                   >
-                    {selectedMemberModal.status === 'active' ? 'सक्रिय (Active)' : 'बंद (Inactive)'}
+                    {selectedMemberModal.status === 'active'
+                      ? (language === 'en' ? 'Active' : 'सक्रिय')
+                      : (language === 'en' ? 'Inactive' : 'बंद')}
                   </span>
                 </div>
               </div>
@@ -573,7 +591,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                   className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
                 >
                   <Phone className="w-4 h-4" />
-                  <span>कॉल करा</span>
+                  <span>{language === 'en' ? 'Call' : 'कॉल करा'}</span>
                 </a>
 
                 <a
@@ -586,7 +604,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                   className="min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-sm"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>WhatsApp मेसेज</span>
+                  <span>{language === 'en' ? 'WhatsApp' : 'WhatsApp मेसेज'}</span>
                 </a>
               </div>
 
@@ -601,7 +619,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                   className="w-full min-h-[44px] flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold border border-slate-200 dark:border-slate-700 transition cursor-pointer"
                 >
                   <Edit2 className="w-4 h-4 text-brand-500" />
-                  <span>माहिती संपादित करा (Edit Profile)</span>
+                  <span>{language === 'en' ? 'Edit Profile' : 'माहिती संपादित करा'}</span>
                 </button>
               </div>
             </div>

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '../lib/i18n';
-import { Mess } from '@messmitra/types';
+import { Mess, formatTime12Hour } from '@messmitra/types';
 import {
   X,
   Store,
@@ -29,7 +29,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
   currentMess,
   onSave,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,13 +38,33 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
     name: currentMess?.name || 'श्री बालाजी मेस',
     area: currentMess?.area || 'कर्वे नगर / कोथरूड',
     city: currentMess?.city || 'पुणे',
-    dailyCutoffTime: currentMess?.dailyCutoffTime || '18:00',
+    dailyCutoffTime: currentMess?.dinnerCutoffTime || currentMess?.dailyCutoffTime || '18:00',
     lunchCutoffTime: currentMess?.lunchCutoffTime || '09:00',
-    dinnerCutoffTime: currentMess?.dinnerCutoffTime || '18:00',
+    dinnerCutoffTime: currentMess?.dinnerCutoffTime || currentMess?.dailyCutoffTime || '18:00',
     defaultVegRate: currentMess?.defaultVegRate || 3000,
     defaultNonVegRate: currentMess?.defaultNonVegRate || 3200,
     upiId: currentMess?.upiId || '9822338975@upi',
   });
+
+  // Only re-sync form data when modal transitions from closed to open
+  const prevOpenRef = React.useRef(false);
+  useEffect(() => {
+    if (isOpen && !prevOpenRef.current) {
+      setFormData({
+        name: currentMess?.name || 'श्री बालाजी मेस',
+        area: currentMess?.area || 'कर्वे नगर / कोथरूड',
+        city: currentMess?.city || 'पुणे',
+        dailyCutoffTime: currentMess?.dinnerCutoffTime || currentMess?.dailyCutoffTime || '18:00',
+        lunchCutoffTime: currentMess?.lunchCutoffTime || '09:00',
+        dinnerCutoffTime: currentMess?.dinnerCutoffTime || currentMess?.dailyCutoffTime || '18:00',
+        defaultVegRate: currentMess?.defaultVegRate || 3000,
+        defaultNonVegRate: currentMess?.defaultNonVegRate || 3200,
+        upiId: currentMess?.upiId || '9822338975@upi',
+      });
+      setStep(1);
+    }
+    prevOpenRef.current = isOpen;
+  }, [isOpen, currentMess]);
 
   if (!isOpen) return null;
 
@@ -57,7 +77,10 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onSave(formData);
+      await onSave({
+        ...formData,
+        dinnerCutoffTime: formData.dinnerCutoffTime || formData.dailyCutoffTime,
+      });
       onClose();
     } catch (err) {
       console.error(err);
@@ -65,6 +88,9 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  const formattedLunchCutoff = formatTime12Hour(formData.lunchCutoffTime, '09:00 AM');
+  const formattedDinnerCutoff = formatTime12Hour(formData.dinnerCutoffTime || formData.dailyCutoffTime, '06:00 PM');
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
@@ -88,7 +114,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
 
           <h2 className="text-base sm:text-xl font-black">
             {step === 1 && 'पायरी १: मेसचे नाव व पत्ता'}
-            {step === 2 && 'पायरी २: कटऑफ वेळा (०९:०० AM / ०६:०० PM) व आहार दर'}
+            {step === 2 && `पायरी २: कटऑफ वेळा (${formattedLunchCutoff} / ${formattedDinnerCutoff}) व आहार दर`}
             {step === 3 && 'पायरी ३: UPI QR कोड व संपर्क तपशील'}
           </h2>
 
@@ -171,7 +197,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    दुपार कटऑफ (Lunch - 09:00 AM) *
+                    {language === 'en' ? `Lunch Cutoff (${formattedLunchCutoff}) *` : `दुपार कटऑफ (${formattedLunchCutoff}) *`}
                   </label>
                   <div className="relative">
                     <Clock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -184,20 +210,22 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     />
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1">
-                    सकाळी ०९:०० वाजेपर्यंत दुपारची सुट्टी
+                    {language === 'en'
+                      ? `Meal cancellation allowed until ${formattedLunchCutoff}`
+                      : `${formattedLunchCutoff} वाजेपर्यंत दुपारची सुट्टी नोंदवता येईल`}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    रात्र कटऑफ (Dinner - 06:00 PM) *
+                    {language === 'en' ? `Dinner Cutoff (${formattedDinnerCutoff}) *` : `रात्र कटऑफ (${formattedDinnerCutoff}) *`}
                   </label>
                   <div className="relative">
                     <Clock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                     <input
                       type="time"
                       required
-                      value={formData.dailyCutoffTime}
+                      value={formData.dinnerCutoffTime || formData.dailyCutoffTime}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -209,7 +237,9 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                     />
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1">
-                    संध्याकाळी ०६:०० वाजेपर्यंत रात्रीची सुट्टी
+                    {language === 'en'
+                      ? `Meal cancellation allowed until ${formattedDinnerCutoff}`
+                      : `${formattedDinnerCutoff} वाजेपर्यंत रात्रीची सुट्टी नोंदवता येईल`}
                   </p>
                 </div>
               </div>
@@ -217,7 +247,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    🟢 शाकाहारी दर (Veg - 56 जेवण) *
+                    {language === 'en' ? '🟢 Pure Veg Rate (56 Meals) *' : '🟢 शाकाहारी दर (५६ जेवण) *'}
                   </label>
                   <input
                     type="number"
@@ -235,7 +265,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    🔴 मांसाहारी दर (Non-Veg - 56 जेवण) *
+                    {language === 'en' ? '🔴 Non-Veg Rate (56 Meals) *' : '🔴 मांसाहारी दर (५६ जेवण) *'}
                   </label>
                   <input
                     type="number"
@@ -259,7 +289,7 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
             <div className="space-y-4 animate-fadeIn">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  अधिकृत UPI ID (शंकर गिरी) *
+                  {language === 'en' ? 'Official Mess UPI ID *' : 'अधिकृत UPI ID *'}
                 </label>
                 <div className="relative">
                   <QrCode className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />

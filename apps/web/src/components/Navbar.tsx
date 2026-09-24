@@ -28,13 +28,14 @@ import {
   Sparkles,
   X,
   LayoutDashboard,
+  LayoutGrid,
   Tag,
   Ticket,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
 import { NotificationBell } from './NotificationBell';
 
-export type ActiveTab = 'members' | 'leaves' | 'billing' | 'expenses' | 'pnl' | 'plans' | 'tokens';
+export type ActiveTab = 'members' | 'leaves' | 'billing' | 'expenses' | 'pnl' | 'plans' | 'tokens' | 'staff' | 'pos';
 export type UserViewRole = 'owner' | 'member' | 'staff';
 
 interface NavbarProps {
@@ -105,10 +106,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Desktop Navigation Tabs (Owner Mode only) */}
             {viewRole === 'owner' && (
-              <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs font-semibold">
+              <nav className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/60 text-xs font-semibold overflow-x-auto max-w-[650px] xl:max-w-none scrollbar-none">
                 <button
                   onClick={() => onSelectTab('members')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'members'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
@@ -123,7 +124,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   onClick={() => onSelectTab('leaves')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'leaves'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
@@ -140,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   onClick={() => onSelectTab('billing')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'billing'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
@@ -151,8 +152,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
 
                 <button
+                  onClick={() => onSelectTab('pos')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
+                    activeTab === 'pos'
+                      ? 'bg-orange-600 text-white shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  <Utensils className="w-3.5 h-3.5 text-orange-500" />
+                  <span>{language === 'en' ? 'Walk-in POS' : 'सुटे जेवण POS'}</span>
+                </button>
+
+                <button
                   onClick={() => onSelectTab('expenses')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'expenses'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
@@ -163,8 +176,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
 
                 <button
+                  onClick={() => onSelectTab('staff')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
+                    activeTab === 'staff'
+                      ? 'bg-teal-600 text-white shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  <ChefHat className="w-3.5 h-3.5 text-teal-400" />
+                  <span>{language === 'en' ? 'Staff Payroll' : 'कर्मचारी पगार'}</span>
+                </button>
+
+                <button
                   onClick={() => onSelectTab('pnl')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'pnl'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
@@ -176,26 +201,26 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   onClick={() => onSelectTab('plans')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'plans'
-                      ? 'bg-brand-600 text-white shadow-sm font-bold'
+                      ? 'bg-purple-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                   }`}
                 >
                   <Tag className="w-3.5 h-3.5" />
-                  <span>प्लॅन्स</span>
+                  <span>{language === 'en' ? 'Plans' : 'प्लॅन्स'}</span>
                 </button>
 
                 <button
                   onClick={() => onSelectTab('tokens')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition cursor-pointer shrink-0 ${
                     activeTab === 'tokens'
                       ? 'bg-brand-600 text-white shadow-sm font-bold'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/50'
                   }`}
                 >
                   <Ticket className="w-3.5 h-3.5 text-amber-400" />
-                  <span>टोकन्स</span>
+                  <span>{language === 'en' ? 'Tokens' : 'टोकन्स'}</span>
                 </button>
               </nav>
             )}
@@ -268,7 +293,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       : 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-500/20 dark:text-blue-300'
                   }`}
                 >
-                  {role === 'owner' ? 'मालक' : role === 'staff' ? 'आचारी' : 'सभासद'}
+                  {role === 'owner'
+                    ? (language === 'en' ? 'Owner' : 'मालक')
+                    : role === 'staff'
+                    ? (language === 'en' ? 'Cook' : 'आचारी')
+                    : (language === 'en' ? 'Member' : 'सभासद')}
                 </span>
               </button>
 
@@ -276,7 +305,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="md:hidden w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 cursor-pointer"
-                title="अधिक पर्याय (More Menu)"
+                title={language === 'en' ? 'More Options' : 'अधिक पर्याय'}
               >
                 <MoreVertical className="w-4 h-4" />
               </button>
@@ -300,6 +329,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* MOBILE BOTTOM NAVIGATION BAR (Thumb-friendly & fixed at screen bottom on phones) */}
       {viewRole === 'owner' && (
         <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-around px-1 py-1.5 safe-area-inset-bottom">
+          {/* 1. Members */}
           <button
             onClick={() => onSelectTab('members')}
             className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer relative ${
@@ -309,29 +339,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Users className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] leading-tight">सभासद</span>
+            <span className="text-[10px] leading-tight">{t('members')}</span>
             {pendingRegistrationsCount > 0 && (
               <span className="absolute top-1 right-3 w-2 h-2 rounded-full bg-amber-500 ring-2 ring-white" />
             )}
           </button>
 
-          <button
-            onClick={() => onSelectTab('leaves')}
-            className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer relative ${
-              activeTab === 'leaves'
-                ? 'text-brand-600 dark:text-brand-400 font-extrabold bg-brand-50/60 dark:bg-brand-950/40'
-                : 'text-slate-500 dark:text-slate-400 font-medium'
-            }`}
-          >
-            <CalendarDays className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] leading-tight">सुट्ट्या</span>
-            {pendingLeavesCount > 0 && (
-              <span className="absolute top-1 right-2 px-1 py-0.2 rounded-full bg-amber-500 text-white text-[8px] font-bold">
-                {pendingLeavesCount}
-              </span>
-            )}
-          </button>
-
+          {/* 2. Billing */}
           <button
             onClick={() => onSelectTab('billing')}
             className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer ${
@@ -341,9 +355,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <CreditCard className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] leading-tight">बिलिंग</span>
+            <span className="text-[10px] leading-tight">{t('billing')}</span>
           </button>
 
+          {/* 3. Expenses */}
           <button
             onClick={() => onSelectTab('expenses')}
             className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer ${
@@ -353,19 +368,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <TrendingDown className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] leading-tight">खर्च</span>
+            <span className="text-[10px] leading-tight">{t('expenses')}</span>
           </button>
 
+          {/* 4. Staff Payroll */}
           <button
-            onClick={() => onSelectTab('pnl')}
+            onClick={() => onSelectTab('staff')}
             className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer ${
-              activeTab === 'pnl'
+              activeTab === 'staff'
+                ? 'text-teal-600 dark:text-teal-400 font-extrabold bg-teal-50/60 dark:bg-teal-950/40'
+                : 'text-slate-500 dark:text-slate-400 font-medium'
+            }`}
+          >
+            <ChefHat className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] leading-tight">{t('staffTab')}</span>
+          </button>
+
+          {/* 5. More / All Modules Drawer */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={`flex flex-col items-center justify-center flex-1 min-h-[48px] py-1 rounded-xl transition cursor-pointer relative ${
+              isMobileMenuOpen || !['members', 'billing', 'expenses', 'staff'].includes(activeTab)
                 ? 'text-brand-600 dark:text-brand-400 font-extrabold bg-brand-50/60 dark:bg-brand-950/40'
                 : 'text-slate-500 dark:text-slate-400 font-medium'
             }`}
           >
-            <PieChart className="w-5 h-5 mb-0.5" />
-            <span className="text-[10px] leading-tight">नफा-तोटा</span>
+            <LayoutGrid className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] leading-tight">{t('moreTab')}</span>
+            {!['members', 'billing', 'expenses', 'staff'].includes(activeTab) && (
+              <span className="absolute top-1.5 right-3 w-2 h-2 rounded-full bg-brand-500 ring-2 ring-white animate-pulse" />
+            )}
           </button>
         </nav>
       )}
@@ -411,12 +443,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
+                  onSelectTab('pnl');
+                }}
+                className="p-3 rounded-2xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-brand-900 dark:text-brand-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <PieChart className="w-5 h-5 text-brand-600" />
+                <span>{language === 'en' ? 'Profit & Loss' : 'नफा-तोटा अहवाल'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onSelectTab('leaves');
+                }}
+                className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <CalendarDays className="w-5 h-5 text-amber-600" />
+                <span>{language === 'en' ? 'Leaves' : 'सुट्ट्या व्यवस्थापन'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onSelectTab('pos');
+                }}
+                className="p-3 rounded-2xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 text-orange-900 dark:text-orange-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <Utensils className="w-5 h-5 text-orange-600" />
+                <span>{language === 'en' ? 'Walk-in POS' : 'सुटे जेवण POS'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
                   onSelectTab('plans');
                 }}
                 className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
               >
                 <Tag className="w-5 h-5 text-purple-600" />
-                <span>दर व योजना व्यवस्थापक</span>
+                <span>{language === 'en' ? 'Price Plans' : 'मेस दर व प्लॅन्स'}</span>
               </button>
 
               <button
@@ -427,7 +492,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
               >
                 <Ticket className="w-5 h-5 text-emerald-600" />
-                <span>जेवण टोकन सिस्टीम</span>
+                <span>{language === 'en' ? 'Meal Tokens' : 'जेवण टोकन्स'}</span>
               </button>
 
               {onOpenQrPoster && (
@@ -439,7 +504,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
                 >
                   <QrCode className="w-5 h-5 text-amber-600" />
-                  <span>नोंदणी QR पोस्टर</span>
+                  <span>{language === 'en' ? 'QR Notice Board' : 'नोंदणी QR पोस्टर'}</span>
                 </button>
               )}
 
@@ -452,7 +517,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
                 >
                   <MessageSquare className="w-5 h-5 text-emerald-600" />
-                  <span>WhatsApp ब्रॉडकास्ट</span>
+                  <span>{language === 'en' ? 'WhatsApp Broadcast' : 'WhatsApp ब्रॉडकास्ट'}</span>
                 </button>
               )}
 
@@ -465,7 +530,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
                 >
                   <FileSpreadsheet className="w-5 h-5 text-blue-600" />
-                  <span>Excel बल्क नोंदणी</span>
+                  <span>{language === 'en' ? 'Excel Import' : 'Excel बल्क नोंदणी'}</span>
                 </button>
               )}
 

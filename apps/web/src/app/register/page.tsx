@@ -23,14 +23,16 @@ import {
   Tag,
 } from 'lucide-react';
 import { getDynamicRateForPlan, getStoredPlans } from '../../lib/pricePlanService';
+import { useI18n } from '../../lib/i18n';
 
 export default function RegisterPage() {
+  const { language } = useI18n();
   const [registerRole, setRegisterRole] = useState<'member' | 'staff'>('member');
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regDiet, setRegDiet] = useState<DietPreference>('veg');
   const [regPlan, setRegPlan] = useState<PlanType>('both');
-  const [regStaffRole, setRegStaffRole] = useState('मुख्य आचारी (Head Maharaj)');
+  const [regStaffRole, setRegStaffRole] = useState('मुख्य आचारी');
   const [regSalary, setRegSalary] = useState(15000);
   const [regPassword, setRegPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -134,7 +136,7 @@ export default function RegisterPage() {
                 href="/"
                 className="w-full py-3 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2"
               >
-                <span>मुख्य पृष्ठावर जा (Go to Home)</span>
+                <span>{language === 'en' ? 'Go to Home' : 'मुख्य पृष्ठावर जा'}</span>
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
@@ -151,7 +153,7 @@ export default function RegisterPage() {
             {/* Role Switcher */}
             <div>
               <label className="block font-bold text-slate-300 mb-1.5">
-                नोंदणी प्रकार निवडा (I am joining as):
+                {language === 'en' ? 'Select Joining Role:' : 'नोंदणी प्रकार निवडा:'}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -164,7 +166,7 @@ export default function RegisterPage() {
                   }`}
                 >
                   <UserPlus className="w-5 h-5" />
-                  <span>मेस सभासद (Member)</span>
+                  <span>{language === 'en' ? 'Mess Member' : 'मेस सभासद'}</span>
                 </button>
 
                 <button
@@ -177,7 +179,7 @@ export default function RegisterPage() {
                   }`}
                 >
                   <ChefHat className="w-5 h-5" />
-                  <span>मेस कर्मचारी (Staff)</span>
+                  <span>{language === 'en' ? 'Mess Staff' : 'मेस कर्मचारी'}</span>
                 </button>
               </div>
             </div>
@@ -185,7 +187,7 @@ export default function RegisterPage() {
             {/* Name */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                पूर्ण नाव (Full Name) *
+                {language === 'en' ? 'Full Name *' : 'पूर्ण नाव *'}
               </label>
               <div className="relative">
                 <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -203,7 +205,7 @@ export default function RegisterPage() {
             {/* Phone */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                मोबाईल नंबर (WhatsApp Number) *
+                {language === 'en' ? 'WhatsApp Mobile Number *' : 'मोबाईल नंबर *'}
               </label>
               <div className="relative">
                 <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -225,7 +227,7 @@ export default function RegisterPage() {
                 {/* Diet */}
                 <div>
                   <label className="block font-bold text-slate-300 mb-1">
-                    आहार प्रकार (Diet Preference) *
+                    {language === 'en' ? 'Diet Preference *' : 'आहार प्रकार *'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -272,7 +274,7 @@ export default function RegisterPage() {
                 {/* Plan (1-meal vs 2-meals) */}
                 <div>
                   <label className="block font-bold text-slate-300 mb-1">
-                    जेवणाची वेळ (Meal Plan) *
+                    {language === 'en' ? 'Meal Plan *' : 'जेवणाची वेळ *'}
                   </label>
                   <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold">
                     <button
@@ -284,7 +286,7 @@ export default function RegisterPage() {
                           : 'bg-slate-800 border-slate-700 text-slate-400'
                       }`}
                     >
-                      <span>२-वेळ दोन्ही (Both)</span>
+                      <span>{language === 'en' ? '2-Meals' : '२-वेळ दोन्ही'}</span>
                       <span className="text-[10px] font-mono text-amber-400">
                         ₹{regDiet === 'veg' ? veg2Rate : nonveg2Rate}
                       </span>
@@ -299,7 +301,7 @@ export default function RegisterPage() {
                           : 'bg-slate-800 border-slate-700 text-slate-400'
                       }`}
                     >
-                      <span>१-वेळ दुपार (Lunch)</span>
+                      <span>{language === 'en' ? '1-Meal Lunch' : '१-वेळ दुपार'}</span>
                       <span className="text-[10px] font-mono text-amber-400">
                         ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
                       </span>
@@ -314,7 +316,7 @@ export default function RegisterPage() {
                           : 'bg-slate-800 border-slate-700 text-slate-400'
                       }`}
                     >
-                      <span>१-वेळ रात्र (Dinner)</span>
+                      <span>{language === 'en' ? '1-Meal Dinner' : '१-वेळ रात्र'}</span>
                       <span className="text-[10px] font-mono text-amber-400">
                         ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
                       </span>
@@ -324,9 +326,9 @@ export default function RegisterPage() {
 
                 {/* Estimated Rate display */}
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
-                  <span className="text-slate-400 font-medium">मासिक शुल्क (Monthly Fee):</span>
+                  <span className="text-slate-400 font-medium">{language === 'en' ? 'Monthly Fee:' : 'मासिक शुल्क:'}</span>
                   <span className="text-sm font-black text-emerald-400 font-mono">
-                    ₹{calculatedRate.toLocaleString('en-IN')}/महिना
+                    ₹{calculatedRate.toLocaleString('en-IN')}{language === 'en' ? '/mo' : '/महिना'}
                   </span>
                 </div>
               </div>
@@ -337,23 +339,23 @@ export default function RegisterPage() {
               <div className="space-y-3 p-3.5 bg-slate-900/60 rounded-2xl border border-slate-800">
                 <div>
                   <label className="block font-bold text-slate-300 mb-1">
-                    पद / काम (Role) *
+                    {language === 'en' ? 'Role / Designation *' : 'पद / काम *'}
                   </label>
                   <select
                     value={regStaffRole}
                     onChange={(e) => setRegStaffRole(e.target.value)}
                     className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:outline-none"
                   >
-                    <option value="मुख्य आचारी (Head Maharaj)">मुख्य आचारी (Head Maharaj)</option>
-                    <option value="मदतनीस (Kitchen Helper)">मदतनीस (Kitchen Helper)</option>
-                    <option value="पोळी मेकर (Roti Maker)">पोळी मेकर (Roti Maker)</option>
-                    <option value="स्वच्छता कर्मचारी (Cleaner)">स्वच्छता कर्मचारी (Cleaner)</option>
+                    <option value="मुख्य आचारी">{language === 'en' ? 'Head Cook' : 'मुख्य आचारी'}</option>
+                    <option value="मदतनीस">{language === 'en' ? 'Kitchen Helper' : 'मदतनीस'}</option>
+                    <option value="पोळी मेकर">{language === 'en' ? 'Roti Maker' : 'पोळी मेकर'}</option>
+                    <option value="स्वच्छता कर्मचारी">{language === 'en' ? 'Cleaner' : 'स्वच्छता कर्मचारी'}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-bold text-slate-300 mb-1">
-                    अपेक्षित मासिक मानधन (Expected Salary in ₹)
+                    {language === 'en' ? 'Expected Monthly Salary (₹)' : 'अपेक्षित मासिक मानधन (₹)'}
                   </label>
                   <input
                     type="number"
@@ -370,7 +372,7 @@ export default function RegisterPage() {
             {/* Password */}
             <div>
               <label className="block font-bold text-slate-300 mb-1">
-                पासवर्ड तयार करा (Set Password for App Login) *
+                {language === 'en' ? 'Set Password for App Login *' : 'पासवर्ड तयार करा *'}
               </label>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -392,7 +394,7 @@ export default function RegisterPage() {
                 disabled={isSubmitting}
                 className="w-full py-3.5 bg-gradient-to-r from-brand-600 via-amber-600 to-brand-700 hover:from-brand-500 text-white font-black text-sm rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                <span>{isSubmitting ? 'नोंदणी होत आहे...' : 'नोंदणी अर्ज सादर करा (Submit Registration)'}</span>
+                <span>{isSubmitting ? (language === 'en' ? 'Submitting...' : 'नोंदणी होत आहे...') : (language === 'en' ? 'Submit Registration' : 'नोंदणी अर्ज सादर करा')}</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -405,7 +407,7 @@ export default function RegisterPage() {
             className="text-xs text-slate-400 hover:text-white transition inline-flex items-center gap-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>परत जा (Back to Home)</span>
+            <span>{language === 'en' ? 'Back to Home' : 'परत जा'}</span>
           </Link>
         </div>
       </div>

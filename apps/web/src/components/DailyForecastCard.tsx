@@ -2,17 +2,27 @@
 
 import React from 'react';
 import { useI18n } from '../lib/i18n';
-import { DailyCookForecast, isNonVegDay, getWeeklyDayScheduleMarathi } from '@messmitra/types';
+import { DailyCookForecast, isNonVegDay, getWeeklyDayScheduleMarathi, Mess, formatTime12Hour } from '@messmitra/types';
 import { ChefHat, Users, UserX, Sun, Moon, CalendarDays, Sparkles, UtensilsCrossed } from 'lucide-react';
 
 interface DailyForecastCardProps {
   forecast: DailyCookForecast;
+  mess?: Mess | null;
   cutoffTime?: string;
+  lunchCutoffTime?: string;
+  dinnerCutoffTime?: string;
   onDateChange?: (date: string) => void;
 }
 
-export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, cutoffTime = '18:00', onDateChange }) => {
-  const { t } = useI18n();
+export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
+  forecast,
+  mess,
+  cutoffTime = '18:00',
+  lunchCutoffTime,
+  dinnerCutoffTime,
+  onDateChange,
+}) => {
+  const { t, language } = useI18n();
   const todayStr = new Date().toISOString().split('T')[0];
   const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
@@ -21,6 +31,12 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
 
   const scheduleInfo = getWeeklyDayScheduleMarathi(forecast.date);
   const isNonVegToday = scheduleInfo.isNonVegDay;
+
+  const effectiveLunchCutoff = lunchCutoffTime || mess?.lunchCutoffTime || '09:00';
+  const effectiveDinnerCutoff = dinnerCutoffTime || mess?.dinnerCutoffTime || mess?.dailyCutoffTime || cutoffTime || '18:00';
+
+  const formattedLunchCutoff = formatTime12Hour(effectiveLunchCutoff, '09:00 AM');
+  const formattedDinnerCutoff = formatTime12Hour(effectiveDinnerCutoff, '06:00 PM');
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-6 shadow-md border border-slate-200 dark:border-slate-800">
@@ -51,38 +67,39 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
               </span>
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              वार: <strong className="text-slate-800 dark:text-slate-200">{scheduleInfo.dayName}</strong> • दुपार कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">09:00 AM</strong> • रात्र कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">06:00 PM</strong>
+              वार: <strong className="text-slate-800 dark:text-slate-200">{scheduleInfo.dayName}</strong> • दुपार कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">{formattedLunchCutoff}</strong> • रात्र कटऑफ: <strong className="text-amber-700 dark:text-amber-300 font-bold">{formattedDinnerCutoff}</strong>
             </p>
           </div>
         </div>
 
         {/* Date Selector Quick Chips */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           {onDateChange && (
             <>
               <button
                 type="button"
                 onClick={() => onDateChange(todayStr)}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                className={`flex-1 sm:flex-none justify-center px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                   isToday
                     ? 'bg-brand-600 text-white shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700'
                 }`}
               >
-                आज (Today)
+                {language === 'en' ? 'Today' : 'आज'}
               </button>
               <button
                 type="button"
                 onClick={() => onDateChange(tomorrowStr)}
-                className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                className={`flex-1 sm:flex-none justify-center px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
                   isTomorrow
                     ? 'bg-brand-600 text-white shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700'
                 }`}
               >
-                उद्या (Tomorrow)
+                {language === 'en' ? 'Tomorrow' : 'उद्या'}
               </button>
-              <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 min-h-[36px] rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              {/* Custom Date Picker - Hidden on Mobile */}
+              <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 min-h-[38px] rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
                 <CalendarDays className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
                 <input
                   type="date"
@@ -135,7 +152,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
             <ChefHat className="w-4 h-4 sm:w-5 sm:h-5 text-brand-600 dark:text-brand-400 animate-pulse" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-brand-600 dark:text-brand-400 tracking-tight">
-            {forecast.cookForCount} <span className="text-xs sm:text-sm font-normal text-slate-600 dark:text-slate-300">जण (Heads)</span>
+            {forecast.cookForCount} <span className="text-xs sm:text-sm font-normal text-slate-600 dark:text-slate-300">{language === 'en' ? 'members' : 'जण'}</span>
           </div>
           <span className="text-[10px] sm:text-[11px] text-brand-800/80 dark:text-brand-200/80 font-medium">महाराजांसाठी अचूक संख्या</span>
         </div>
@@ -162,12 +179,12 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
         </div>
 
         {/* 🟢 Veg Count */}
-        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 font-semibold">
+        <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/50 dark:to-slate-900 px-3 py-2 rounded-xl border border-emerald-300 dark:border-emerald-500/50 text-emerald-800 dark:text-emerald-300 font-semibold shadow-sm">
           <div className="truncate">
-            <span className="text-emerald-700 dark:text-emerald-400 text-[10px] block leading-tight">
+            <span className="text-emerald-700 dark:text-emerald-400 text-[10px] block leading-tight font-bold">
               🟢 शाकाहारी {isNonVegToday ? '(व्हेज)' : '(सर्व)'}
             </span>
-            <strong className="text-slate-900 dark:text-white font-bold text-sm">
+            <strong className="text-emerald-700 dark:text-emerald-300 font-black text-sm">
               {isNonVegToday ? (forecast.vegCount ?? forecast.cookForCount) : forecast.cookForCount}
             </strong>
           </div>
@@ -175,18 +192,18 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({ forecast, 
 
         {/* 🔴 Non-Veg Count (Only on Wed / Fri / Sun) */}
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-semibold ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-semibold transition-all ${
             isNonVegToday
-              ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-500/40 text-rose-800 dark:text-rose-300'
-              : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-80'
+              ? 'bg-gradient-to-r from-rose-100 to-red-100 dark:from-rose-950 dark:to-red-900/60 border-2 border-red-500 text-red-800 dark:text-red-200 shadow-md ring-1 ring-red-400/30'
+              : 'bg-slate-100 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 opacity-70'
           }`}
         >
           <div className="truncate">
-            <span className="text-[10px] block leading-tight">
-              🔴 मांसाहारी {isNonVegToday ? '(बुध/शुक्र/रवि)' : '(आज नाही)'}
+            <span className={`text-[10px] block leading-tight font-bold ${isNonVegToday ? 'text-red-700 dark:text-red-300' : 'text-slate-400'}`}>
+              🍗 मांसाहारी {isNonVegToday ? '(फक्त रात्री)' : '(आज नाही)'}
             </span>
-            <strong className="text-sm font-bold">
-              {isNonVegToday ? (forecast.nonVegCount ?? 0) : '0 (आज शाकाहारी)'}
+            <strong className={`text-sm font-black ${isNonVegToday ? 'text-red-700 dark:text-red-300' : 'text-slate-500'}`}>
+              {isNonVegToday ? `${forecast.nonVegCount ?? 0} ताटे` : '0 (शाकाहारी)'}
             </strong>
           </div>
         </div>

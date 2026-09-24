@@ -28,6 +28,7 @@ import {
   getStoredPlans,
   saveStoredPlans,
 } from '../lib/pricePlanService';
+import { useI18n } from '../lib/i18n';
 
 interface PriceAndPlanManagerProps {
   members: Member[];
@@ -42,6 +43,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   onOpenTokenCounter,
   onSelectPlanForMember,
 }) => {
+  const { language } = useI18n();
   const [plans, setPlans] = useState<MessPricePlan[]>(DEFAULT_PRICE_PLANS);
   const [activeFilter, setActiveFilter] = useState<'all' | 'monthly' | 'token_bundle' | 'concession'>('all');
   const [editingPlan, setEditingPlan] = useState<MessPricePlan | null>(null);
@@ -116,7 +118,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               ? [{ label: `${formTokenCount} Meal Tokens`, type: 'token' as const }]
               : []),
             ...(formCategory === 'concession'
-              ? [{ label: 'Female Rate', type: 'female' as const }]
+              ? [{ label: 'Student Concession', type: 'concession' as const }]
               : []),
           ],
         };
@@ -217,11 +219,13 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               <Tag className="w-5 h-5" />
             </div>
             <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              दर व योजना व्यवस्थापक (Price & Plan Manager)
+              {language === 'en' ? 'Price & Plan Manager' : 'दर व योजना व्यवस्थापक'}
             </h2>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 pl-11">
-            मासिक जेवण दर • टोकन कूपन बंडल्स • विद्यार्थिनी सवलत • आजचे प्रत्यक्ष सदस्य संख्या
+            {language === 'en'
+              ? 'Monthly meal plans • Token coupon bundles • Student discounts • Active subscribers count'
+              : 'मासिक जेवण दर • टोकन कूपन बंडल्स • विद्यार्थिनी सवलत • आजचे प्रत्यक्ष सदस्य संख्या'}
           </p>
         </div>
 
@@ -232,7 +236,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               className="px-4 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
             >
               <Ticket className="w-4 h-4" />
-              <span>🎫 जेवण टोकन काउंटर (Token POS)</span>
+              <span>{language === 'en' ? '🎫 Meal Token POS' : '🎫 जेवण टोकन काउंटर'}</span>
             </button>
           )}
 
@@ -251,7 +255,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>+ नवीन योजना जोडा (Add Plan)</span>
+            <span>{language === 'en' ? '+ Add Plan' : '+ नवीन योजना जोडा'}</span>
           </button>
         </div>
       </div>
@@ -260,10 +264,10 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
           {[
-            { id: 'all', label: `सर्व योजना (${plans.length})` },
-            { id: 'monthly', label: `मासिक प्लॅन्स (${plans.filter((p) => p.planCategory === 'monthly').length})` },
-            { id: 'token_bundle', label: `टोकन बंडल्स (${plans.filter((p) => p.planCategory === 'token_bundle').length})` },
-            { id: 'concession', label: `सवलत योजना (${plans.filter((p) => p.planCategory === 'concession').length})` },
+            { id: 'all', label: language === 'en' ? `All Plans (${plans.length})` : `सर्व योजना (${plans.length})` },
+            { id: 'monthly', label: language === 'en' ? `Monthly Plans (${plans.filter((p) => p.planCategory === 'monthly').length})` : `मासिक प्लॅन्स (${plans.filter((p) => p.planCategory === 'monthly').length})` },
+            { id: 'token_bundle', label: language === 'en' ? `Token Bundles (${plans.filter((p) => p.planCategory === 'token_bundle').length})` : `टोकन बंडल्स (${plans.filter((p) => p.planCategory === 'token_bundle').length})` },
+            { id: 'concession', label: language === 'en' ? `Concessions (${plans.filter((p) => p.planCategory === 'concession').length})` : `सवलत योजना (${plans.filter((p) => p.planCategory === 'concession').length})` },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -283,7 +287,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="प्लॅन किंवा दर शोधा..."
+            placeholder={language === 'en' ? 'Search plan or rate...' : 'प्लॅन किंवा दर शोधा...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
@@ -373,7 +377,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800">
                 <div className="bg-[#f7f5f0] dark:bg-slate-800/90 rounded-xl p-2.5 flex items-center justify-between text-xs font-medium">
                   <div className="text-slate-700 dark:text-slate-300">
-                    <span>Active Subscribers: </span>
+                    <span>{language === 'en' ? 'Active Subscribers: ' : 'सक्रिय सभासद: '}</span>
                     <strong className="font-bold text-slate-900 dark:text-white font-mono">
                       {stats.count}
                     </strong>
@@ -385,11 +389,11 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                       onClick={() => setIsGrandfatheredInfoOpen(true)}
                       className="text-purple-700 dark:text-purple-300 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
                     >
-                      <span>★ {stats.grandfathered} Grandfathered</span>
+                      <span>★ {stats.grandfathered} {language === 'en' ? 'Grandfathered' : 'जुन्या दरावर'}</span>
                     </button>
                   ) : (
                     <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                      All on current rate
+                      {language === 'en' ? 'All on current rate' : 'सर्व नवीन दरावर'}
                     </span>
                   )}
                 </div>
@@ -409,7 +413,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   ✎
                 </div>
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  योजना व दर बदला (Edit Plan)
+                  {language === 'en' ? 'Edit Plan & Rate' : 'योजना व दर बदला'}
                 </h3>
               </div>
               <button
@@ -423,7 +427,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  प्लॅनचे नाव (English) *
+                  {language === 'en' ? 'Plan Name (English) *' : 'प्लॅनचे नाव *'}
                 </label>
                 <input
                   type="text"
@@ -436,7 +440,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मराठी नाव (Marathi Title)
+                  {language === 'en' ? 'Marathi Title' : 'मराठी नाव'}
                 </label>
                 <input
                   type="text"
@@ -449,21 +453,21 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    वरचा बॅज (Badge Text) *
+                    {language === 'en' ? 'Badge Text *' : 'वरचा बॅज *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={formBadge}
                     onChange={(e) => setFormBadge(e.target.value)}
-                    placeholder="उदा. 1 MEAL/DAY, TOKEN BUNDLE"
+                    placeholder={language === 'en' ? 'e.g. 1 MEAL/DAY, TOKEN BUNDLE' : 'उदा. 1 MEAL/DAY, TOKEN BUNDLE'}
                     className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    दर (Price in ₹) *
+                    {language === 'en' ? 'Price (₹) *' : 'दर (₹) *'}
                   </label>
                   <input
                     type="number"
@@ -479,21 +483,21 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  दर युनिट वर्णन (Price Unit Display) *
+                  {language === 'en' ? 'Price Unit Display *' : 'दर युनिट वर्णन *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={formPriceUnit}
                   onChange={(e) => setFormPriceUnit(e.target.value)}
-                  placeholder="उदा. / month (~₹80/meal) किंवा / 30 tokens (45d)"
+                  placeholder={language === 'en' ? 'e.g. / month (~₹80/meal) or / 30 tokens' : 'उदा. / month (~₹80/meal) किंवा / 30 tokens'}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  मेन्यू समाविष्ट माहिती (Description / Inclusions) *
+                  {language === 'en' ? 'Menu Inclusions / Description *' : 'मेन्यू समाविष्ट माहिती *'}
                 </label>
                 <textarea
                   rows={3}
@@ -510,14 +514,14 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   onClick={() => setEditingPlan(null)}
                   className="flex-1 min-h-[44px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
                 >
-                  रद्द करा
+                  {language === 'en' ? 'Cancel' : 'रद्द करा'}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 min-h-[44px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
-                  <span>बदल सेव्ह करा</span>
+                  <span>{language === 'en' ? 'Save Changes' : 'बदल सेव्ह करा'}</span>
                 </button>
               </div>
             </form>
@@ -533,7 +537,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               <div className="flex items-center gap-2">
                 <PlusCircle className="w-5 h-5 text-brand-500" />
                 <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  नवीन मेस योजना जोडा (Add New Plan)
+                  {language === 'en' ? 'Add New Plan' : 'नवीन मेस योजना जोडा'}
                 </h3>
               </div>
               <button
@@ -547,27 +551,27 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             <form onSubmit={handleCreatePlan} className="p-6 space-y-4 text-xs overflow-y-auto">
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  प्लॅन प्रकार (Category) *
+                  {language === 'en' ? 'Plan Category *' : 'प्लॅन प्रकार *'}
                 </label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as any)}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="monthly">नियमित मासिक प्लॅन (Monthly Regular)</option>
-                  <option value="token_bundle">प्रीपेड टोकन बंडल (Prepaid Token Pack)</option>
-                  <option value="concession">विद्यार्थी सवलत योजना (Student Concession)</option>
+                  <option value="monthly">{language === 'en' ? 'Regular Monthly Plan' : 'नियमित मासिक प्लॅन'}</option>
+                  <option value="token_bundle">{language === 'en' ? 'Prepaid Token Pack' : 'प्रीपेड टोकन बंडल'}</option>
+                  <option value="concession">{language === 'en' ? 'Student Concession Plan' : 'विद्यार्थी सवलत योजना'}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  योजनेचे नाव (Plan Name) *
+                  {language === 'en' ? 'Plan Name *' : 'योजनेचे नाव *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="उदा. 15-Day Exam Pass, Sunday Special Pass"
+                  placeholder={language === 'en' ? 'e.g. 15-Day Exam Pass, Sunday Special Pass' : 'उदा. 15-Day Exam Pass, Sunday Special Pass'}
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
@@ -577,12 +581,12 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    बॅज टॅग (Badge) *
+                    {language === 'en' ? 'Badge Tag *' : 'बॅज टॅग *'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="उदा. EXAM PASS, TOKEN BUNDLE"
+                    placeholder={language === 'en' ? 'e.g. EXAM PASS, TOKEN BUNDLE' : 'उदा. EXAM PASS, TOKEN BUNDLE'}
                     value={formBadge}
                     onChange={(e) => setFormBadge(e.target.value)}
                     className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
@@ -591,7 +595,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    रक्कम (Price in ₹) *
+                    {language === 'en' ? 'Price (₹) *' : 'रक्कम (₹) *'}
                   </label>
                   <input
                     type="number"
@@ -607,12 +611,12 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  वर्णन व समाविष्ट बाबी (Description) *
+                  {language === 'en' ? 'Description & Inclusions *' : 'वर्णन व समाविष्ट बाबी *'}
                 </label>
                 <textarea
                   rows={2}
                   required
-                  placeholder="उदा. १५ दिवस दोन्ही वेळचे अमर्यादित जेवण, रविवारी विशेष गोड जेवण..."
+                  placeholder={language === 'en' ? 'e.g. 15 days unlimited lunch and dinner, special Sunday sweet...' : 'उदा. १५ दिवस दोन्ही वेळचे अमर्यादित जेवण, रविवारी विशेष गोड जेवण...'}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
@@ -625,7 +629,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   className="w-full min-h-[46px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <PlusCircle className="w-4 h-4" />
-                  <span>योजना तयार करा (Create Plan)</span>
+                  <span>{language === 'en' ? 'Create Plan' : 'योजना तयार करा'}</span>
                 </button>
               </div>
             </form>
@@ -640,7 +644,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-black text-sm sm:text-base">
                 <Sparkles className="w-5 h-5" />
-                <span>ग्रँडफादर्ड दर म्हणजे काय? (Grandfathered Rates)</span>
+                <span>{language === 'en' ? 'What are Grandfathered Rates?' : 'ग्रँडफादर्ड दर म्हणजे काय?'}</span>
               </div>
               <button
                 onClick={() => setIsGrandfatheredInfoOpen(false)}
@@ -651,19 +655,24 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              जेव्हा तुम्ही मेसचे दर वाढवता (उदा. ₹3,000 वरून ₹4,200), तेव्हा आधीपासून ॲक्टिव्ह असलेले जुने सभासद अजूनही जुन्या दराने जेवत असल्यास त्यांना <strong>Grandfathered</strong> म्हणून हायलाइट केले जाते.
+              {language === 'en'
+                ? 'When you increase mess rates (e.g. ₹3,000 to ₹4,200), members who joined earlier and are still active on the previous rate are highlighted as Grandfathered.'
+                : 'जेव्हा तुम्ही मेसचे दर वाढवता (उदा. ₹3,000 वरून ₹4,200), तेव्हा आधीपासून ॲक्टिव्ह असलेले जुने सभासद अजूनही जुन्या दराने जेवत असल्यास त्यांना Grandfathered म्हणून हायलाइट केले जाते.'}
             </p>
 
             <div className="p-3 bg-purple-50 dark:bg-purple-950/50 rounded-xl border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-200">
-              💡 <strong>टीप:</strong> तुम्ही हव्या त्या सभासदाला <strong>'सभासद यादी' (Members)</strong> मध्ये जाऊन १-क्लिकने नवीन दरावर अपडेट करू शकता.
+              💡 <strong>{language === 'en' ? 'Tip:' : 'टीप:'}</strong>{' '}
+              {language === 'en'
+                ? 'You can update any member to current rates with 1-click in the Member Directory.'
+                : 'तुम्ही हव्या त्या सभासदाला "सभासद यादी" मध्ये जाऊन १-क्लिकने नवीन दरावर अपडेट करू शकता.'}
             </div>
 
             <button
               type="button"
               onClick={() => setIsGrandfatheredInfoOpen(false)}
-              className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs"
+              className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs cursor-pointer"
             >
-              समजले (Got it)
+              {language === 'en' ? 'Got it' : 'समजले'}
             </button>
           </div>
         </div>

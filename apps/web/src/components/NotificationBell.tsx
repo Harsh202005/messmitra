@@ -25,8 +25,10 @@ import {
   Ticket,
   CheckCircle2,
 } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 export const NotificationBell: React.FC = () => {
+  const { language } = useI18n();
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [pushStatus, setPushStatus] = useState<NotificationPermission>('default');
@@ -89,7 +91,7 @@ export const NotificationBell: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center"
-        title="सूचना केंद्र (Notification Center)"
+        title={language === 'en' ? 'Notification Center' : 'सूचना केंद्र'}
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -116,10 +118,10 @@ export const NotificationBell: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                    सूचना केंद्र (Notifications)
+                    {language === 'en' ? 'Notification Center' : 'सूचना केंद्र'}
                   </h4>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {unreadCount} न वाचलेल्या सूचना
+                    {unreadCount} {language === 'en' ? 'unread notifications' : 'न वाचलेल्या सूचना'}
                   </span>
                 </div>
               </div>
@@ -132,20 +134,48 @@ export const NotificationBell: React.FC = () => {
               </button>
             </div>
 
-            {/* Permission Banner if not granted */}
-            {pushStatus !== 'granted' && (
+            {/* Mobile Notification Permission & Test Banner */}
+            {pushStatus !== 'granted' ? (
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200 dark:border-amber-900/50 flex items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <Smartphone className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span className="text-[11px] text-amber-900 dark:text-amber-200">
-                    मोबाईल पुश सूचना चालू करा
+                  <span className="text-[11px] text-amber-900 dark:text-amber-200 truncate">
+                    {pushStatus === 'denied'
+                      ? (language === 'en' ? '⚠️ Notifications blocked (check settings)' : '⚠️ सूचना ब्लॉक आहेत (सेटिंग्ज तपासा)')
+                      : (language === 'en' ? 'Enable mobile push notifications' : 'मोबाईल स्टेटस बार सूचना चालू करा')}
+                  </span>
+                </div>
+                {pushStatus !== 'denied' && (
+                  <button
+                    onClick={handleEnablePush}
+                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-lg transition cursor-pointer shrink-0"
+                  >
+                    {language === 'en' ? 'Enable' : 'चालू करा'}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="px-3 py-2 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/40 flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5 min-w-0 text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="text-[11px] font-medium truncate">
+                    {language === 'en' ? 'Push Notifications Active' : 'मोबाईल सूचना सक्रिय'}
                   </span>
                 </div>
                 <button
-                  onClick={handleEnablePush}
-                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white font-bold text-[11px] rounded-lg transition cursor-pointer shrink-0"
+                  onClick={() => {
+                    playNotificationChime();
+                    showSystemPushNotification(
+                      language === 'en' ? 'Shree Balaji Mess 🍛' : 'श्री बालाजी मेस 🍛',
+                      language === 'en'
+                        ? 'Mobile notification test successful! Notification received on your status bar.'
+                        : 'मोबाईल नोटिफिकेशन पॅनल चाचणी यशस्वी! हे नोटिफिकेशन फोनच्या वरच्या पट्टीवर आले आहे.'
+                    );
+                  }}
+                  className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[10px] rounded-md transition cursor-pointer shrink-0"
+                  title={language === 'en' ? 'Send test push notification' : 'मोबाईल नोटिफिकेशन पॅनलवर चाचणी मेसेज पाठवा'}
                 >
-                  चालू करा
+                  {language === 'en' ? '📲 Test' : '📲 टेस्ट करा'}
                 </button>
               </div>
             )}
@@ -155,7 +185,7 @@ export const NotificationBell: React.FC = () => {
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-xs">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-slate-700 opacity-50" />
-                  <span>कोणतीही नवीन सूचना नाही.</span>
+                  <span>{language === 'en' ? 'No new notifications.' : 'कोणतीही नवीन सूचना नाही.'}</span>
                 </div>
               ) : (
                 notifications.map((notif) => (
@@ -202,7 +232,7 @@ export const NotificationBell: React.FC = () => {
                   className="flex items-center gap-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition cursor-pointer text-[11px]"
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
-                  <span>सर्व वाचलेले चिन्हांकित करा</span>
+                  <span>{language === 'en' ? 'Mark All as Read' : 'सर्व वाचलेले चिन्हांकित करा'}</span>
                 </button>
 
                 <button
@@ -210,7 +240,7 @@ export const NotificationBell: React.FC = () => {
                   className="flex items-center gap-1 text-rose-600 dark:text-rose-400 hover:text-rose-700 transition cursor-pointer text-[11px]"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>साफ करा</span>
+                  <span>{language === 'en' ? 'Clear All' : 'साफ करा'}</span>
                 </button>
               </div>
             )}

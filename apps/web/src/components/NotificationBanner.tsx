@@ -18,8 +18,10 @@ import {
   ChevronRight,
   ExternalLink,
 } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 export const NotificationBanner: React.FC = () => {
+  const { language } = useI18n();
   const [activeNotification, setActiveNotification] = useState<InAppNotification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -108,11 +110,11 @@ export const NotificationBanner: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[10px]">आत्ताच (Just now)</span>
+            <span className="text-[10px]">{language === 'en' ? 'Just now' : 'आत्ताच'}</span>
             <button
               onClick={handleDismiss}
               className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-              title="बंद करा"
+              title={language === 'en' ? 'Close' : 'बंद करा'}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -138,14 +140,14 @@ export const NotificationBanner: React.FC = () => {
         <div className="pt-1 flex items-center justify-between border-t border-slate-800/80 text-xs">
           <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
             <Sparkles className="w-3 h-3" />
-            <span>मोबाईल पुश सूचना</span>
+            <span>{language === 'en' ? 'Mobile Push Notification' : 'मोबाईल पुश सूचना'}</span>
           </span>
 
           <button
             onClick={handleDismiss}
             className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-0.5 cursor-pointer"
           >
-            <span>समजले (OK)</span>
+            <span>{language === 'en' ? 'OK' : 'समजले'}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>

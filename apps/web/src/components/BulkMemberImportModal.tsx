@@ -15,6 +15,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
+import { useI18n } from '../lib/i18n';
 
 interface BulkMemberImportModalProps {
   isOpen: boolean;
@@ -69,6 +70,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
   messId,
   onMembersImported,
 }) => {
+  const { language } = useI18n();
   const [rows, setRows] = useState<MemberDraftRow[]>(DEFAULT_ROWS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -221,7 +223,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
                 <span>Production Onboarding Engine</span>
               </div>
               <h3 className="font-bold text-base sm:text-lg">
-                Excel / CSV बल्क सभासद नोंदणी (Bulk Member Onboarding)
+                {language === 'en' ? 'Excel / CSV Bulk Member Onboarding' : 'Excel / CSV बल्क सभासद नोंदणी'}
               </h3>
             </div>
           </div>
@@ -239,7 +241,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
           <div className="flex items-center gap-2 flex-wrap">
             <label className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-sm transition cursor-pointer min-h-[44px]">
               <Upload className="w-4 h-4" />
-              <span>CSV फाईल अपलोड करा</span>
+              <span>{language === 'en' ? 'Upload CSV File' : 'CSV फाईल अपलोड करा'}</span>
               <input
                 type="file"
                 accept=".csv,text/csv"
@@ -254,7 +256,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
               className="flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold rounded-xl border border-slate-300 dark:border-slate-600 transition cursor-pointer min-h-[44px]"
             >
               <Download className="w-4 h-4 text-blue-500" />
-              <span>नमुना CSV डाऊनलोड (Sample Template)</span>
+              <span>{language === 'en' ? 'Download Sample CSV' : 'नमुना CSV डाऊनलोड'}</span>
             </button>
           </div>
 
@@ -265,7 +267,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100 font-bold rounded-xl transition cursor-pointer min-h-[44px]"
             >
               <Plus className="w-4 h-4" />
-              <span>नवीन ओळ जोडा</span>
+              <span>{language === 'en' ? 'Add Row' : 'नवीन ओळ जोडा'}</span>
             </button>
           </div>
         </div>
@@ -295,12 +297,12 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
               <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <th className="p-3">#</th>
-                  <th className="p-3 min-w-[160px]">सभासदाचे नाव (Full Name) *</th>
-                  <th className="p-3 min-w-[140px]">फोन नंबर (Phone)</th>
-                  <th className="p-3 min-w-[130px]">आहार (Diet)</th>
-                  <th className="p-3 min-w-[110px]">दर (Monthly Rate)</th>
-                  <th className="p-3 min-w-[130px]">जॉइन तारीख</th>
-                  <th className="p-3 text-center">हटवा</th>
+                  <th className="p-3 min-w-[160px]">{language === 'en' ? 'Full Name *' : 'सभासदाचे नाव *'}</th>
+                  <th className="p-3 min-w-[140px]">{language === 'en' ? 'Phone' : 'फोन नंबर'}</th>
+                  <th className="p-3 min-w-[130px]">{language === 'en' ? 'Diet' : 'आहार'}</th>
+                  <th className="p-3 min-w-[110px]">{language === 'en' ? 'Monthly Rate' : 'दर'}</th>
+                  <th className="p-3 min-w-[130px]">{language === 'en' ? 'Join Date' : 'जॉइन तारीख'}</th>
+                  <th className="p-3 text-center">{language === 'en' ? 'Delete' : 'हटवा'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -393,7 +395,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
         <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
             <Users className="w-4 h-4 text-blue-500" />
-            <span>एकूण तयार होणारे सभासद: {rows.filter((r) => r.name.trim()).length}</span>
+            <span>{language === 'en' ? `Total Members to Add: ${rows.filter((r) => r.name.trim()).length}` : `एकूण तयार होणारे सभासद: ${rows.filter((r) => r.name.trim()).length}`}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -402,7 +404,7 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer min-h-[44px]"
             >
-              रद्द करा (Cancel)
+              {language === 'en' ? 'Cancel' : 'रद्द करा'}
             </button>
 
             <button
@@ -412,11 +414,11 @@ export const BulkMemberImportModal: React.FC<BulkMemberImportModalProps> = ({
               className="flex items-center gap-1.5 px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg transition disabled:opacity-50 cursor-pointer min-h-[44px]"
             >
               {isSubmitting ? (
-                <span>जोडत आहे...</span>
+                <span>{language === 'en' ? 'Adding...' : 'जोडत आहे...'}</span>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>सर्व सभासद जोडा ({rows.filter((r) => r.name.trim()).length})</span>
+                  <span>{language === 'en' ? `Add All Members (${rows.filter((r) => r.name.trim()).length})` : `सर्व सभासद जोडा (${rows.filter((r) => r.name.trim()).length})`}</span>
                 </>
               )}
             </button>

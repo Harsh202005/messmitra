@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useI18n } from '../lib/i18n';
-import { BillingCycle, Mess, Member, generateWhatsAppReminderLink } from '@messmitra/types';
+import { BillingCycle, Mess, Member, generateWhatsAppReminderLink, formatTime12Hour } from '@messmitra/types';
 import { UpiQrCode } from './UpiQrCode';
 import {
   X,
@@ -33,7 +33,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
   mess,
   member,
 }) => {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const currentCycle = cycle || billingCycle;
 
   if (!isOpen || !currentCycle) return null;
@@ -67,7 +67,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
           <div className="flex items-center gap-2">
             <Receipt className="w-5 h-5 text-brand-500" />
             <h3 className="font-bold text-base">
-              अधिकृत मेस पावती (Official Bill Invoice Slip)
+              {language === 'en' ? 'Official Bill Invoice Slip' : 'अधिकृत मेस पावती'}
             </h3>
           </div>
 
@@ -77,7 +77,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>प्रिंट / PDF डाउनलोड</span>
+              <span>{language === 'en' ? 'Print / PDF' : 'प्रिंट / PDF डाउनलोड'}</span>
             </button>
 
             <button
@@ -109,7 +109,7 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
                 {mess?.area || 'कर्वे नगर / कोथरूड'}, {mess?.city || 'पुणे'} • मालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong>
               </p>
               <p className="text-xs text-slate-600 font-mono mt-0.5">
-                UPI ID: <strong>{mess?.upiId || '9822338975@upi'}</strong> • रात्रीचे कटऑफ: <strong>06:00 PM</strong>
+                UPI ID: <strong>{mess?.upiId || '9822338975@upi'}</strong> • रात्रीचे कटऑफ: <strong>{formatTime12Hour(mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00')}</strong>
               </p>
             </div>
 
@@ -125,11 +125,11 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
           {/* Member Details */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
-              <span className="text-slate-500 block text-[11px]">सभासदाचे नाव (Member Name)</span>
+              <span className="text-slate-500 block text-[11px]">{language === 'en' ? 'Member Name' : 'सभासदाचे नाव'}</span>
               <strong className="text-sm text-slate-900">{currentCycle.memberName}</strong>
             </div>
             <div>
-              <span className="text-slate-500 block text-[11px]">संपर्क फोन (Phone)</span>
+              <span className="text-slate-500 block text-[11px]">{language === 'en' ? 'Contact Phone' : 'संपर्क फोन'}</span>
               <span className="font-mono text-slate-900">{currentCycle.memberPhone || '-'}</span>
             </div>
           </div>
@@ -139,19 +139,19 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
-                  <th className="p-3">तपशील (Description)</th>
-                  <th className="p-3 text-center">संख्या (Units)</th>
-                  <th className="p-3 text-right">दर (Rate)</th>
-                  <th className="p-3 text-right">रक्कम (Amount)</th>
+                  <th className="p-3">{language === 'en' ? 'Description' : 'तपशील'}</th>
+                  <th className="p-3 text-center">{language === 'en' ? 'Units' : 'संख्या'}</th>
+                  <th className="p-3 text-right">{language === 'en' ? 'Rate' : 'दर'}</th>
+                  <th className="p-3 text-right">{language === 'en' ? 'Amount' : 'रक्कम'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono text-slate-800">
                 {/* Line 1: Base Monthly Meals */}
                 <tr>
                   <td className="p-3 font-sans font-medium">
-                    मासिक नियमित जेवण (Monthly Subscription Base)
+                    {language === 'en' ? 'Monthly Regular Meals' : 'मासिक नियमित जेवण'}
                   </td>
-                  <td className="p-3 text-center">{currentCycle.baseMeals} जेवण</td>
+                  <td className="p-3 text-center">{currentCycle.baseMeals} {language === 'en' ? 'meals' : 'जेवण'}</td>
                   <td className="p-3 text-right">₹{currentCycle.rate}</td>
                   <td className="p-3 text-right font-bold">₹{currentCycle.rate}</td>
                 </tr>
@@ -161,9 +161,9 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
                   <tr className="text-emerald-700 bg-emerald-50/50">
                     <td className="p-3 font-sans font-medium flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      मंजूर सुट्टी वजावट (Approved Leaves Deduction)
+                      {language === 'en' ? 'Approved Leaves Deduction' : 'मंजूर सुट्टी वजावट'}
                     </td>
-                    <td className="p-3 text-center">{currentCycle.approvedLeaveDays} दिवस ({currentCycle.approvedLeaveDays * 2} जेवण)</td>
+                    <td className="p-3 text-center">{currentCycle.approvedLeaveDays} {language === 'en' ? 'days' : 'दिवस'} ({currentCycle.approvedLeaveDays * 2} {language === 'en' ? 'meals' : 'जेवण'})</td>
                     <td className="p-3 text-right">-₹{Math.round(currentCycle.perMealRate || 57.14)}/meal</td>
                     <td className="p-3 text-right font-bold">
                       -₹{Math.round((currentCycle.approvedLeaveDays || 0) * 2 * (currentCycle.perMealRate || 57.14))}
@@ -171,8 +171,8 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
                   </tr>
                 ) : (
                   <tr>
-                    <td className="p-3 font-sans text-slate-500">सुट्टी वजावट (No Leaves Taken)</td>
-                    <td className="p-3 text-center text-slate-500">0 दिवस</td>
+                    <td className="p-3 font-sans text-slate-500">{language === 'en' ? 'No Leaves Taken' : 'सुट्टी वजावट नाही'}</td>
+                    <td className="p-3 text-center text-slate-500">0 {language === 'en' ? 'days' : 'दिवस'}</td>
                     <td className="p-3 text-right text-slate-500">-</td>
                     <td className="p-3 text-right text-slate-500">₹0.00</td>
                   </tr>
@@ -186,8 +186,8 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
             {/* Dynamic UPI QR Code for instant scanning */}
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
               <UpiQrCode
-                upiId={mess?.upiId || 'balajimess@okhdfcbank'}
-                name={mess?.name || 'Mess'}
+                upiId={mess?.upiId || '9822338975@upi'}
+                name={mess?.name || 'श्री बालाजी मेस'}
                 amount={outstanding > 0 ? outstanding : currentCycle.amountDue}
                 size={140}
               />
@@ -196,15 +196,15 @@ export const BillInvoiceModal: React.FC<BillInvoiceModalProps> = ({
             {/* Calculations Summary */}
             <div className="space-y-2 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <div className="flex justify-between text-slate-600">
-                <span>एकूण आकारलेली रक्कम (Total Due):</span>
+                <span>{language === 'en' ? 'Total Amount Due:' : 'एकूण आकारलेली रक्कम:'}</span>
                 <span className="font-mono font-bold text-slate-900">₹{currentCycle.amountDue}</span>
               </div>
               <div className="flex justify-between text-emerald-700">
-                <span>भरलेली रक्कम (Amount Paid):</span>
+                <span>{language === 'en' ? 'Amount Paid:' : 'भरलेली रक्कम:'}</span>
                 <span className="font-mono font-bold">₹{currentCycle.amountPaid}</span>
               </div>
               <div className="flex justify-between text-sm font-black pt-2 border-t-2 border-slate-300 text-slate-900">
-                <span>बाकी देय रक्कम (Balance Due):</span>
+                <span>{language === 'en' ? 'Balance Due:' : 'बाकी देय रक्कम:'}</span>
                 <span className={`font-mono ${outstanding > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                   ₹{outstanding}
                 </span>

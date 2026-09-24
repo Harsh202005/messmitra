@@ -10,10 +10,16 @@ import {
   ExpenseRecurring,
   ExpenseOneOff,
   Staff,
+  StaffSalaryPayment,
+  StaffAttendanceRecord,
+  MenuCatalogItem,
+  WalkInOrder,
+  WalkInOrderItem,
   ProfitAndLossSummary,
   PendingRegistration,
   calculateProratedMeals,
   calculateMonthlyBill,
+  calculateLeaveDaysInMonth,
   isLeaveSubmissionLate,
   isNonVegDay,
   generateBillingCsv,
@@ -66,249 +72,99 @@ const DEFAULT_MESS: Mess = {
   createdAt: '2026-06-01T00:00:00Z',
 };
 
-const DEFAULT_MEMBERS: Member[] = [
-  {
-    id: '11111111-1111-1111-1111-111111111111',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Rahul Deshmukh',
-    phone: '+91 98901 23456',
-    gender: 'male',
-    dietPreference: 'nonveg',
-    rate: 3200,
-    planType: 'both',
-    joinDate: '2026-06-01',
-    status: 'active',
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-  {
-    id: '22222222-2222-2222-2222-222222222222',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Priya Kulkarni',
-    phone: '+91 98902 34567',
-    gender: 'female',
-    dietPreference: 'veg',
-    rate: 3000,
-    planType: 'both',
-    joinDate: '2026-07-15',
-    status: 'active',
-    createdAt: '2026-07-15T00:00:00Z',
-  },
-  {
-    id: '33333333-3333-3333-3333-333333333333',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Amit Joshi',
-    phone: '+91 98903 45678',
-    gender: 'male',
-    dietPreference: 'nonveg',
-    rate: 3200,
-    planType: 'both',
-    joinDate: '2026-08-01',
-    status: 'active',
-    createdAt: '2026-08-01T00:00:00Z',
-  },
-  {
-    id: '44444444-4444-4444-4444-444444444444',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Sneha Shinde',
-    phone: '+91 98904 56789',
-    gender: 'female',
-    dietPreference: 'veg',
-    rate: 3000,
-    planType: 'both',
-    joinDate: '2026-08-10',
-    status: 'active',
-    createdAt: '2026-08-10T00:00:00Z',
-  },
-  {
-    id: '55555555-5555-5555-5555-555555555555',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Omkar Jadhav',
-    phone: '+91 98905 67890',
-    gender: 'male',
-    dietPreference: 'veg',
-    rate: 1500,
-    planType: 'lunch',
-    joinDate: '2026-09-01',
-    status: 'active',
-    createdAt: '2026-09-01T00:00:00Z',
-  },
-  {
-    id: '66666666-6666-6666-6666-666666666666',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Tanvi Pawar',
-    phone: '+91 98906 78901',
-    gender: 'female',
-    dietPreference: 'nonveg',
-    rate: 1600,
-    planType: 'dinner',
-    joinDate: '2026-09-05',
-    status: 'active',
-    createdAt: '2026-09-05T00:00:00Z',
-  },
-  {
-    id: '77777777-7777-7777-7777-777777777777',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Vikas Gaikwad',
-    phone: '+91 98907 89012',
-    gender: 'male',
-    dietPreference: 'nonveg',
-    rate: 3200,
-    planType: 'both',
-    joinDate: '2026-05-10',
-    status: 'inactive',
-    createdAt: '2026-05-10T00:00:00Z',
-  },
-];
+const DEFAULT_MEMBERS: Member[] = [];
+const DEFAULT_LEAVES: LeaveRequest[] = [];
+const DEFAULT_RECURRING: ExpenseRecurring[] = [];
+const DEFAULT_ONEOFF: ExpenseOneOff[] = [];
+const DEFAULT_STAFF: Staff[] = [];
+const DEFAULT_REGISTRATIONS: PendingRegistration[] = [];
+const DEFAULT_STAFF_SALARY_PAYMENTS: StaffSalaryPayment[] = [];
+const DEFAULT_WALKIN_ORDERS: WalkInOrder[] = [];
 
-const DEFAULT_LEAVES: LeaveRequest[] = [
+export const DEFAULT_POS_CATALOG: MenuCatalogItem[] = [
   {
-    id: '88888888-8888-8888-8888-888888888888',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    memberId: '11111111-1111-1111-1111-111111111111',
-    memberName: 'Rahul Deshmukh',
-    memberPhone: '+91 98901 23456',
-    startDate: '2026-09-12',
-    endDate: '2026-09-14',
-    submittedAt: '2026-09-10T14:30:00Z',
-    status: 'auto_valid',
-    isLate: false,
-    reason: 'Home visit for weekend',
-    createdAt: '2026-09-10T14:30:00Z',
+    id: 'thali-veg-unlimited',
+    name: 'Pure Veg Unlimited Thali',
+    nameMr: 'शुद्ध शाकाहारी अमर्यादित थाळी',
+    price: 80,
+    diet: 'veg',
+    category: 'thali',
+    icon: '🥗',
+    badge: 'सर्वात लोकप्रिय',
+    available: true,
   },
   {
-    id: '99999999-9999-9999-9999-999999999999',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    memberId: '33333333-3333-3333-3333-333333333333',
-    memberName: 'Amit Joshi',
-    memberPhone: '+91 98903 45678',
-    startDate: '2026-09-11',
-    endDate: '2026-09-11',
-    submittedAt: '2026-09-11T09:45:00Z',
-    status: 'pending_approval',
-    isLate: true,
-    reason: 'Urgent college exam prep',
-    createdAt: '2026-09-11T09:45:00Z',
-  },
-];
-
-const DEFAULT_RECURRING: ExpenseRecurring[] = [
-  {
-    id: 'bb111111-1111-1111-1111-111111111111',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'rent',
-    payeeName: 'Mess Space Landlord (श्री कुलकर्णी)',
-    amount: 15000,
-    frequency: 'monthly',
-    nextDueDate: '2026-09-05',
-    isActive: true,
-    lastConfirmedMonth: '2026-09',
-    createdAt: '2026-06-01T00:00:00Z',
+    id: 'thali-nonveg-special',
+    name: 'Special Chicken / Egg Thali',
+    nameMr: 'स्पेशल चिकन थाळी / अंडी थाळी',
+    price: 120,
+    diet: 'nonveg',
+    category: 'thali',
+    icon: '🍗',
+    badge: 'बुध, शुक्र, रवि स्पेशल',
+    available: true,
   },
   {
-    id: 'bb222222-2222-2222-2222-222222222222',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'salary',
-    payeeName: 'Mahadev Mama (महाराज / Cook)',
-    amount: 18000,
-    frequency: 'monthly',
-    nextDueDate: '2026-09-07',
-    isActive: true,
-    lastConfirmedMonth: '2026-09',
-    createdAt: '2026-06-01T00:00:00Z',
+    id: 'parcel-veg-box',
+    name: 'Pure Veg Parcel Box',
+    nameMr: 'शाकाहारी पार्सल डबा (३ चपाती+२ भाजी+भात)',
+    price: 90,
+    diet: 'veg',
+    category: 'parcel',
+    isParcel: true,
+    icon: '📦',
+    available: true,
   },
   {
-    id: 'bb333333-3333-3333-3333-333333333333',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'gas',
-    payeeName: 'Commercial HP Gas Cylinder (2 cylinders/mo)',
-    amount: 3600,
-    frequency: 'monthly',
-    nextDueDate: '2026-09-10',
-    isActive: true,
-    lastConfirmedMonth: '2026-09',
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-];
-
-const DEFAULT_ONEOFF: ExpenseOneOff[] = [
-  {
-    id: 'cc111111-1111-1111-1111-111111111111',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'vegetables',
-    amount: 1450,
-    date: '2026-09-02',
-    note: 'Fresh market vegetables (मंडी खरेदी)',
-    createdBy: 'Shankar Giri',
-    createdAt: '2026-09-02T08:00:00Z',
+    id: 'parcel-nonveg-box',
+    name: 'Special Chicken Parcel Box',
+    nameMr: 'स्पेशल चिकन पार्सल डबा (३ चपाती+चिकन+भात)',
+    price: 130,
+    diet: 'nonveg',
+    category: 'parcel',
+    isParcel: true,
+    icon: '🍱',
+    available: true,
   },
   {
-    id: 'cc222222-2222-2222-2222-222222222222',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'dairy',
-    amount: 840,
-    date: '2026-09-05',
-    note: 'Milk, Curd, Paneer for feast day',
-    createdBy: 'Shankar Giri',
-    createdAt: '2026-09-05T07:30:00Z',
+    id: 'extra-chapati-2',
+    name: 'Extra Butter Chapati (2 pcs)',
+    nameMr: 'गरमागरम चपाती (२ नग)',
+    price: 20,
+    diet: 'veg',
+    category: 'extra',
+    icon: '🫓',
+    available: true,
   },
   {
-    id: 'cc333333-3333-3333-3333-333333333333',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    category: 'groceries',
-    amount: 4200,
-    date: '2026-09-08',
-    note: 'Kolam Rice & Toor Dal sack',
-    createdBy: 'Shankar Giri',
-    createdAt: '2026-09-08T16:00:00Z',
-  },
-];
-
-const DEFAULT_STAFF: Staff[] = [
-  {
-    id: 'aa111111-1111-1111-1111-111111111111',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Mahadev Mama',
-    role: 'Head Cook (महाराज)',
-    monthlySalary: 18000,
-    phone: '+91 97654 32101',
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
+    id: 'extra-jowar-bhakri',
+    name: 'Jowar / Bajra Bhakri (1 pc)',
+    nameMr: 'ज्वारी / बाजरी भाकरी (१ नग)',
+    price: 20,
+    diet: 'veg',
+    category: 'extra',
+    icon: '🌾',
+    available: true,
   },
   {
-    id: 'aa222222-2222-2222-2222-222222222222',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'Santosh',
-    role: 'Helper & Cleaning',
-    monthlySalary: 10000,
-    phone: '+91 97654 32102',
-    isActive: true,
-    createdAt: '2026-06-01T00:00:00Z',
-  },
-];
-
-const DEFAULT_REGISTRATIONS: PendingRegistration[] = [
-  {
-    id: 'reg-001',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'अनिकेत पवार (Aniket Pawar)',
-    phone: '+91 98901 99887',
-    role: 'member',
-    dietPreference: 'veg',
-    planType: 'both',
-    rate: 3000,
-    submittedAt: new Date(Date.now() - 3600000).toISOString(),
-    status: 'pending_approval',
+    id: 'extra-sunday-sweet',
+    name: 'Special Sweet (Gulabjam / Shrikhand)',
+    nameMr: 'विशेष गोड पदार्थ (गुलाबजाम / श्रीखंड)',
+    price: 30,
+    diet: 'veg',
+    category: 'extra',
+    icon: '🍨',
+    available: true,
   },
   {
-    id: 'reg-002',
-    messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-    name: 'दत्तात्रय महाराज (Dattatray Maharaj)',
-    phone: '+91 98220 55443',
-    role: 'staff',
-    staffRole: 'सहाय्यक आचारी (Assistant Cook)',
-    salary: 12000,
-    submittedAt: new Date(Date.now() - 7200000).toISOString(),
-    status: 'pending_approval',
+    id: 'extra-taak',
+    name: 'Fresh Masala Taak (Buttermilk)',
+    nameMr: 'ताजे मसाला ताक (१ ग्लास)',
+    price: 15,
+    diet: 'veg',
+    category: 'extra',
+    icon: '🥛',
+    available: true,
   },
 ];
 
@@ -364,24 +220,16 @@ export const MessMitraApi = {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (
-            parsed.name !== 'श्री बालाजी मेस' ||
-            parsed.upiId !== '9822338975@upi' ||
-            parsed.ownerName !== 'शंकर गिरी' ||
-            !parsed.lunchCutoffTime
-          ) {
-            parsed.name = 'श्री बालाजी मेस';
-            parsed.ownerName = 'शंकर गिरी';
-            parsed.contactNumber = '+91 98223 38975';
-            parsed.upiId = '9822338975@upi';
-            parsed.defaultVegRate = 3000;
-            parsed.defaultNonVegRate = 3200;
-            parsed.dailyCutoffTime = '18:00';
-            parsed.lunchCutoffTime = '09:00';
-            parsed.dinnerCutoffTime = '18:00';
-            localStorage.setItem('messmitra_mess', JSON.stringify(parsed));
-          }
-          return parsed;
+          return {
+            ...DEFAULT_MESS,
+            ...parsed,
+            name: parsed.name || 'श्री बालाजी मेस',
+            ownerName: parsed.ownerName || 'शंकर गिरी',
+            upiId: parsed.upiId || '9822338975@upi',
+            dailyCutoffTime: parsed.dailyCutoffTime || parsed.dinnerCutoffTime || '18:00',
+            lunchCutoffTime: parsed.lunchCutoffTime || '09:00',
+            dinnerCutoffTime: parsed.dinnerCutoffTime || parsed.dailyCutoffTime || '18:00',
+          };
         } catch {
           // parse error fallback
         }
@@ -391,10 +239,14 @@ export const MessMitraApi = {
   },
 
   async saveMess(dto: Partial<Mess>): Promise<Mess> {
+    const current = await this.getCurrentMess();
+    const lunchCutoff = dto.lunchCutoffTime || current.lunchCutoffTime || '09:00';
+    const dinnerCutoff = dto.dinnerCutoffTime || dto.dailyCutoffTime || current.dinnerCutoffTime || current.dailyCutoffTime || '18:00';
+    const dailyCutoff = dto.dailyCutoffTime || dinnerCutoff;
+
     const supabase = getSupabase();
     if (supabase) {
       try {
-        const current = await this.getCurrentMess();
         const { data, error } = await supabase
           .from('mess')
           .upsert({
@@ -402,10 +254,14 @@ export const MessMitraApi = {
             name: dto.name || current.name,
             area: dto.area || current.area,
             city: dto.city || current.city,
-            daily_cutoff_time: dto.dailyCutoffTime || current.dailyCutoffTime,
+            daily_cutoff_time: dailyCutoff,
+            lunch_cutoff_time: lunchCutoff,
+            dinner_cutoff_time: dinnerCutoff,
             upi_id: dto.upiId || current.upiId,
             default_male_rate: dto.defaultNonVegRate || dto.defaultMaleRate || current.defaultMaleRate,
             default_female_rate: dto.defaultVegRate || dto.defaultFemaleRate || current.defaultFemaleRate,
+            default_veg_rate: dto.defaultVegRate || current.defaultVegRate,
+            default_nonveg_rate: dto.defaultNonVegRate || current.defaultNonVegRate,
           })
           .select()
           .single();
@@ -416,23 +272,26 @@ export const MessMitraApi = {
             name: data.name,
             area: data.area,
             city: data.city,
-            dailyCutoffTime: data.daily_cutoff_time.substring(0, 5),
-            lunchCutoffTime: '09:00',
-            dinnerCutoffTime: '18:00',
-            ownerId: data.owner_id,
-            ownerName: 'शंकर गिरी',
-            contactNumber: '+91 98223 38975',
-            upiId: data.upi_id,
-            defaultMaleRate: Number(data.default_male_rate),
-            defaultFemaleRate: Number(data.default_female_rate),
-            defaultVegRate: Number(data.default_female_rate || 3000),
-            defaultNonVegRate: Number(data.default_male_rate || 3200),
-            tagline: 'चव हीच आमची ओळख • २१ वर्षांची अखंड परंपरा',
-            establishedYears: 21,
-            createdAt: data.created_at,
+            dailyCutoffTime: (data.daily_cutoff_time || dailyCutoff).substring(0, 5),
+            lunchCutoffTime: (data.lunch_cutoff_time || lunchCutoff).substring(0, 5),
+            dinnerCutoffTime: (data.dinner_cutoff_time || dinnerCutoff).substring(0, 5),
+            ownerId: data.owner_id || current.ownerId,
+            ownerName: data.owner_name || 'शंकर गिरी',
+            contactNumber: data.contact_number || '+91 98223 38975',
+            upiId: data.upi_id || current.upiId,
+            defaultMaleRate: Number(data.default_male_rate || 3200),
+            defaultFemaleRate: Number(data.default_female_rate || 3000),
+            defaultVegRate: Number(data.default_veg_rate || data.default_female_rate || 3000),
+            defaultNonVegRate: Number(data.default_nonveg_rate || data.default_male_rate || 3200),
+            tagline: data.tagline || current.tagline || 'चव हीच आमची ओळख • २१ वर्षांची अखंड परंपरा',
+            establishedYears: Number(data.established_years || 21),
+            createdAt: data.created_at || current.createdAt,
           };
           if (typeof window !== 'undefined') {
             localStorage.setItem('messmitra_mess', JSON.stringify(saved));
+            if (saved.upiId) {
+              localStorage.setItem('messmitra_custom_upi_id', saved.upiId);
+            }
           }
           notifyDataChanged();
           return saved;
@@ -449,14 +308,39 @@ export const MessMitraApi = {
           'Content-Type': 'application/json',
           Authorization: 'Bearer demo-owner-token',
         },
-        body: JSON.stringify(dto),
+        body: JSON.stringify({
+          ...dto,
+          lunchCutoffTime: lunchCutoff,
+          dinnerCutoffTime: dinnerCutoff,
+          dailyCutoffTime: dailyCutoff,
+        }),
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const fetched = await res.json();
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('messmitra_mess', JSON.stringify(fetched));
+          if (fetched.upiId) {
+            localStorage.setItem('messmitra_custom_upi_id', fetched.upiId);
+          }
+        }
+        notifyDataChanged();
+        return fetched;
+      }
     } catch { }
 
-    const updated = { ...DEFAULT_MESS, ...dto };
+    const updated: Mess = {
+      ...current,
+      ...dto,
+      dailyCutoffTime: dailyCutoff,
+      lunchCutoffTime: lunchCutoff,
+      dinnerCutoffTime: dinnerCutoff,
+      upiId: dto.upiId || current.upiId,
+    };
     if (typeof window !== 'undefined') {
       localStorage.setItem('messmitra_mess', JSON.stringify(updated));
+      if (updated.upiId) {
+        localStorage.setItem('messmitra_custom_upi_id', updated.upiId);
+      }
     }
     notifyDataChanged();
     return updated;
@@ -480,7 +364,7 @@ export const MessMitraApi = {
             name: row.name,
             phone: row.phone,
             gender: row.gender,
-            dietPreference: (row.diet_preference as any) || (row.gender === 'female' ? 'veg' : 'nonveg'),
+            dietPreference: (row.diet_preference as any) || 'veg',
             rate: Number(row.rate),
             planType: row.plan_type,
             joinDate: row.join_date,
@@ -536,7 +420,8 @@ export const MessMitraApi = {
             mess_id: mess.id,
             name: memberData.name,
             phone: memberData.phone,
-            gender: memberData.gender || (memberData.dietPreference === 'veg' ? 'female' : 'male'),
+            gender: memberData.gender || 'male',
+            diet_preference: memberData.dietPreference || 'veg',
             rate: memberData.rate,
             plan_type: memberData.planType,
             join_date: memberData.joinDate,
@@ -552,7 +437,7 @@ export const MessMitraApi = {
             name: data.name,
             phone: data.phone,
             gender: data.gender,
-            dietPreference: memberData.dietPreference || (data.gender === 'female' ? 'veg' : 'nonveg'),
+            dietPreference: memberData.dietPreference || (data.diet_preference as any) || 'veg',
             rate: Number(data.rate),
             planType: data.plan_type,
             joinDate: data.join_date,
@@ -616,7 +501,7 @@ export const MessMitraApi = {
             name: data.name,
             phone: data.phone,
             gender: data.gender,
-            dietPreference: memberData.dietPreference || (data.gender === 'female' ? 'veg' : 'nonveg'),
+            dietPreference: memberData.dietPreference || (data.diet_preference as any) || 'veg',
             rate: Number(data.rate),
             planType: data.plan_type,
             joinDate: data.join_date,
@@ -636,7 +521,7 @@ export const MessMitraApi = {
       }
     }
 
-    let updatedMember: Member = DEFAULT_MEMBERS[0];
+    let updatedMember: Member | null = null;
     if (typeof window !== 'undefined') {
       const current = await this.getMembers();
       const updated = current.map((m) => {
@@ -649,6 +534,9 @@ export const MessMitraApi = {
       localStorage.setItem('messmitra_members', JSON.stringify(updated));
     }
     notifyDataChanged();
+    if (!updatedMember) {
+      throw new Error(`Member with id ${id} not found`);
+    }
     return updatedMember;
   },
 
@@ -675,6 +563,11 @@ export const MessMitraApi = {
       localStorage.setItem('messmitra_staff', JSON.stringify([]));
       localStorage.setItem('messmitra_registrations', JSON.stringify([]));
       localStorage.setItem('messmitra_payments', JSON.stringify([]));
+      localStorage.setItem('messmitra_staff_salaries', JSON.stringify([]));
+      localStorage.setItem('messmitra_staff_attendance', JSON.stringify([]));
+      localStorage.setItem('messmitra_walkin_orders', JSON.stringify([]));
+      localStorage.setItem('messmitra_meal_tokens', JSON.stringify([]));
+      localStorage.setItem('messmitra_notifications', JSON.stringify([]));
     }
     notifyDataChanged();
   },
@@ -736,8 +629,8 @@ export const MessMitraApi = {
     const lunchVegCount = lunchCount;
 
     // Dinner is Non-Veg ONLY on Wed, Fri, Sun for members with nonveg diet preference
-    const dinnerVegMembers = dinnerMembers.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg');
-    const dinnerNonVegMembers = dinnerMembers.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'nonveg');
+    const dinnerVegMembers = dinnerMembers.filter((m) => (m.dietPreference || 'veg') === 'veg');
+    const dinnerNonVegMembers = dinnerMembers.filter((m) => (m.dietPreference || 'veg') === 'nonveg');
 
     const dinnerVegLeaves = activeLeaves.filter((l) => dinnerVegMembers.some((m) => m.id === l.memberId)).length;
     const dinnerNonVegLeaves = activeLeaves.filter((l) => dinnerNonVegMembers.some((m) => m.id === l.memberId)).length;
@@ -750,9 +643,9 @@ export const MessMitraApi = {
       : 0;
 
     const vegCount = isNonVegSpecialDay
-      ? Math.max(0, members.filter((m) => (m.dietPreference || (m.gender === 'female' ? 'veg' : 'nonveg')) === 'veg').length - activeLeaves.filter((l) => {
+      ? Math.max(0, members.filter((m) => (m.dietPreference || 'veg') === 'veg').length - activeLeaves.filter((l) => {
           const m = members.find((mb) => mb.id === l.memberId);
-          return (m?.dietPreference || (m?.gender === 'female' ? 'veg' : 'nonveg')) === 'veg';
+          return (m?.dietPreference || 'veg') === 'veg';
         }).length)
       : totalCookFor;
 
@@ -951,7 +844,7 @@ export const MessMitraApi = {
       }
     }
 
-    let updatedLeave: LeaveRequest = DEFAULT_LEAVES[0];
+    let updatedLeave: LeaveRequest | null = null;
     if (typeof window !== 'undefined') {
       const current = await this.getLeaves();
       const updated = current.map((l) => {
@@ -964,6 +857,9 @@ export const MessMitraApi = {
       localStorage.setItem('messmitra_leaves', JSON.stringify(updated));
     }
     notifyDataChanged();
+    if (!updatedLeave) {
+      throw new Error(`Leave with id ${id} not found`);
+    }
     return updatedLeave;
   },
 
@@ -974,6 +870,10 @@ export const MessMitraApi = {
     const members = await this.getMembers();
     const leaves = await this.getLeaves();
 
+    const [yearStr, monthStr] = month.split('-');
+    const year = parseInt(yearStr, 10) || new Date().getFullYear();
+    const monthNum = parseInt(monthStr, 10) || (new Date().getMonth() + 1);
+
     // Read stored payments
     let storedPayments: any[] = [];
     if (typeof window !== 'undefined') {
@@ -982,12 +882,15 @@ export const MessMitraApi = {
     }
 
     const cycles: BillingCycle[] = members.map((m) => {
-      const memberLeaves = leaves.filter(
-        (l) => l.memberId === m.id && (l.status === 'auto_valid' || l.status === 'approved')
-      );
-      // Calculate distinct approved days in month
-      const leaveDays = memberLeaves.length > 0 ? 3 : 0;
-      const bill = calculateMonthlyBill(m.rate, leaveDays, m.planType);
+      let leaveDays = 0;
+      leaves.forEach((l) => {
+        if (l.memberId === m.id && (l.status === 'auto_valid' || l.status === 'approved')) {
+          leaveDays += calculateLeaveDaysInMonth(l.startDate, l.endDate, year, monthNum);
+        }
+      });
+
+      const baseMeals = calculateProratedMeals(m.joinDate, year, monthNum, m.planType);
+      const bill = calculateMonthlyBill(m.rate, leaveDays, m.planType, baseMeals);
 
       // Check payments recorded for this member and month
       const memberCycleId = `b-${m.id}-${month}`;
@@ -999,9 +902,7 @@ export const MessMitraApi = {
             (p.billingCycleId && p.billingCycleId.includes(m.id))) &&
           (!p.month || p.month === month)
       );
-      const customPaid = matchingPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
-      const defaultPaid = m.name.includes('Rahul') && matchingPayments.length === 0 ? bill.finalAmountDue : 0;
-      const amountPaid = matchingPayments.length > 0 ? customPaid : defaultPaid;
+      const amountPaid = matchingPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
 
       const status = amountPaid >= bill.finalAmountDue ? 'paid' : (amountPaid > 0 ? 'partially_paid' : 'unpaid');
 
@@ -1012,7 +913,7 @@ export const MessMitraApi = {
         memberName: m.name,
         memberPhone: m.phone,
         month,
-        baseMeals: 56,
+        baseMeals,
         approvedLeaveDays: leaveDays,
         rate: m.rate,
         perMealRate: bill.perMealRate,
@@ -1471,6 +1372,289 @@ export const MessMitraApi = {
     return newStaff;
   },
 
+  async updateStaff(id: string, dto: Partial<Staff>): Promise<Staff | null> {
+    const current = await this.getStaff();
+    let updatedStaff: Staff | null = null;
+    const updatedList = current.map((s) => {
+      if (s.id === id) {
+        updatedStaff = { ...s, ...dto };
+        return updatedStaff;
+      }
+      return s;
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_staff', JSON.stringify(updatedList));
+    }
+    notifyDataChanged();
+    return updatedStaff;
+  },
+
+  async deleteStaff(id: string): Promise<boolean> {
+    const current = await this.getStaff();
+    const updated = current.filter((s) => s.id !== id);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_staff', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return true;
+  },
+
+  // -------------------------------------------------------------
+  // 6B. STAFF SALARY LEDGER & ADVANCE PAYMENTS
+  // -------------------------------------------------------------
+  async getStaffSalaryPayments(month?: string): Promise<StaffSalaryPayment[]> {
+    let payments = DEFAULT_STAFF_SALARY_PAYMENTS;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_staff_salaries');
+      if (saved) {
+        try {
+          payments = JSON.parse(saved);
+        } catch { }
+      } else {
+        localStorage.setItem('messmitra_staff_salaries', JSON.stringify(DEFAULT_STAFF_SALARY_PAYMENTS));
+      }
+    }
+
+    if (month) {
+      return payments.filter((p) => p.month === month);
+    }
+    return payments;
+  },
+
+  async recordStaffSalaryPayment(
+    payment: Omit<StaffSalaryPayment, 'id' | 'createdAt' | 'voucherNumber'>
+  ): Promise<StaffSalaryPayment> {
+    const current = await this.getStaffSalaryPayments();
+    const count = current.length + 1;
+    const voucherNumber = `SAL-${payment.month}-${String(count).padStart(3, '0')}`;
+    const newPayment: StaffSalaryPayment = {
+      ...payment,
+      id: `sp-${Date.now()}`,
+      voucherNumber,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [newPayment, ...current];
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_staff_salaries', JSON.stringify(updated));
+    }
+
+    // Automatically record an expense entry in the one-off expenses ledger
+    await this.createOneOffExpense({
+      category: 'salary',
+      amount: newPayment.netPaid,
+      date: newPayment.paidDate,
+      note: `${newPayment.staffName} (${newPayment.paymentType === 'advance' ? 'उचल / Advance' : 'पगार / Salary'}) - ${voucherNumber}`,
+      createdBy: 'शंकर गिरी',
+    });
+
+    notifyDataChanged();
+    return newPayment;
+  },
+
+  async approveMonthlyStaffSalaries(
+    month: string,
+    approvals: Array<{
+      staffId: string;
+      staffName: string;
+      baseSalary: number;
+      advanceDeductions: number;
+      bonusAmount?: number;
+      netPaid: number;
+      paymentMethod: 'cash' | 'upi' | 'bank_transfer';
+      paidDate: string;
+      note?: string;
+    }>
+  ): Promise<StaffSalaryPayment[]> {
+    const results: StaffSalaryPayment[] = [];
+    for (const item of approvals) {
+      const payment = await this.recordStaffSalaryPayment({
+        messId: 'balaji-mess-pune',
+        staffId: item.staffId,
+        staffName: item.staffName,
+        month,
+        baseSalary: item.baseSalary,
+        advanceDeductions: item.advanceDeductions,
+        bonusAmount: item.bonusAmount || 0,
+        netPaid: item.netPaid,
+        paymentType: 'monthly_approval',
+        paymentMethod: item.paymentMethod,
+        paidDate: item.paidDate,
+        note: item.note || `महिना ${month} चा पगार मालक शंकर गिरी यांनी मंजूर केला.`,
+      });
+      results.push(payment);
+    }
+    notifyDataChanged();
+    return results;
+  },
+
+  // -------------------------------------------------------------
+  // 6C. STAFF ATTENDANCE TRACKER
+  // -------------------------------------------------------------
+  async getStaffAttendance(month: string = new Date().toISOString().substring(0, 7)): Promise<StaffAttendanceRecord[]> {
+    if (typeof window !== 'undefined') {
+      const key = `messmitra_staff_attendance_${month}`;
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch { }
+      }
+    }
+    return [];
+  },
+
+  async markStaffAttendance(
+    month: string,
+    records: StaffAttendanceRecord[]
+  ): Promise<void> {
+    if (typeof window !== 'undefined') {
+      const key = `messmitra_staff_attendance_${month}`;
+      localStorage.setItem(key, JSON.stringify(records));
+    }
+    notifyDataChanged();
+  },
+
+  // -------------------------------------------------------------
+  // 6D. WALK-IN / GUEST DAILY MEAL POS COUNTER
+  // -------------------------------------------------------------
+  async getWalkInOrders(targetDate?: string): Promise<WalkInOrder[]> {
+    let orders = DEFAULT_WALKIN_ORDERS;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_walkin_orders');
+      if (saved) {
+        try {
+          orders = JSON.parse(saved);
+        } catch { }
+      } else {
+        localStorage.setItem('messmitra_walkin_orders', JSON.stringify(DEFAULT_WALKIN_ORDERS));
+      }
+    }
+
+    if (targetDate) {
+      return orders.filter((o) => o.createdAt.startsWith(targetDate));
+    }
+    return orders;
+  },
+
+  async createWalkInOrder(
+    data: Omit<WalkInOrder, 'id' | 'orderNumber' | 'createdAt'>
+  ): Promise<WalkInOrder> {
+    const current = await this.getWalkInOrders();
+    const count = current.length + 101;
+    const newOrder: WalkInOrder = {
+      ...data,
+      id: `wo-${Date.now()}`,
+      orderNumber: `POS-${count}`,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [newOrder, ...current];
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_walkin_orders', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newOrder;
+  },
+
+  async getWalkInDailyStats(targetDate: string = new Date().toISOString().split('T')[0]): Promise<{
+    totalOrders: number;
+    totalRevenue: number;
+    cashRevenue: number;
+    upiRevenue: number;
+    vegThaliCount: number;
+    nonVegThaliCount: number;
+    parcelCount: number;
+  }> {
+    const orders = await this.getWalkInOrders(targetDate);
+    const totalOrders = orders.length;
+    let totalRevenue = 0;
+    let cashRevenue = 0;
+    let upiRevenue = 0;
+    let vegThaliCount = 0;
+    let nonVegThaliCount = 0;
+    let parcelCount = 0;
+
+    orders.forEach((o) => {
+      totalRevenue += o.totalAmount;
+      if (o.paymentMethod === 'cash') cashRevenue += o.totalAmount;
+      if (o.paymentMethod === 'upi') upiRevenue += o.totalAmount;
+
+      o.items.forEach((item) => {
+        if (item.diet === 'veg' && item.itemId.includes('thali')) vegThaliCount += item.quantity;
+        if (item.diet === 'nonveg' && item.itemId.includes('thali')) nonVegThaliCount += item.quantity;
+        if (item.isParcel) parcelCount += item.quantity;
+      });
+    });
+
+    return {
+      totalOrders,
+      totalRevenue,
+      cashRevenue,
+      upiRevenue,
+      vegThaliCount,
+      nonVegThaliCount,
+      parcelCount,
+    };
+  },
+
+  async getPosCatalog(): Promise<MenuCatalogItem[]> {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_pos_catalog');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch { }
+      } else {
+        localStorage.setItem('messmitra_pos_catalog', JSON.stringify(DEFAULT_POS_CATALOG));
+      }
+    }
+    return DEFAULT_POS_CATALOG;
+  },
+
+  async savePosCatalog(items: MenuCatalogItem[]): Promise<MenuCatalogItem[]> {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_pos_catalog', JSON.stringify(items));
+    }
+    notifyDataChanged();
+    return items;
+  },
+
+  async deleteWalkInOrder(orderId: string): Promise<void> {
+    if (typeof window !== 'undefined') {
+      const current = await this.getWalkInOrders();
+      const updated = current.filter((o) => o.id !== orderId);
+      localStorage.setItem('messmitra_walkin_orders', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+  },
+
+  downloadWalkInOrdersCsv(orders: WalkInOrder[], targetDate?: string): void {
+    const headers = ['Order Number', 'Date', 'Time', 'Customer Name', 'Phone', 'Items', 'Payment Method', 'Status', 'Total Amount (INR)'];
+    const rows = orders.map((o) => [
+      o.orderNumber,
+      o.createdAt.substring(0, 10),
+      new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      `"${(o.customerName || 'Walk-in Customer').replace(/"/g, '""')}"`,
+      `"${(o.customerPhone || '').replace(/"/g, '""')}"`,
+      `"${o.items.map((i) => `${i.name} (x${i.quantity})`).join('; ').replace(/"/g, '""')}"`,
+      o.paymentMethod.toUpperCase(),
+      o.paymentStatus.toUpperCase(),
+      o.totalAmount,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `daily-sales-${targetDate || new Date().toISOString().substring(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
   // -------------------------------------------------------------
   // 7. P&L SUMMARY & DYNAMIC CATEGORY AGGREGATION
   // -------------------------------------------------------------
@@ -1588,7 +1772,7 @@ export const MessMitraApi = {
 
     target.status = status;
     target.reviewedAt = new Date().toISOString();
-    target.reviewedBy = 'शंकर गिरी (Owner)';
+    target.reviewedBy = 'शंकर गिरी';
 
     if (status === 'approved') {
       if (target.role === 'member') {
@@ -1608,7 +1792,7 @@ export const MessMitraApi = {
         await this.createStaff({
           name: target.name,
           phone: target.phone,
-          role: target.staffRole || 'सहाय्यक आचारी (Cook)',
+          role: target.staffRole || 'सहाय्यक आचारी',
           monthlySalary: target.salary || 12000,
         });
       }

@@ -17,7 +17,7 @@ export const translations: Translations = {
   appName: {
     mr: 'श्री बालाजी मेस',
     hi: 'श्री बालाजी मेस',
-    en: 'श्री बालाजी मेस',
+    en: 'Shree Balaji Mess',
   },
   tagline: {
     mr: '२१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख',
@@ -30,29 +30,54 @@ export const translations: Translations = {
     en: 'Dashboard',
   },
   members: {
-    mr: 'सभासद (Members)',
-    hi: 'सदस्य (Members)',
+    mr: 'सभासद',
+    hi: 'सदस्य',
     en: 'Members',
   },
   billing: {
-    mr: 'बिलिंग व हिशोब',
-    hi: 'बिलिंग और हिसाब',
-    en: 'Billing & Accounting',
+    mr: 'बिलिंग',
+    hi: 'बिलिंग',
+    en: 'Billing',
   },
   leaves: {
-    mr: 'सुट्ट्या (Leaves)',
-    hi: 'छुट्टियां (Leaves)',
-    en: 'Leave Requests',
+    mr: 'सुट्ट्या',
+    hi: 'छुट्टियां',
+    en: 'Leaves',
   },
   expenses: {
-    mr: 'खर्च व्यवस्थापन',
-    hi: 'खर्च प्रबंधन',
+    mr: 'खर्च',
+    hi: 'खर्च',
     en: 'Expenses',
   },
   pnl: {
-    mr: 'नफा-तोटा (P&L)',
-    hi: 'लाभ-हानि (P&L)',
-    en: 'P&L Dashboard',
+    mr: 'नफा-तोटा',
+    hi: 'लाभ-हानि',
+    en: 'Profit & Loss',
+  },
+  staffTab: {
+    mr: 'कर्मचारी पगार',
+    hi: 'कर्मचारी वेतन',
+    en: 'Staff Payroll',
+  },
+  kitchenTab: {
+    mr: 'स्वयंपाकघर',
+    hi: 'रसोई',
+    en: 'Kitchen & Menu',
+  },
+  plansTab: {
+    mr: 'मेस प्लॅन्स',
+    hi: 'मेस प्लान',
+    en: 'Price Plans',
+  },
+  posTab: {
+    mr: 'सुटे जेवण POS',
+    hi: 'दैनिक भोजन POS',
+    en: 'Walk-in POS',
+  },
+  moreTab: {
+    mr: 'अधिक',
+    hi: 'अधिक',
+    en: 'More',
   },
   setupWizard: {
     mr: 'मेस सेटिंग्ज',
@@ -62,16 +87,16 @@ export const translations: Translations = {
   editSettings: {
     mr: 'मेस सेटिंग्ज बदला',
     hi: 'मेस सेटिंग्स बदलें',
-    en: 'Edit Mess Settings',
+    en: 'Edit Settings',
   },
   ownerView: {
-    mr: 'मालक डॅशबोर्ड (Owner)',
-    hi: 'मालिक डैशबोर्ड (Owner)',
-    en: 'Owner Dashboard',
+    mr: 'मालक',
+    hi: 'मालिक',
+    en: 'Owner',
   },
   memberPortalView: {
-    mr: 'सभासद पोर्टल (Member View)',
-    hi: 'सदस्य पोर्टल (Member View)',
+    mr: 'सभासद पोर्टल',
+    hi: 'सदस्य पोर्टल',
     en: 'Member Portal',
   },
 
@@ -97,13 +122,13 @@ export const translations: Translations = {
     en: 'Cook For (Heads)',
   },
   lunchCount: {
-    mr: 'दुपारचे जेवण (Lunch)',
-    hi: 'दोपहर का खाना (Lunch)',
+    mr: 'दुपारचे जेवण',
+    hi: 'दोपहर का खाना',
     en: 'Lunch Count',
   },
   dinnerCount: {
-    mr: 'रात्रीचे जेवण (Dinner)',
-    hi: 'रात का खाना (Dinner)',
+    mr: 'रात्रीचे जेवण',
+    hi: 'रात का खाना',
     en: 'Dinner Count',
   },
 
@@ -139,59 +164,59 @@ export const translations: Translations = {
     en: 'Active',
   },
   inactive: {
-    mr: 'बंद / इनॅक्टिव्ह',
+    mr: 'बंद',
     hi: 'निष्क्रिय',
     en: 'Inactive',
   },
   male: {
-    mr: '🟢 शाकाहारी (Veg)',
-    hi: '🟢 शाकाहारी (Veg)',
-    en: '🟢 Vegetarian',
+    mr: 'शाकाहारी',
+    hi: 'शाकाहारी',
+    en: 'Vegetarian',
   },
   female: {
-    mr: '🔴 मांसाहारी (Non-Veg)',
-    hi: '🔴 मांसाहारी (Non-Veg)',
-    en: '🔴 Non-Vegetarian',
+    mr: 'मांसाहारी',
+    hi: 'मांसाहारी',
+    en: 'Non-Vegetarian',
   },
   veg: {
-    mr: '🟢 शाकाहारी (Veg)',
-    hi: '🟢 शाकाहारी (Veg)',
-    en: '🟢 Veg',
+    mr: 'शाकाहारी',
+    hi: 'शाकाहारी',
+    en: 'Veg',
   },
   nonveg: {
-    mr: '🔴 मांसाहारी (Non-Veg)',
-    hi: '🔴 मांसाहारी (Non-Veg)',
-    en: '🔴 Non-Veg',
+    mr: 'मांसाहारी',
+    hi: 'मांसाहारी',
+    en: 'Non-Veg',
   },
   dietPreference: {
-    mr: 'आहार प्रकार (Diet Preference)',
-    hi: 'भोजन प्रकार (Diet Preference)',
+    mr: 'आहार प्रकार',
+    hi: 'भोजन प्रकार',
     en: 'Diet Preference',
   },
   vegRate: {
-    mr: 'शाकाहारी दर (Veg Rate - ₹3,000)',
-    hi: 'शाकाहारी दर (Veg Rate - ₹3,000)',
-    en: 'Veg Monthly Rate (₹3,000)',
+    mr: 'शाकाहारी दर',
+    hi: 'शाकाहारी दर',
+    en: 'Veg Monthly Rate',
   },
   nonVegRate: {
-    mr: 'मांसाहारी दर (Non-Veg Rate - ₹3,200)',
-    hi: 'मांसाहारी दर (Non-Veg Rate - ₹3,200)',
-    en: 'Non-Veg Monthly Rate (₹3,200)',
+    mr: 'मांसाहारी दर',
+    hi: 'मांसाहारी दर',
+    en: 'Non-Veg Monthly Rate',
   },
   legacyBadge: {
     mr: '२१ वर्षांची परंपरा • चव हीच आमची ओळख',
     hi: '२१ वर्षों की परंपरा • स्वाद ही हमारी पहचान',
-    en: '21 Years of Heritage • Taste is Our Identity',
+    en: '21 Years of Heritage • Authentic Taste',
   },
   dinnerCutoffLabel: {
-    mr: 'रात्रीचे जेवण कटऑफ वेळ (Dinner Cutoff)',
+    mr: 'रात्रीचे जेवण कटऑफ वेळ',
     hi: 'रात के खाने का कटऑफ समय',
-    en: 'Dinner Cutoff Time (6:00 PM)',
+    en: 'Dinner Cutoff Time',
   },
   lunchCutoffLabel: {
-    mr: 'दुपारचे जेवण कटऑफ वेळ (Lunch Cutoff)',
+    mr: 'दुपारचे जेवण कटऑफ वेळ',
     hi: 'दोपहर के खाने का कटऑफ समय',
-    en: 'Lunch Cutoff Time (9:00 AM)',
+    en: 'Lunch Cutoff Time',
   },
   bothMeals: {
     mr: 'दुपार + रात्र (दोन्ही)',
@@ -200,12 +225,12 @@ export const translations: Translations = {
   },
   lunchOnly: {
     mr: 'फक्त दुपारचे',
-    hi: 'सिर्फ दोपहर (Lunch)',
+    hi: 'सिर्फ दोपहर',
     en: 'Lunch Only',
   },
   dinnerOnly: {
     mr: 'फक्त रात्रीचे',
-    hi: 'सिर्फ रात (Dinner)',
+    hi: 'सिर्फ रात',
     en: 'Dinner Only',
   },
   monthlyRate: {
@@ -214,7 +239,7 @@ export const translations: Translations = {
     en: 'Monthly Rate (₹)',
   },
   joinDate: {
-    mr: 'जोडल्याची तारीख',
+    mr: 'नोंदणी तारीख',
     hi: 'जुड़ने की तारीख',
     en: 'Join Date',
   },
@@ -234,9 +259,9 @@ export const translations: Translations = {
     en: 'Full Name',
   },
   phoneNumber: {
-    mr: 'फोन नंबर (WhatsApp)',
-    hi: 'फ़ोन नंबर (WhatsApp)',
-    en: 'Phone Number (WhatsApp)',
+    mr: 'फोन नंबर',
+    hi: 'फ़ोन नंबर',
+    en: 'Phone Number',
   },
   gender: {
     mr: 'लिंग',
@@ -244,13 +269,13 @@ export const translations: Translations = {
     en: 'Gender',
   },
   planType: {
-    mr: 'जेवणाचा प्रकार (Plan)',
-    hi: 'भोजन प्रकार (Plan)',
+    mr: 'जेवणाचा प्रकार',
+    hi: 'भोजन प्रकार',
     en: 'Meal Plan Type',
   },
   save: {
-    mr: 'जतन करा (Save)',
-    hi: 'सुरक्षित करें (Save)',
+    mr: 'जतन करा',
+    hi: 'सुरक्षित करें',
     en: 'Save',
   },
   cancel: {
@@ -296,7 +321,7 @@ export const translations: Translations = {
     en: 'City',
   },
   cutoffTime: {
-    mr: 'रोजची सुट्टी नोंदवण्याची अंतिम वेळ (Cutoff)',
+    mr: 'रोजची सुट्टी नोंदवण्याची अंतिम वेळ',
     hi: 'दैनिक छुट्टी दर्ज करने का कटऑफ समय',
     en: 'Daily Leave Cutoff Time',
   },
@@ -306,19 +331,29 @@ export const translations: Translations = {
     en: 'Requests after cutoff require owner approval.',
   },
   maleRateLabel: {
-    mr: 'मुलांचा डीफॉल्ट मासिक दर (₹)',
-    hi: 'पुरुषों का डिफ़ॉल्ट मासिक दर (₹)',
-    en: 'Default Male Monthly Rate (₹)',
+    mr: 'मांसाहारी डीफॉल्ट मासिक दर (₹)',
+    hi: 'मांसाहारी डिफ़ॉल्ट मासिक दर (₹)',
+    en: 'Default Non-Veg Monthly Rate (₹)',
   },
   femaleRateLabel: {
-    mr: 'मुलींचा डीफॉल्ट मासिक दर (₹)',
-    hi: 'महिलाओं का डिफ़ॉल्ट मासिक दर (₹)',
-    en: 'Default Female Monthly Rate (₹)',
+    mr: 'शुद्ध शाकाहारी डीफॉल्ट मासिक दर (₹)',
+    hi: 'शुद्ध शाकाहारी डिफ़ॉल्ट मासिक दर (₹)',
+    en: 'Default Pure Veg Monthly Rate (₹)',
+  },
+  vegRateLabel: {
+    mr: 'शुद्ध शाकाहारी डीफॉल्ट मासिक दर (₹)',
+    hi: 'शुद्ध शाकाहारी डिफ़ॉल्ट मासिक दर (₹)',
+    en: 'Default Pure Veg Monthly Rate (₹)',
+  },
+  nonVegRateLabel: {
+    mr: 'मांसाहारी डीफॉल्ट मासिक दर (₹)',
+    hi: 'मांसाहारी डिफ़ॉल्ट मासिक दर (₹)',
+    en: 'Default Non-Veg Monthly Rate (₹)',
   },
   upiIdLabel: {
-    mr: 'मालकाचा UPI ID (GPay / PhonePe)',
-    hi: 'मालिक का UPI ID (GPay / PhonePe)',
-    en: 'Owner UPI ID (GPay / PhonePe / Paytm)',
+    mr: 'मालकाचा UPI ID',
+    hi: 'मालिक का UPI ID',
+    en: 'Owner UPI ID',
   },
   upiIdHelp: {
     mr: 'सभासदांना WhatsApp वर पाठवल्या जाणाऱ्या बिल लिंकमध्ये हा UPI ID आपोआप जोडला जाईल.',
@@ -348,19 +383,19 @@ export const translations: Translations = {
 
   // Leaves & Dispute Resolution
   submitLeave: {
-    mr: 'सुट्टी नोंदवा (Submit Leave)',
-    hi: 'छुट्टी दर्ज करें (Submit Leave)',
-    en: 'Submit Leave Request',
+    mr: 'सुट्टी नोंदवा',
+    hi: 'छुट्टी दर्ज करें',
+    en: 'Submit Leave',
   },
   leaveDateRange: {
-    mr: 'सुट्टीचा कालावधी (तारीख पासून - पर्यंत)',
-    hi: 'छुट्टी की अवधि (तारीख से - तक)',
-    en: 'Leave Date Range (From - To)',
+    mr: 'सुट्टीचा कालावधी',
+    hi: 'छुट्टी की अवधि',
+    en: 'Leave Date Range',
   },
   leaveReason: {
-    mr: 'सुट्टीचे कारण (पर्यायी)',
-    hi: 'छुट्टी का कारण (वैकल्पिक)',
-    en: 'Reason for Leave (Optional)',
+    mr: 'सुट्टीचे कारण',
+    hi: 'छुट्टी का कारण',
+    en: 'Reason for Leave',
   },
   ownerApprovalQueue: {
     mr: 'उशिरा आलेल्या सुट्ट्यांची मंजुरी रांग',
@@ -368,14 +403,14 @@ export const translations: Translations = {
     en: 'Late Submissions Approval Queue',
   },
   autoValidBadge: {
-    mr: 'वेळेत (आपोआप मंजूर)',
-    hi: 'समय पर (स्वतः स्वीकृत)',
-    en: 'Auto-Valid (Pre-Cutoff)',
+    mr: 'वेळेत मंजूर',
+    hi: 'समय पर स्वीकृत',
+    en: 'Auto-Approved',
   },
   latePendingBadge: {
-    mr: 'उशिरा (मंजुरी प्रलंबित)',
-    hi: 'देर से (अनुमोदन प्रतीक्षारत)',
-    en: 'Late (Pending Approval)',
+    mr: 'मंजुरी प्रलंबित',
+    hi: 'अनुमोदन प्रतीक्षारत',
+    en: 'Pending Approval',
   },
   approvedBadge: {
     mr: 'मंजूर',
@@ -398,9 +433,9 @@ export const translations: Translations = {
     en: 'Reject',
   },
   timestampAuditNote: {
-    mr: 'वाद निवारणासाठी अचूक वेळ नोंदवली जाते (अपरिवर्तनीय).',
-    hi: 'विवाद समाधान के लिए सटीक समय दर्ज किया जाता है (अपरिवर्तनीय)।',
-    en: 'Timestamp is permanently recorded for dispute resolution.',
+    mr: 'अचूक वेळ नोंदवली जाते.',
+    hi: 'सटीक समय दर्ज किया जाता है।',
+    en: 'Timestamp is permanently recorded.',
   },
 
   // Billing & Accounting
@@ -410,28 +445,28 @@ export const translations: Translations = {
     en: 'Monthly Billing & Ledger',
   },
   generateBills: {
-    mr: 'या महिन्याचे बिल तयार करा (56 Meals Formula)',
-    hi: 'इस महीने का बिल बनाएं (56 Meals Formula)',
-    en: 'Generate Monthly Bills (56-Meal Formula)',
+    mr: 'या महिन्याचे बिल तयार करा',
+    hi: 'इस महीने का बिल बनाएं',
+    en: 'Generate Monthly Bills',
   },
   amountDue: {
-    mr: 'बाकी रक्कम (Due)',
-    hi: 'बकाया राशि (Due)',
+    mr: 'बाकी रक्कम',
+    hi: 'बकाया राशि',
     en: 'Amount Due',
   },
   amountPaid: {
-    mr: 'भरलेली रक्कम (Paid)',
-    hi: 'प्राप्त राशि (Paid)',
+    mr: 'भरलेली रक्कम',
+    hi: 'प्राप्त राशि',
     en: 'Amount Paid',
   },
   pendingDues: {
-    mr: 'एकूण येणे बाकी (Pending)',
-    hi: 'कुल बकाया (Pending)',
+    mr: 'एकूण येणे बाकी',
+    hi: 'कुल बकाया',
     en: 'Pending Dues',
   },
   totalCollected: {
-    mr: 'एकूण जमा (Collected)',
-    hi: 'कुल जमा (Collected)',
+    mr: 'एकूण जमा',
+    hi: 'कुल जमा',
     en: 'Total Collected',
   },
   sendWhatsAppReminder: {
@@ -447,29 +482,29 @@ export const translations: Translations = {
   recordAdjustment: {
     mr: 'दुरुस्ती / वजावट नोंदवा',
     hi: 'समायोजन / छूट दर्ज करें',
-    en: 'Record Adjustment Entry',
+    en: 'Record Adjustment',
   },
   adjustmentNoteRequired: {
-    mr: 'दुरुस्तीचे कारण आवश्यक आहे (Audit Note)',
-    hi: 'समायोजन का कारण आवश्यक है (Audit Note)',
+    mr: 'दुरुस्तीचे कारण आवश्यक आहे',
+    hi: 'समायोजन का कारण आवश्यक है',
     en: 'Adjustment reason note is required',
   },
   exportCsv: {
-    mr: 'CSV डाउनलोड करा (Export)',
-    hi: 'CSV डाउनलोड करें (Export)',
-    en: 'Export CSV Report',
+    mr: 'CSV डाउनलोड करा',
+    hi: 'CSV डाउनलोड करें',
+    en: 'Export CSV',
   },
 
   // Expenses & Staff
   recurringExpenses: {
-    mr: 'दरमहा नियमित खर्च (Rent / Salary / Gas)',
-    hi: 'मासिक नियमित खर्च (Rent / Salary / Gas)',
+    mr: 'दरमहा नियमित खर्च',
+    hi: 'मासिक नियमित खर्च',
     en: 'Monthly Recurring Expenses',
   },
   oneOffExpenses: {
-    mr: 'दैनंदिन खर्च (भाजीपाला / किराणा / दुरुस्ती)',
-    hi: 'दैनिक खर्च (सब्जी / किराना / मरम्मत)',
-    en: 'Daily One-Off Expenses',
+    mr: 'दैनंदिन खर्च',
+    hi: 'दैनिक खर्च',
+    en: 'Daily Expenses',
   },
   addExpense: {
     mr: 'खर्च नोंदवा',
@@ -477,8 +512,8 @@ export const translations: Translations = {
     en: 'Add Expense',
   },
   addStaff: {
-    mr: 'कर्मचारी जोडा (महाराज / मदतनीस)',
-    hi: 'कर्मचारी जोड़ें (रसोइया / सहायक)',
+    mr: 'कर्मचारी जोडा',
+    hi: 'कर्मचारी जोड़ें',
     en: 'Add Staff Member',
   },
   confirmCycle: {
@@ -489,14 +524,14 @@ export const translations: Translations = {
 
   // P&L Dashboard
   netProfit: {
-    mr: 'निव्वळ नफा (Net Profit)',
-    hi: 'शुद्ध लाभ (Net Profit)',
+    mr: 'निव्वळ नफा',
+    hi: 'शुद्ध लाभ',
     en: 'Net Profit',
   },
   grossIncome: {
-    mr: 'एकूण उत्पन्न (जमा फी)',
-    hi: 'कुल आय (प्राप्त शुल्क)',
-    en: 'Gross Income (Fees Collected)',
+    mr: 'एकूण उत्पन्न',
+    hi: 'कुल आय',
+    en: 'Gross Income',
   },
   totalExpenses: {
     mr: 'एकूण खर्च',
@@ -506,7 +541,7 @@ export const translations: Translations = {
   expenseBreakdown: {
     mr: 'खर्चाचे विभागवार वर्गीकरण',
     hi: 'खर्च का श्रेणीवार विवरण',
-    en: 'Expense Breakdown by Category',
+    en: 'Expense Breakdown',
   },
 };
 
