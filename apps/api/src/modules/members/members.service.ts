@@ -183,12 +183,8 @@ export class MembersService {
     let membersOnLeaveIds: Set<string> = new Set();
 
     if (!client || this.supabaseService.getIsMockMode()) {
-      // In-memory: filter the shared in-memory leaves array (re-query via Supabase service)
-      // We directly check the date range here without importing LeavesService (avoids circular dep)
-      const DEMO_LEAVES = [
-        { memberId: 'm1111111-1111-1111-1111-111111111111', startDate: '2026-09-12', endDate: '2026-09-14', status: 'auto_valid' },
-        { memberId: 'm3333333-3333-3333-3333-333333333333', startDate: '2026-09-11', endDate: '2026-09-11', status: 'pending_approval' },
-      ];
+      // In-memory mode: no hardcoded demo leaves
+      const DEMO_LEAVES: any[] = [];
       for (const l of DEMO_LEAVES) {
         if (
           (l.status === 'auto_valid' || l.status === 'approved') &&

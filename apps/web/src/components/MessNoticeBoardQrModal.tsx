@@ -183,12 +183,12 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
     window.print();
   };
 
-  const handleDownloadPoster = async () => {
+  const handleDownloadPoster = async (format: 'png' | 'jpg' = 'png') => {
     setIsGeneratingDownload(true);
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      if (!ctx) throw new Error('Could not create canvas context');
 
       if (qrType === 'register') {
         if (registerPosterStyle === 'template') {
@@ -199,36 +199,50 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
           await new Promise((resolve, reject) => {
             templateImg.onload = resolve;
-            templateImg.onerror = reject;
+            templateImg.onerror = () => {
+              // If template fails, resolve anyway so we can fallback
+              resolve(null);
+            };
           });
 
           canvas.width = templateImg.naturalWidth || 682;
           canvas.height = templateImg.naturalHeight || 1024;
 
-          ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+          if (templateImg.complete && templateImg.naturalWidth > 0) {
+            ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+          } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          }
 
           const qrX = canvas.width * 0.638;
           const qrY = canvas.height * 0.342;
           const qrW = canvas.width * 0.295;
           const qrH = canvas.height * 0.180;
 
-          const qrImg = new Image();
-          qrImg.src = qrDataUrl;
-          await new Promise((resolve, reject) => {
-            qrImg.onload = resolve;
-            qrImg.onerror = reject;
-          });
+          if (qrDataUrl) {
+            const qrImg = new Image();
+            qrImg.src = qrDataUrl;
+            await new Promise((resolve) => {
+              qrImg.onload = resolve;
+              qrImg.onerror = resolve;
+            });
 
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.roundRect(qrX, qrY, qrW, qrH, 6);
-          ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            if (ctx.roundRect) {
+              ctx.roundRect(qrX, qrY, qrW, qrH, 6);
+            } else {
+              ctx.rect(qrX, qrY, qrW, qrH);
+            }
+            ctx.fill();
 
-          ctx.drawImage(qrImg, qrX + 2, qrY + 2, qrW - 4, qrH - 4);
+            ctx.drawImage(qrImg, qrX + 2, qrY + 2, qrW - 4, qrH - 4);
+          }
         } else {
           // MODE 1B: Official High-Res A4 Registration Notice Poster (Vector Sizing)
-          canvas.width = 800;
-          canvas.height = 1180;
+          canvas.width = 1200;
+          canvas.height = 1770;
 
           // Background Gradient
           const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -240,101 +254,114 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
           // Top Saffron Bar
           ctx.fillStyle = '#ea580c';
-          ctx.fillRect(0, 0, canvas.width, 24);
+          ctx.fillRect(0, 0, canvas.width, 36);
 
           // Border Frame
           ctx.strokeStyle = '#ea580c';
-          ctx.lineWidth = 8;
-          ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+          ctx.lineWidth = 12;
+          ctx.strokeRect(24, 24, canvas.width - 48, canvas.height - 48);
 
           // Header Brand Title
           ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 38px sans-serif';
+          ctx.font = 'bold 56px sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText('श्री बालाजी मेस (पुणे)', canvas.width / 2, 95);
+          ctx.fillText('श्री बालाजी मेस (पुणे)', canvas.width / 2, 140);
 
           ctx.fillStyle = '#c2410c';
-          ctx.font = 'bold 20px sans-serif';
-          ctx.fillText('🚩 २१ वर्षांची अखंड परंपरा • घरगुती रुचकर जेवण व टिफिन सेवा 🚩', canvas.width / 2, 135);
+          ctx.font = 'bold 30px sans-serif';
+          ctx.fillText('🚩 २१ वर्षांची अखंड परंपरा • घरगुती रुचकर जेवण व टिफिन सेवा 🚩', canvas.width / 2, 200);
 
           // Header Pill: SCAN TO REGISTER
           ctx.fillStyle = '#059669';
           ctx.beginPath();
-          ctx.roundRect(canvas.width / 2 - 230, 165, 460, 48, 24);
+          if (ctx.roundRect) {
+            ctx.roundRect(canvas.width / 2 - 340, 245, 680, 72, 36);
+          } else {
+            ctx.rect(canvas.width / 2 - 340, 245, 680, 72);
+          }
           ctx.fill();
 
           ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 22px sans-serif';
-          ctx.fillText('📱 ऑनलाईन नोंदणी • SCAN TO REGISTER', canvas.width / 2, 197);
+          ctx.font = 'bold 32px sans-serif';
+          ctx.fillText('📱 ऑनलाईन नोंदणी • SCAN TO REGISTER', canvas.width / 2, 292);
 
           // Draw QR Container Card
-          const qrBoxSize = 460;
+          const qrBoxSize = 680;
           const qrBoxX = (canvas.width - qrBoxSize) / 2;
-          const qrBoxY = 240;
+          const qrBoxY = 360;
 
           ctx.fillStyle = '#ffffff';
           ctx.shadowColor = 'rgba(0,0,0,0.12)';
-          ctx.shadowBlur = 24;
+          ctx.shadowBlur = 30;
           ctx.beginPath();
-          ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 28);
+          if (ctx.roundRect) {
+            ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 40);
+          } else {
+            ctx.rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+          }
           ctx.fill();
           ctx.shadowBlur = 0;
 
           ctx.strokeStyle = '#e2e8f0';
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 4;
           ctx.stroke();
 
           // Draw QR Image
-          const qrImg = new Image();
-          qrImg.src = qrDataUrl;
-          await new Promise((resolve, reject) => {
-            qrImg.onload = resolve;
-            qrImg.onerror = reject;
-          });
-
-          ctx.drawImage(qrImg, qrBoxX + 24, qrBoxY + 24, qrBoxSize - 48, qrBoxSize - 48);
+          if (qrDataUrl) {
+            const qrImg = new Image();
+            qrImg.src = qrDataUrl;
+            await new Promise((resolve) => {
+              qrImg.onload = resolve;
+              qrImg.onerror = resolve;
+            });
+            ctx.drawImage(qrImg, qrBoxX + 36, qrBoxY + 36, qrBoxSize - 72, qrBoxSize - 72);
+          }
 
           // Feature Highlights Box
-          const infoY = 740;
+          const infoY = 1100;
           ctx.fillStyle = '#f8fafc';
           ctx.beginPath();
-          ctx.roundRect(60, infoY, canvas.width - 120, 240, 20);
+          if (ctx.roundRect) {
+            ctx.roundRect(90, infoY, canvas.width - 180, 360, 30);
+          } else {
+            ctx.rect(90, infoY, canvas.width - 180, 360);
+          }
           ctx.fill();
 
           ctx.strokeStyle = '#cbd5e1';
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 3;
           ctx.stroke();
 
           ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 22px sans-serif';
+          ctx.font = 'bold 34px sans-serif';
           ctx.textAlign = 'left';
-          ctx.fillText('✨ मेस मित्र वैशिष्ट्ये:', 90, infoY + 45);
+          ctx.fillText('✨ मेस मित्र वैशिष्ट्ये:', 140, infoY + 65);
 
-          ctx.font = '19px sans-serif';
+          ctx.font = '28px sans-serif';
           ctx.fillStyle = '#334155';
-          ctx.fillText('🍲  घरगुती रुचकर व ताजे जेवण (दुपारी व रात्री)', 90, infoY + 85);
-          ctx.fillText('📅  मोबाईल ॲपवरून सुट्टी (Leave) नोंदवण्याची सोय', 90, infoY + 125);
-          ctx.fillText('📊  पारदर्शक मासिक बिलिंग व त्वरित UPI पेमेंट', 90, infoY + 165);
-          ctx.fillText('🎫  डिजिटल मील टोकन व डाएट निवड (व्हेज / नॉन-व्हेज)', 90, infoY + 205);
+          ctx.fillText('🍲  घरगुती रुचकर व ताजे जेवण (दुपारी व रात्री)', 140, infoY + 125);
+          ctx.fillText('📅  मोबाईल ॲपवरून सुट्टी (Leave) नोंदवण्याची सोय', 140, infoY + 185);
+          ctx.fillText('📊  पारदर्शक मासिक बिलिंग व त्वरित UPI पेमेंट', 140, infoY + 245);
+          ctx.fillText('🎫  डिजिटल मील टोकन व डाएट निवड (व्हेज / नॉन-व्हेज)', 140, infoY + 305);
 
           // Contact Box
           ctx.textAlign = 'center';
           ctx.fillStyle = '#0f172a';
-          ctx.font = 'bold 24px sans-serif';
-          ctx.fillText('चालक: शंकर गिरी • मो. ९८२२३३८९७५', canvas.width / 2, 1040);
+          ctx.font = 'bold 36px sans-serif';
+          ctx.fillText('चालक: शंकर गिरी • मो. ९८२२३३८९७५', canvas.width / 2, 1550);
 
           ctx.fillStyle = '#64748b';
-          ctx.font = '16px monospace';
-          ctx.fillText(liveAppUrl, canvas.width / 2, 1080);
+          ctx.font = '24px monospace';
+          ctx.fillText(liveAppUrl, canvas.width / 2, 1610);
 
           ctx.fillStyle = '#94a3b8';
-          ctx.font = '14px sans-serif';
-          ctx.fillText('Powered by MessMitra (मेस मित्र)', canvas.width / 2, 1120);
+          ctx.font = '20px sans-serif';
+          ctx.fillText('Powered by MessMitra (मेस मित्र)', canvas.width / 2, 1670);
         }
       } else {
         // MODE 2: Dedicated Official UPI Merchant Standee Poster
-        canvas.width = 800;
-        canvas.height = 1150;
+        canvas.width = 1200;
+        canvas.height = 1720;
 
         // Background Gradient
         const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
@@ -346,103 +373,163 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
 
         // Header Top Bar with Brand Saffron
         ctx.fillStyle = '#ea580c';
-        ctx.fillRect(0, 0, canvas.width, 24);
+        ctx.fillRect(0, 0, canvas.width, 36);
 
         // Border
         ctx.strokeStyle = '#ea580c';
-        ctx.lineWidth = 8;
-        ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+        ctx.lineWidth = 12;
+        ctx.strokeRect(24, 24, canvas.width - 48, canvas.height - 48);
 
         // Header Text
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 38px sans-serif';
+        ctx.font = 'bold 56px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('श्री बालाजी मेस (पुणे)', canvas.width / 2, 95);
+        ctx.fillText('श्री बालाजी मेस (पुणे)', canvas.width / 2, 140);
 
         ctx.fillStyle = '#c2410c';
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillText('🚩 २१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख 🚩', canvas.width / 2, 135);
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText('🚩 २१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख 🚩', canvas.width / 2, 200);
 
         // UPI Header Pill
         ctx.fillStyle = '#0284c7';
         ctx.beginPath();
-        ctx.roundRect(canvas.width / 2 - 220, 165, 440, 48, 24);
+        if (ctx.roundRect) {
+          ctx.roundRect(canvas.width / 2 - 330, 245, 660, 72, 36);
+        } else {
+          ctx.rect(canvas.width / 2 - 330, 245, 660, 72);
+        }
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText('SCAN & PAY WITH ANY UPI APP', canvas.width / 2, 197);
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText('SCAN & PAY WITH ANY UPI APP', canvas.width / 2, 292);
 
         // Draw QR Container Box
-        const qrBoxSize = 480;
+        const qrBoxSize = 720;
         const qrBoxX = (canvas.width - qrBoxSize) / 2;
-        const qrBoxY = 240;
+        const qrBoxY = 360;
 
         ctx.fillStyle = '#ffffff';
         ctx.shadowColor = 'rgba(0,0,0,0.15)';
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 30;
         ctx.beginPath();
-        ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 28);
+        if (ctx.roundRect) {
+          ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 40);
+        } else {
+          ctx.rect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize);
+        }
         ctx.fill();
         ctx.shadowBlur = 0;
 
         ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
         // Draw the QR Code Image
-        const qrImg = new Image();
-        qrImg.src = qrDataUrl;
-        await new Promise((resolve, reject) => {
-          qrImg.onload = resolve;
-          qrImg.onerror = reject;
-        });
-
-        ctx.drawImage(qrImg, qrBoxX + 25, qrBoxY + 25, qrBoxSize - 50, qrBoxSize - 50);
+        if (qrDataUrl) {
+          const qrImg = new Image();
+          qrImg.src = qrDataUrl;
+          await new Promise((resolve) => {
+            qrImg.onload = resolve;
+            qrImg.onerror = resolve;
+          });
+          ctx.drawImage(qrImg, qrBoxX + 38, qrBoxY + 38, qrBoxSize - 76, qrBoxSize - 76);
+        }
 
         // Payee & Owner Info Box
-        const infoY = 760;
+        const infoY = 1140;
         ctx.fillStyle = '#f1f5f9';
         ctx.beginPath();
-        ctx.roundRect(80, infoY, canvas.width - 160, 200, 20);
+        if (ctx.roundRect) {
+          ctx.roundRect(120, infoY, canvas.width - 240, 300, 30);
+        } else {
+          ctx.rect(120, infoY, canvas.width - 240, 300);
+        }
         ctx.fill();
 
         ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 26px sans-serif';
-        ctx.fillText(`UPI ID: ${upiId}`, canvas.width / 2, infoY + 50);
+        ctx.font = 'bold 38px sans-serif';
+        ctx.fillText(`UPI ID: ${upiId}`, canvas.width / 2, infoY + 75);
 
         ctx.fillStyle = '#334155';
-        ctx.font = 'bold 22px sans-serif';
-        ctx.fillText(`खातेदार: ${payeeName}`, canvas.width / 2, infoY + 95);
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillText(`खातेदार: ${payeeName}`, canvas.width / 2, infoY + 140);
 
         ctx.fillStyle = '#475569';
-        ctx.font = '20px sans-serif';
-        ctx.fillText('चालक: शंकर गिरी • मो. ९८२२३३८९७५', canvas.width / 2, infoY + 140);
+        ctx.font = '30px sans-serif';
+        ctx.fillText('चालक: शंकर गिरी • मो. ९८२२३३८९७५', canvas.width / 2, infoY + 205);
 
         if (paymentAmount) {
           ctx.fillStyle = '#16a34a';
-          ctx.font = 'bold 22px sans-serif';
-          ctx.fillText(`निश्चित रक्कम: ₹${paymentAmount}`, canvas.width / 2, infoY + 175);
+          ctx.font = 'bold 32px sans-serif';
+          ctx.fillText(`निश्चित रक्कम: ₹${paymentAmount}`, canvas.width / 2, infoY + 258);
         }
 
         // Footer Brand & Apps
         ctx.fillStyle = '#64748b';
-        ctx.font = 'bold 18px sans-serif';
-        ctx.fillText('Google Pay  •  PhonePe  •  Paytm  •  BHIM UPI', canvas.width / 2, 1020);
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillText('Google Pay  •  PhonePe  •  Paytm  •  BHIM UPI', canvas.width / 2, 1530);
 
         ctx.fillStyle = '#94a3b8';
-        ctx.font = '16px sans-serif';
-        ctx.fillText('मेस मासिक फी व जेवण बिलासाठी हे स्टँडी काउंटरवर वापरा.', canvas.width / 2, 1060);
+        ctx.font = '22px sans-serif';
+        ctx.fillText('मेस मासिक फी व जेवण बिलासाठी हे स्टँडी काउंटरवर वापरा.', canvas.width / 2, 1590);
       }
 
-      // Trigger download
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-      const link = document.createElement('a');
-      link.download = qrType === 'register' ? 'shree_balaji_mess_joining_poster.jpg' : 'shree_balaji_mess_upi_standee.jpg';
-      link.href = dataUrl;
-      link.click();
+      // Determine output extension and mime type
+      const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      const ext = format === 'jpg' ? 'jpg' : 'png';
+      const baseFilename =
+        qrType === 'register'
+          ? registerPosterStyle === 'template'
+            ? 'shree_balaji_mess_flyer'
+            : 'shree_balaji_mess_registration_poster'
+          : 'shree_balaji_mess_upi_standee';
+      const fullFilename = `${baseFilename}.${ext}`;
+
+      // Save via toBlob / DataURL with explicit anchor download
+      if (canvas.toBlob) {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = fullFilename;
+              link.setAttribute('download', fullFilename);
+              document.body.appendChild(link);
+              link.click();
+              setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              }, 1000);
+            } else {
+              // Fallback
+              const dataUrl = canvas.toDataURL(mimeType, 0.95);
+              const link = document.createElement('a');
+              link.href = dataUrl;
+              link.download = fullFilename;
+              link.setAttribute('download', fullFilename);
+              document.body.appendChild(link);
+              link.click();
+              setTimeout(() => document.body.removeChild(link), 1000);
+            }
+          },
+          mimeType,
+          0.95
+        );
+      } else {
+        const dataUrl = canvas.toDataURL(mimeType, 0.95);
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fullFilename;
+        link.setAttribute('download', fullFilename);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => document.body.removeChild(link), 1000);
+      }
     } catch (err) {
       console.error('Poster generation failed:', err);
+      alert(language === 'en' ? 'Download failed. Please try Print / Save as PDF.' : 'डाऊनलोड अयशस्वी. कृपया प्रिंट / PDF पर्याय वापरा.');
     } finally {
       setIsGeneratingDownload(false);
     }
@@ -486,24 +573,25 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={handlePrint}
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer min-h-[36px]"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>{language === 'en' ? 'Print' : 'प्रिंट'}</span>
+              <span>{language === 'en' ? 'Print / PDF' : 'प्रिंट / PDF'}</span>
             </button>
 
             <button
               type="button"
-              onClick={handleDownloadPoster}
+              onClick={() => handleDownloadPoster('png')}
               disabled={isGeneratingDownload || !qrDataUrl}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition cursor-pointer min-h-[36px]"
+              title="Download high-resolution PNG image"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>{isGeneratingDownload ? (language === 'en' ? 'Downloading...' : 'डाऊनलोड...') : (language === 'en' ? 'Download Poster' : 'पोस्टर डाऊनलोड')}</span>
+              <span>{isGeneratingDownload ? (language === 'en' ? 'Saving...' : 'जतन होत आहे...') : 'PNG डाऊनलोड (HD)'}</span>
             </button>
 
             <button
@@ -979,15 +1067,36 @@ export const MessNoticeBoardQrModal: React.FC<MessNoticeBoardQrModalProps> = ({
             चालक: शंकर गिरी (९८२२३३८९७५)
           </span>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
-              onClick={handleDownloadPoster}
+              onClick={handlePrint}
+              className="sm:hidden px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px]"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>प्रिंट / PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDownloadPoster('png')}
               disabled={isGeneratingDownload || !qrDataUrl}
-              className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px]"
+              className="flex-1 sm:flex-none px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px]"
+              title="Download high-resolution PNG format"
             >
               <Download className="w-4 h-4" />
-              <span>JPG डाऊनलोड करा</span>
+              <span>PNG डाऊनलोड (HD)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleDownloadPoster('jpg')}
+              disabled={isGeneratingDownload || !qrDataUrl}
+              className="flex-1 sm:flex-none px-3.5 py-2 bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5 min-h-[38px]"
+              title="Download JPG format"
+            >
+              <Download className="w-4 h-4" />
+              <span>JPG डाऊनलोड</span>
             </button>
 
             <button
