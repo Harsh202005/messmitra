@@ -349,39 +349,51 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               }`}
             >
               <div className="space-y-3">
-                {/* Header: Badge & 1-Click ON/OFF Toggle Switch */}
-                <div className="flex items-center justify-between gap-2">
+                {/* Header: Badge, ON/OFF Toggle & Delete button */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-mono">
                     {plan.badge}
                   </span>
 
-                  {/* 1-Click ON/OFF Status Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleTogglePlan(plan.id, plan.isActive)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
-                      isPlanActive
-                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
-                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-200'
-                    }`}
-                    title={
-                      isPlanActive
-                        ? 'योजना सध्या चालू आहे (क्लिक करून बंद करा)'
-                        : 'योजना सध्या बंद आहे (क्लिक करून चालू करा)'
-                    }
-                  >
-                    {isPlanActive ? (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>चालू (ON)</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-2 h-2 rounded-full bg-rose-500" />
-                        <span>बंद (OFF)</span>
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {/* 1-Click ON/OFF Status Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePlan(plan.id, plan.isActive)}
+                      className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                        isPlanActive
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-200'
+                      }`}
+                      title={
+                        isPlanActive
+                          ? 'योजना सध्या चालू आहे (क्लिक करून बंद करा)'
+                          : 'योजना सध्या बंद आहे (क्लिक करून चालू करा)'
+                      }
+                    >
+                      {isPlanActive ? (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>चालू</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-rose-500" />
+                          <span>बंद</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* Top Delete Quick Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePlan(plan.id, plan.nameMr || plan.name)}
+                      className="p-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/70 border border-rose-200 dark:border-rose-800/60 transition cursor-pointer"
+                      title={language === 'en' ? 'Delete Plan' : 'योजना हटवा'}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Plan Name (Marathi / English) */}
@@ -479,10 +491,11 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
                   <button
                     onClick={() => handleDeletePlan(plan.id, plan.nameMr || plan.name)}
-                    className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-xl transition cursor-pointer"
-                    title={language === 'en' ? 'Delete Plan' : 'योजना हटवा'}
+                    className="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 rounded-xl font-bold text-xs transition cursor-pointer flex items-center gap-1"
+                    title={language === 'en' ? 'Delete Plan' : 'योजना कायमची हटवा'}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                    <span>{language === 'en' ? 'Delete' : 'हटवा'}</span>
                   </button>
                 </div>
               </div>
