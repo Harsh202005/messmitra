@@ -5,9 +5,16 @@ import { useEffect, useState, useRef } from 'react';
 // Current client build version baked into the JS bundle
 const CLIENT_BUILD_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '';
 
+declare global {
+  interface Window {
+    __messmitra_reload_app?: () => void;
+  }
+}
+
 export default function ServiceWorkerRegister() {
   const [isUpdating, setIsUpdating] = useState(false);
   const isReloadingRef = useRef(false);
+  const currentAppVersionRef = useRef<string>(CLIENT_BUILD_VERSION);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -15,13 +22,35 @@ export default function ServiceWorkerRegister() {
     let registrationRef: ServiceWorkerRegistration | null = null;
     let pollInterval: NodeJS.Timeout | null = null;
 
-    const triggerReload = (targetVersion?: string) => {
+    // Hard purge all caches and force reload to latest version
+    const forcePurgeAndReload = async () => {
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+          }
+        }
+      } catch (e) {
+        console.warn('Purge error:', e);
+      }
+      // Force reload bypassing cache
+      window.location.href = window.location.pathname + '?_t=' + Date.now();
+    };
+
+    window.__messmitra_reload_app = forcePurgeAndReload;
+
+    const triggerReload = async (targetVersion?: string) => {
       if (isReloadingRef.current) return;
 
       const lastReload = sessionStorage.getItem('balaji_last_reload');
       const now = Date.now();
-      if (lastReload && now - parseInt(lastReload, 10) < 8000) {
-        // Prevent rapid reload loops within 8 seconds
+      if (lastReload && now - parseInt(lastReload, 10) < 6000) {
+        // Prevent rapid reload loops within 6 seconds
         return;
       }
 
@@ -32,8 +61,15 @@ export default function ServiceWorkerRegister() {
         sessionStorage.setItem('balaji_known_version', targetVersion);
       }
 
+      // Clear all caches so the upcoming reload gets the fresh HTML and JS chunks
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        }
+      } catch {}
+
       setTimeout(() => {
-        // Force hard reload from server
         window.location.reload();
       }, 1000);
     };
@@ -43,7 +79,7 @@ export default function ServiceWorkerRegister() {
       try {
         if (!navigator.onLine) return;
 
-        // Also tell SW to check for byte differences in sw.js
+        // Force check for sw.js byte difference
         if (registrationRef) {
           registrationRef.update().catch(() => {});
         }
@@ -60,26 +96,39 @@ export default function ServiceWorkerRegister() {
         const data = await res.json();
         const serverVersion = data?.version;
 
-        if (serverVersion && CLIENT_BUILD_VERSION && serverVersion !== CLIENT_BUILD_VERSION) {
-          const knownVersion = sessionStorage.getItem('balaji_known_version');
-          if (knownVersion !== serverVersion) {
-            console.log(`[AutoUpdate] New version detected: server=${serverVersion}, client=${CLIENT_BUILD_VERSION}`);
-            triggerReload(serverVersion);
-          }
+        if (!serverVersion) return;
+
+        // If we didn't have an initial version, adopt the first returned one
+        if (!currentAppVersionRef.current) {
+          currentAppVersionRef.current = serverVersion;
+          return;
+        }
+
+        // Remote version changed -> new commit/build has been deployed!
+        if (serverVersion !== currentAppVersionRef.current) {
+          console.log(`[AutoUpdate] New deployment detected: ${serverVersion} (was: ${currentAppVersionRef.current})`);
+          currentAppVersionRef.current = serverVersion;
+          triggerReload(serverVersion);
         }
       } catch (e) {
-        // Silently catch fetch errors (e.g. temporary network offline)
+        // Network failure / temporary offline
       }
     };
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
-      // Register with updateViaCache: 'none' to always fetch newest sw.js from network
+      // Register with updateViaCache: 'none' and version query param to bypass edge/browser cache
+      const swUrl = `/sw.js?v=${CLIENT_BUILD_VERSION || Date.now()}`;
       navigator.serviceWorker
-        .register('/sw.js', { updateViaCache: 'none' })
+        .register(swUrl, { updateViaCache: 'none' })
         .then((reg) => {
           registrationRef = reg;
-          console.log('[SW] ServiceWorker registered with updateViaCache: none');
+
+          // Check for waiting worker immediately
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            triggerReload();
+          }
 
           // Listen for new worker installation
           reg.addEventListener('updatefound', () => {
@@ -88,18 +137,12 @@ export default function ServiceWorkerRegister() {
 
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] New version installed, activating immediately...');
+                console.log('[SW] New version installed. Activating and updating page...');
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
                 triggerReload();
               }
             });
           });
-
-          // Check if there is already a waiting worker
-          if (reg.waiting) {
-            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-            triggerReload();
-          }
         })
         .catch((err) => {
           console.warn('[SW] Registration failed:', err);
@@ -130,13 +173,13 @@ export default function ServiceWorkerRegister() {
     };
     window.addEventListener('error', handleError);
 
-    // Initial check after 3 seconds
+    // Initial check after 2 seconds
     const initialTimer = setTimeout(() => {
       checkVersionUpdate();
-    }, 3000);
+    }, 2000);
 
-    // Poll every 30 seconds
-    pollInterval = setInterval(checkVersionUpdate, 30000);
+    // Poll every 25 seconds
+    pollInterval = setInterval(checkVersionUpdate, 25000);
 
     // Recheck immediately when user returns to app/tab
     const handleVisibilityChange = () => {

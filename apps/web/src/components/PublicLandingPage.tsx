@@ -472,6 +472,23 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
         <p>
           श्री बालाजी मेस — २१ वर्षांची अखंड परंपरा • चालक: <strong>शंकर गिरी ({phone})</strong> • MessMitra Platform
         </p>
+        <div className="mt-2.5 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                if (window.__messmitra_reload_app) {
+                  window.__messmitra_reload_app();
+                } else {
+                  window.location.reload();
+                }
+              }
+            }}
+            className="text-[11px] text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1 cursor-pointer bg-brand-50 dark:bg-brand-950/40 px-2.5 py-1 rounded-full border border-brand-200 dark:border-brand-800"
+          >
+            <span>🔄 नवीन व्हर्जन लोड करा / रिफ्रेश</span>
+          </button>
+        </div>
       </footer>
 
       {/* MOBILE STICKY FLOATING QUICK ACTION BAR (Thumb-friendly on Phones) */}

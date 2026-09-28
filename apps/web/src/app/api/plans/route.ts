@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { MessPricePlan } from '@messmitra/types';
 
-const DATA_DIR = path.join(process.cwd(), '.data');
-const PLANS_FILE = path.join(DATA_DIR, 'plans.json');
+export const dynamic = 'force-dynamic';
 
 const INITIAL_PRICE_PLANS: MessPricePlan[] = [
   {
@@ -78,32 +78,43 @@ const INITIAL_PRICE_PLANS: MessPricePlan[] = [
   },
 ];
 
-function ensureDataFile() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(PLANS_FILE)) {
-    fs.writeFileSync(PLANS_FILE, JSON.stringify(INITIAL_PRICE_PLANS, null, 2), 'utf-8');
-  }
+let inMemoryPlans: MessPricePlan[] = INITIAL_PRICE_PLANS;
+
+function getPlansFilePath(): string {
+  try {
+    const localDir = path.join(process.cwd(), '.data');
+    if (fs.existsSync(localDir)) {
+      return path.join(localDir, 'plans.json');
+    }
+  } catch {}
+  return path.join(os.tmpdir(), 'messmitra_plans.json');
 }
 
 function readPlans(): MessPricePlan[] {
-  ensureDataFile();
   try {
-    const raw = fs.readFileSync(PLANS_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    const filePath = getPlansFilePath();
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        inMemoryPlans = parsed;
+        return parsed;
+      }
     }
-    return INITIAL_PRICE_PLANS;
   } catch {
-    return INITIAL_PRICE_PLANS;
+    // Fall back to inMemoryPlans
   }
+  return inMemoryPlans;
 }
 
 function writePlans(data: MessPricePlan[]) {
-  ensureDataFile();
-  fs.writeFileSync(PLANS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  inMemoryPlans = data;
+  try {
+    const filePath = getPlansFilePath();
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch {
+    // Ignore read-only filesystem errors
+  }
 }
 
 export async function GET() {
@@ -111,11 +122,11 @@ export async function GET() {
     const list = readPlans();
     return NextResponse.json(list, {
       headers: {
-        'Cache-Control': 'no-store, max-age=0',
+        'Cache-Control': 'no-store, no-cache, max-age=0',
       },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(INITIAL_PRICE_PLANS);
   }
 }
 
@@ -150,6 +161,7 @@ export async function POST(req: NextRequest) {
           tags: body.tags || [{ label: 'General', type: 'general' }],
           planCategory: body.planCategory || 'monthly',
           isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
+          showOnLanding: body.showOnLanding !== undefined ? Boolean(body.showOnLanding) : true,
           createdAt: new Date().toISOString(),
         };
         updated = [...current, newPlan];
@@ -168,7 +180,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, isActive, price, name, nameMr, priceUnit, description } = body;
+    const { id, isActive, showOnLanding, price, name, nameMr, priceUnit, description } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing plan id' }, { status: 400 });
@@ -183,6 +195,9 @@ export async function PATCH(req: NextRequest) {
 
     if (isActive !== undefined) {
       current[index].isActive = Boolean(isActive);
+    }
+    if (showOnLanding !== undefined) {
+      current[index].showOnLanding = Boolean(showOnLanding);
     }
     if (price !== undefined) {
       current[index].price = Number(price);
@@ -202,6 +217,24 @@ export async function PATCH(req: NextRequest) {
 
     writePlans(current);
     return NextResponse.json(current[index]);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id') || (await req.json().catch(() => ({})))?.id;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing plan id' }, { status: 400 });
+    }
+
+    const current = readPlans();
+    const updated = current.filter((p) => p.id !== id);
+    writePlans(updated);
+    return NextResponse.json({ success: true, remaining: updated.length });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }

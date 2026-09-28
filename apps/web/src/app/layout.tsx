@@ -50,6 +50,23 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <meta name="application-name" content="बालाजी मेस" />
         <meta name="apple-mobile-web-app-title" content="बालाजी मेस" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if ('caches' in window) {
+                  caches.keys().then(function(keys) {
+                    keys.forEach(function(k) {
+                      if (k !== 'balajimess-v5-live') {
+                        caches.delete(k);
+                      }
+                    });
+                  });
+                }
+              } catch(e) {}
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200">
         <ServiceWorkerRegister />

@@ -1,26 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { PendingRegistration } from '@messmitra/types';
 
-const DATA_DIR = path.join(process.cwd(), '.data');
-const REG_FILE = path.join(DATA_DIR, 'registrations.json');
+export const dynamic = 'force-dynamic';
+
+function getRegFilePath(): string {
+  try {
+    const localDir = path.join(process.cwd(), '.data');
+    if (fs.existsSync(localDir)) {
+      return path.join(localDir, 'registrations.json');
+    }
+  } catch {}
+  return path.join(os.tmpdir(), 'messmitra_registrations.json');
+}
 
 function readRegistrations(): PendingRegistration[] {
   try {
-    if (!fs.existsSync(REG_FILE)) return [];
-    const raw = fs.readFileSync(REG_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const filePath = getRegFilePath();
+    if (!fs.existsSync(filePath)) return [];
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
 function writeRegistrations(data: PendingRegistration[]) {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    const filePath = getRegFilePath();
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch {
+    // Ignore read-only filesystem errors
   }
-  fs.writeFileSync(REG_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export async function PATCH(
