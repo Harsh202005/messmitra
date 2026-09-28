@@ -1,10 +1,12 @@
-// Centralized Dynamic Price & Plan Management Service
-// Allows owner to configure custom rates, add/remove plans, and toggle ON/OFF status.
-// Synchronizes in real-time across Admin, Landing Page, Member Registration, and Billing.
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
+import { MessPricePlan } from '@messmitra/types';
 
-import { MessPricePlan, PlanType, DietPreference } from '@messmitra/types';
+const DATA_DIR = path.join(process.cwd(), '.data');
+const PLANS_FILE = path.join(DATA_DIR, 'plans.json');
 
-export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
+export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
   {
     id: 'plan-1meal-veg',
     badge: '1 MEAL / DAY',
@@ -72,100 +74,131 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
   },
 ];
 
-const STORAGE_KEY = 'messmitra_custom_price_plans';
+function ensureDataFile() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  if (!fs.existsSync(PLANS_FILE)) {
+    fs.writeFileSync(PLANS_FILE, JSON.stringify(INITIAL_PRICE_PLANS, null, 2), 'utf-8');
+  }
+}
 
-// Get all price plans from storage or defaults (synchronous fallback)
-export const getStoredPlans = (): MessPricePlan[] => {
-  if (typeof window === 'undefined') return DEFAULT_PRICE_PLANS;
+function readPlans(): MessPricePlan[] {
+  ensureDataFile();
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PRICE_PLANS));
-      return DEFAULT_PRICE_PLANS;
-    }
-    const parsed = JSON.parse(data);
+    const raw = fs.readFileSync(PLANS_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
-    return DEFAULT_PRICE_PLANS;
-  } catch (e) {
-    return DEFAULT_PRICE_PLANS;
+    return INITIAL_PRICE_PLANS;
+  } catch {
+    return INITIAL_PRICE_PLANS;
   }
-};
+}
 
-// Async fetch from Multi-Device API Server
-export const fetchServerPlans = async (): Promise<MessPricePlan[]> => {
-  if (typeof window !== 'undefined') {
-    try {
-      const res = await fetch('/api/plans', { cache: 'no-store' });
-      if (res.ok) {
-        const plans: MessPricePlan[] = await res.json();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
-        window.dispatchEvent(new CustomEvent('messmitra_plans_updated', { detail: plans }));
-        return plans;
+function writePlans(data: MessPricePlan[]) {
+  ensureDataFile();
+  fs.writeFileSync(PLANS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+export async function GET() {
+  try {
+    const list = readPlans();
+    return NextResponse.json(list, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0',
+      },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+
+    if (Array.isArray(body)) {
+      // Overwrite full plan list
+      writePlans(body);
+      return NextResponse.json(body);
+    }
+
+    if (body.id) {
+      const current = readPlans();
+      const existingIndex = current.findIndex((p) => p.id === body.id);
+      let updated: MessPricePlan[];
+
+      if (existingIndex >= 0) {
+        current[existingIndex] = { ...current[existingIndex], ...body };
+        updated = current;
+      } else {
+        const newPlan: MessPricePlan = {
+          id: body.id || `plan-${Date.now()}`,
+          badge: body.badge || 'CUSTOM PLAN',
+          name: body.name || 'New Plan',
+          nameMr: body.nameMr || body.name || 'नवीन योजना',
+          price: Number(body.price || 3000),
+          priceUnit: body.priceUnit || '/ month',
+          description: body.description || '',
+          descriptionMr: body.descriptionMr || body.description || '',
+          tags: body.tags || [{ label: 'General', type: 'general' }],
+          planCategory: body.planCategory || 'monthly',
+          isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
+          createdAt: new Date().toISOString(),
+        };
+        updated = [...current, newPlan];
       }
-    } catch {}
-  }
-  return getStoredPlans();
-};
 
-// Save updated price plans locally and to server
-export const saveStoredPlans = async (plans: MessPricePlan[]) => {
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
-      window.dispatchEvent(new CustomEvent('messmitra_plans_updated', { detail: plans }));
-      await fetch('/api/plans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(plans),
-      });
-    } catch (e) {
-      console.warn('Failed to save price plans to server', e);
+      writePlans(updated);
+      return NextResponse.json(updated);
     }
+
+    return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
-};
+}
 
-// Toggle a plan ON / OFF (isActive)
-export const togglePlanActive = async (planId: string, isActive: boolean) => {
-  const current = getStoredPlans();
-  const updated = current.map((p) => (p.id === planId ? { ...p, isActive } : p));
-  await saveStoredPlans(updated);
-};
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, isActive, price, name, nameMr, priceUnit, description } = body;
 
-// Update details/price of a specific plan
-export const updatePlanDetails = async (planId: string, updates: Partial<MessPricePlan>) => {
-  const current = getStoredPlans();
-  const updated = current.map((p) => (p.id === planId ? { ...p, ...updates } : p));
-  await saveStoredPlans(updated);
-};
-
-// Dynamically compute the rate for a given plan selection based on Owner's configured rates
-export const getDynamicRateForPlan = (
-  planType: PlanType,
-  dietPreference: DietPreference
-): number => {
-  const plans = getStoredPlans();
-  const isOneMeal = planType === 'lunch' || planType === 'dinner';
-
-  if (isOneMeal) {
-    if (dietPreference === 'veg') {
-      const p = plans.find((pl) => pl.id === 'plan-1meal-veg' && pl.isActive !== false);
-      return p ? p.price : 2400;
-    } else {
-      const p =
-        plans.find((pl) => pl.id === 'plan-1meal-nonveg' && pl.isActive !== false) ||
-        plans.find((pl) => pl.id === 'plan-2meal-special' && pl.isActive !== false);
-      return p ? (p.id === 'plan-2meal-special' ? Math.round(p.price * 0.8) : p.price) : 2800;
+    if (!id) {
+      return NextResponse.json({ error: 'Missing plan id' }, { status: 400 });
     }
-  }
 
-  // Two meals (both)
-  if (dietPreference === 'veg') {
-    const p = plans.find((pl) => pl.id === 'plan-2meal-veg' && pl.isActive !== false);
-    return p ? p.price : 3000;
-  } else {
-    const p = plans.find((pl) => pl.id === 'plan-2meal-special' && pl.isActive !== false);
-    return p ? p.price : 3200;
+    const current = readPlans();
+    const index = current.findIndex((p) => p.id === id);
+
+    if (index === -1) {
+      return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+    }
+
+    if (isActive !== undefined) {
+      current[index].isActive = Boolean(isActive);
+    }
+    if (price !== undefined) {
+      current[index].price = Number(price);
+    }
+    if (name !== undefined) {
+      current[index].name = String(name);
+    }
+    if (nameMr !== undefined) {
+      current[index].nameMr = String(nameMr);
+    }
+    if (priceUnit !== undefined) {
+      current[index].priceUnit = String(priceUnit);
+    }
+    if (description !== undefined) {
+      current[index].description = String(description);
+    }
+
+    writePlans(current);
+    return NextResponse.json(current[index]);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
-};
+}

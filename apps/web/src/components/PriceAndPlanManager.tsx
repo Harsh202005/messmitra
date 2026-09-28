@@ -21,12 +21,19 @@ import {
   Search,
   MessageSquare,
   HelpCircle,
+  ToggleLeft,
+  ToggleRight,
+  Power,
+  Trash2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 import {
   DEFAULT_PRICE_PLANS,
   getStoredPlans,
   saveStoredPlans,
+  togglePlanActive,
 } from '../lib/pricePlanService';
 import { useI18n } from '../lib/i18n';
 
@@ -55,13 +62,14 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   const [formName, setFormName] = useState('');
   const [formNameMr, setFormNameMr] = useState('');
   const [formBadge, setFormBadge] = useState('1 MEAL/DAY');
-  const [formPrice, setFormPrice] = useState(1700);
-  const [formPriceUnit, setFormPriceUnit] = useState('/ month (~₹56.6/meal)');
+  const [formPrice, setFormPrice] = useState(2400);
+  const [formPriceUnit, setFormPriceUnit] = useState('/ महिना (~२८ जेवणे)');
   const [formDescription, setFormDescription] = useState('');
   const [formCategory, setFormCategory] = useState<'monthly' | 'token_bundle' | 'concession'>('monthly');
   const [formVegNonveg, setFormVegNonveg] = useState<'veg' | 'nonveg' | 'both'>('veg');
   const [formTokenCount, setFormTokenCount] = useState(30);
   const [formValidityDays, setFormValidityDays] = useState(45);
+  const [formIsActive, setFormIsActive] = useState(true);
 
   // Load persisted plans from service
   useEffect(() => {
@@ -79,6 +87,19 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     saveStoredPlans(newPlans);
   };
 
+  const handleTogglePlan = (planId: string, currentActive?: boolean) => {
+    const nextStatus = currentActive === undefined ? false : !currentActive;
+    const updated = plans.map((p) => (p.id === planId ? { ...p, isActive: nextStatus } : p));
+    savePlans(updated);
+  };
+
+  const handleDeletePlan = (planId: string, planName: string) => {
+    if (confirm(`तुम्हाला "${planName}" ही योजना काढून टाकायची आहे का?`)) {
+      const updated = plans.filter((p) => p.id !== planId);
+      savePlans(updated);
+    }
+  };
+
   const handleOpenEdit = (plan: MessPricePlan) => {
     setEditingPlan(plan);
     setFormName(plan.name);
@@ -91,6 +112,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     setFormVegNonveg(plan.tags.some((t: any) => t.type === 'nonveg') ? 'nonveg' : 'veg');
     setFormTokenCount(plan.tokenCount || 30);
     setFormValidityDays(plan.validityDays || 45);
+    setFormIsActive(plan.isActive !== false);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -107,9 +129,11 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
           price: Number(formPrice),
           priceUnit: formPriceUnit.trim(),
           description: formDescription.trim(),
+          descriptionMr: formDescription.trim(),
           planCategory: formCategory,
           tokenCount: formCategory === 'token_bundle' ? Number(formTokenCount) : undefined,
           validityDays: formCategory === 'token_bundle' ? Number(formValidityDays) : undefined,
+          isActive: formIsActive,
           tags: [
             formVegNonveg === 'nonveg'
               ? { label: 'Non-Veg / Special', type: 'nonveg' as const }
@@ -141,6 +165,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
       price: Number(formPrice),
       priceUnit: formPriceUnit.trim() || '/ month',
       description: formDescription.trim(),
+      descriptionMr: formDescription.trim(),
       tags: [
         formVegNonveg === 'nonveg'
           ? { label: 'Non-Veg / Special', type: 'nonveg' as const }
@@ -152,7 +177,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
       planCategory: formCategory,
       tokenCount: formCategory === 'token_bundle' ? Number(formTokenCount) : undefined,
       validityDays: formCategory === 'token_bundle' ? Number(formValidityDays) : undefined,
-      isActive: true,
+      isActive: formIsActive,
       createdAt: new Date().toISOString(),
     };
 
@@ -161,7 +186,9 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   };
 
   const handleResetDefaults = () => {
-    savePlans(DEFAULT_PRICE_PLANS);
+    if (confirm('तुम्हाला सर्व योजना व दर मूळ डीफॉल्ट स्थितीवर रीसेट करायचे आहेत का?')) {
+      savePlans(DEFAULT_PRICE_PLANS);
+    }
   };
 
   // Helper to compute subscriber counts dynamically
@@ -174,23 +201,15 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     }
     if (plan.id === 'plan-1meal-nonveg') {
       const matching = activeMembers.filter((m) => m.planType !== 'both' && m.dietPreference === 'nonveg');
-      return { count: Math.max(1, matching.length), grandfathered: 0 };
+      return { count: Math.max(0, matching.length), grandfathered: 0 };
     }
     if (plan.id === 'plan-2meal-veg') {
       const matching = activeMembers.filter((m) => m.planType === 'both' && m.dietPreference === 'veg');
-      // In screenshot: Active Subscribers: 2, 1 Grandfathered (paying ₹3000 legacy rate)
-      const count = Math.max(2, matching.length);
-      return { count, grandfathered: 1 };
+      return { count: matching.length, grandfathered: matching.filter((m) => m.rate < plan.price).length };
     }
     if (plan.id === 'plan-2meal-special') {
       const matching = activeMembers.filter((m) => m.planType === 'both' && m.dietPreference === 'nonveg');
       return { count: matching.length, grandfathered: 0 };
-    }
-    if (plan.id === 'plan-30token-flexi') {
-      return { count: 1, grandfathered: 0 };
-    }
-    if (plan.id === 'plan-student-female-concession') {
-      return { count: 1, grandfathered: 0 };
     }
     return { count: 0, grandfathered: 0 };
   };
@@ -212,31 +231,33 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   return (
     <div className="space-y-5 sm:space-y-6">
       {/* Top Banner / Hero */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/50 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/50 flex items-center justify-center text-brand-600 dark:text-brand-400 shrink-0">
               <Tag className="w-5 h-5" />
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              {language === 'en' ? 'Price & Plan Manager' : 'दर व योजना व्यवस्थापक'}
-            </h2>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'en' ? 'Price & Plan Manager' : 'मेस दर व योजना व्यवस्थापक'}
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {language === 'en'
+                  ? 'Customize rates, create new plans, and toggle plans ON/OFF on public website'
+                  : 'सर्व दर बदला, नवीन योजना जोडा व वेबसाइटवर योजना चालू/बंद (ON/OFF) करा'}
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 pl-11">
-            {language === 'en'
-              ? 'Monthly meal plans • Token coupon bundles • Student discounts • Active subscribers count'
-              : 'मासिक जेवण दर • टोकन कूपन बंडल्स • विद्यार्थिनी सवलत • आजचे प्रत्यक्ष सदस्य संख्या'}
-          </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {onOpenTokenCounter && (
             <button
               onClick={onOpenTokenCounter}
-              className="px-4 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
+              className="px-3.5 py-2.5 min-h-[44px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
             >
               <Ticket className="w-4 h-4" />
-              <span>{language === 'en' ? '🎫 Meal Token POS' : '🎫 जेवण टोकन काउंटर'}</span>
+              <span>{language === 'en' ? 'Meal Tokens' : 'जेवण टोकन्स'}</span>
             </button>
           )}
 
@@ -244,18 +265,28 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             onClick={() => {
               setFormName('');
               setFormNameMr('');
-              setFormBadge('1 MEAL/DAY');
-              setFormPrice(2400);
-              setFormPriceUnit('/ month (~₹80/meal)');
+              setFormBadge('नवीन योजना');
+              setFormPrice(3000);
+              setFormPriceUnit('/ महिना (~५६ जेवणे)');
               setFormDescription('');
               setFormCategory('monthly');
               setFormVegNonveg('veg');
+              setFormIsActive(true);
               setIsAddPlanModalOpen(true);
             }}
             className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-1.5"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>{language === 'en' ? '+ Add Plan' : '+ नवीन योजना जोडा'}</span>
+            <span>{language === 'en' ? '+ Add New Plan' : '+ नवीन योजना जोडा'}</span>
+          </button>
+
+          <button
+            onClick={handleResetDefaults}
+            className="px-3 py-2.5 min-h-[44px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5"
+            title="मूळ डीफॉल्ट दर रीसेट करा"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+            <span>रीसेट</span>
           </button>
         </div>
       </div>
@@ -265,9 +296,8 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
           {[
             { id: 'all', label: language === 'en' ? `All Plans (${plans.length})` : `सर्व योजना (${plans.length})` },
-            { id: 'monthly', label: language === 'en' ? `Monthly Plans (${plans.filter((p) => p.planCategory === 'monthly').length})` : `मासिक प्लॅन्स (${plans.filter((p) => p.planCategory === 'monthly').length})` },
-            { id: 'token_bundle', label: language === 'en' ? `Token Bundles (${plans.filter((p) => p.planCategory === 'token_bundle').length})` : `टोकन बंडल्स (${plans.filter((p) => p.planCategory === 'token_bundle').length})` },
-            { id: 'concession', label: language === 'en' ? `Concessions (${plans.filter((p) => p.planCategory === 'concession').length})` : `सवलत योजना (${plans.filter((p) => p.planCategory === 'concession').length})` },
+            { id: 'monthly', label: language === 'en' ? `Monthly (${plans.filter((p) => p.planCategory === 'monthly').length})` : `मासिक (${plans.filter((p) => p.planCategory === 'monthly').length})` },
+            { id: 'token_bundle', label: language === 'en' ? `Token Pass (${plans.filter((p) => p.planCategory === 'token_bundle').length})` : `कूपन पास (${plans.filter((p) => p.planCategory === 'token_bundle').length})` },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -283,7 +313,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
           ))}
         </div>
 
-        <div className="relative min-w-[200px]">
+        <div className="relative min-w-[220px]">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -295,47 +325,72 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
         </div>
       </div>
 
-      {/* 4-Column Responsive Cards Grid matching the exact reference screenshots */}
+      {/* 4-Column Responsive Cards Grid matching screenshots */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {filteredPlans.map((plan) => {
           const stats = getPlanSubscriberStats(plan);
+          const isPlanActive = plan.isActive !== false;
 
           return (
             <div
               key={plan.id}
-              className="bg-[#fcfaf7] dark:bg-slate-850 border border-[#eae3d5] dark:border-slate-800 rounded-3xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition space-y-4 group"
+              className={`rounded-3xl p-5 flex flex-col justify-between shadow-xs hover:shadow-md transition space-y-4 border ${
+                isPlanActive
+                  ? 'bg-white dark:bg-slate-850 border-slate-200 dark:border-slate-800'
+                  : 'bg-slate-100/70 dark:bg-slate-900/60 border-slate-300 dark:border-slate-800/80 opacity-75'
+              }`}
             >
               <div className="space-y-3">
-                {/* Header: Badge & Edit Button */}
+                {/* Header: Badge & 1-Click ON/OFF Toggle Switch */}
                 <div className="flex items-center justify-between gap-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 font-mono">
                     {plan.badge}
                   </span>
 
+                  {/* 1-Click ON/OFF Status Button */}
                   <button
-                    onClick={() => handleOpenEdit(plan)}
-                    className="text-xs text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition cursor-pointer"
+                    type="button"
+                    onClick={() => handleTogglePlan(plan.id, plan.isActive)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                      isPlanActive
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-200'
+                        : 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-200'
+                    }`}
+                    title={
+                      isPlanActive
+                        ? 'योजना सध्या चालू आहे (क्लिक करून बंद करा)'
+                        : 'योजना सध्या बंद आहे (क्लिक करून चालू करा)'
+                    }
                   >
-                    <span>✎</span>
-                    <span>Edit</span>
+                    {isPlanActive ? (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>चालू (ON)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-2 h-2 rounded-full bg-rose-500" />
+                        <span>बंद (OFF)</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
-                {/* Plan Name */}
+                {/* Plan Name (Marathi / English) */}
                 <div>
                   <h3 className="font-bold text-base sm:text-[16px] text-slate-900 dark:text-white leading-snug">
-                    {plan.name}
+                    {language === 'mr' ? plan.nameMr || plan.name : plan.name}
                   </h3>
                   {plan.nameMr && plan.nameMr !== plan.name && (
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {plan.nameMr}
+                      {plan.name}
                     </p>
                   )}
                 </div>
 
-                {/* Pricing Display in Large Bold Typography */}
+                {/* Price Display */}
                 <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-2xl sm:text-3xl font-black font-mono text-[#ea580c] tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-black font-mono text-brand-600 dark:text-brand-400 tracking-tight">
                     ₹{plan.price.toLocaleString('en-IN')}
                   </span>
                   <span className="text-xs sm:text-[13px] text-slate-500 dark:text-slate-400 font-mono">
@@ -343,28 +398,33 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   </span>
                 </div>
 
+                {/* Inactive Notice Banner if turned OFF */}
+                {!isPlanActive && (
+                  <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] font-bold flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                    <span>वेबसाइटवर लपवला आहे (Hidden from Public Page)</span>
+                  </div>
+                )}
+
                 {/* Description Paragraph */}
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed min-h-[48px]">
-                  {plan.description}
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed min-h-[44px]">
+                  {language === 'mr' ? plan.descriptionMr || plan.description : plan.description}
                 </p>
 
-                {/* Category Tags Pills */}
+                {/* Category Tags */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
                   {plan.tags.map((tag: any, idx: number) => {
                     let tagStyle = 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
-
                     if (tag.type === 'nonveg') {
                       tagStyle = 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800/60';
                     } else if (tag.type === 'token') {
                       tagStyle = 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60';
-                    } else if (tag.type === 'female') {
-                      tagStyle = 'bg-pink-50 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300 border-pink-200 dark:border-pink-800/60';
                     }
 
                     return (
                       <span
                         key={idx}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${tagStyle}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${tagStyle}`}
                       >
                         {tag.label}
                       </span>
@@ -373,28 +433,50 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                 </div>
               </div>
 
-              {/* Footer: Subscriber Stats & Grandfathered Badge */}
-              <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800">
-                <div className="bg-[#f7f5f0] dark:bg-slate-800/90 rounded-xl p-2.5 flex items-center justify-between text-xs font-medium">
+              {/* Footer: Subscriber Stats & Action Buttons */}
+              <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 space-y-2">
+                <div className="bg-slate-50 dark:bg-slate-800/90 rounded-xl p-2.5 flex items-center justify-between text-xs font-medium">
                   <div className="text-slate-700 dark:text-slate-300">
-                    <span>{language === 'en' ? 'Active Subscribers: ' : 'सक्रिय सभासद: '}</span>
+                    <span>{language === 'en' ? 'Active Members: ' : 'सक्रिय सभासद: '}</span>
                     <strong className="font-bold text-slate-900 dark:text-white font-mono">
                       {stats.count}
                     </strong>
                   </div>
 
-                  {stats.grandfathered > 0 ? (
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold">
+                    {isPlanActive ? '● Live' : '○ Disabled'}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 pt-1">
+                  <button
+                    onClick={() => handleOpenEdit(plan)}
+                    className="flex-1 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-brand-500" />
+                    <span>{language === 'en' ? 'Edit Details' : 'दर व माहिती बदला'}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleTogglePlan(plan.id, plan.isActive)}
+                    className={`px-3 py-2 font-bold text-xs rounded-xl border transition cursor-pointer ${
+                      isPlanActive
+                        ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100'
+                        : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
+                    }`}
+                    title={isPlanActive ? 'योजना बंद करा (Turn OFF)' : 'योजना चालू करा (Turn ON)'}
+                  >
+                    <Power className="w-3.5 h-3.5" />
+                  </button>
+
+                  {plan.id.startsWith('plan-17') && (
                     <button
-                      type="button"
-                      onClick={() => setIsGrandfatheredInfoOpen(true)}
-                      className="text-purple-700 dark:text-purple-300 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+                      onClick={() => handleDeletePlan(plan.id, plan.name)}
+                      className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition cursor-pointer"
+                      title="योजना हटवा"
                     >
-                      <span>★ {stats.grandfathered} {language === 'en' ? 'Grandfathered' : 'जुन्या दरावर'}</span>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                  ) : (
-                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                      {language === 'en' ? 'All on current rate' : 'सर्व नवीन दरावर'}
-                    </span>
                   )}
                 </div>
               </div>
@@ -425,9 +507,47 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             </div>
 
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs overflow-y-auto">
+              {/* ON/OFF Status Switch */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-white text-xs">
+                    वेबसाइटवर योजना चालू ठेवावी का?
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {formIsActive ? 'योजना चालू आहे (Website व ॲपवर दिसेल)' : 'योजना बंद आहे (वेबसाइटवर दिसणार नाही)'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFormIsActive(!formIsActive)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    formIsActive
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-rose-600 text-white'
+                  }`}
+                >
+                  {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
+                </button>
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {language === 'en' ? 'Plan Name (English) *' : 'प्लॅनचे नाव *'}
+                  {language === 'en' ? 'Marathi Title *' : 'मराठी नाव *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formNameMr}
+                  onChange={(e) => setFormNameMr(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'en' ? 'Plan Name (English) *' : 'इंग्रजी नाव *'}
                 </label>
                 <input
                   type="text"
@@ -435,18 +555,6 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {language === 'en' ? 'Marathi Title' : 'मराठी नाव'}
-                </label>
-                <input
-                  type="text"
-                  value={formNameMr}
-                  onChange={(e) => setFormNameMr(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
                 />
               </div>
 
@@ -460,7 +568,6 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                     required
                     value={formBadge}
                     onChange={(e) => setFormBadge(e.target.value)}
-                    placeholder={language === 'en' ? 'e.g. 1 MEAL/DAY, TOKEN BUNDLE' : 'उदा. 1 MEAL/DAY, TOKEN BUNDLE'}
                     className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
                   />
                 </div>
@@ -472,7 +579,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   <input
                     type="number"
                     required
-                    min={100}
+                    min={50}
                     step={50}
                     value={formPrice}
                     onChange={(e) => setFormPrice(Number(e.target.value))}
@@ -490,7 +597,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   required
                   value={formPriceUnit}
                   onChange={(e) => setFormPriceUnit(e.target.value)}
-                  placeholder={language === 'en' ? 'e.g. / month (~₹80/meal) or / 30 tokens' : 'उदा. / month (~₹80/meal) किंवा / 30 tokens'}
+                  placeholder="उदा. / महिना (~२८ जेवणे) किंवा / १० टोकन्स"
                   className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none"
                 />
               </div>
@@ -549,6 +656,30 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             </div>
 
             <form onSubmit={handleCreatePlan} className="p-6 space-y-4 text-xs overflow-y-auto">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-900 dark:text-white text-xs">
+                    वेबसाइटवर योजना चालू ठेवावी का?
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {formIsActive ? 'योजना लगेच लाइव्ह होईल' : 'योजना सध्या बंद राहील'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFormIsActive(!formIsActive)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    formIsActive
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-rose-600 text-white'
+                  }`}
+                >
+                  {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                  <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
+                </button>
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {language === 'en' ? 'Plan Category *' : 'प्लॅन प्रकार *'}
@@ -556,7 +687,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as any)}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none font-bold"
                 >
                   <option value="monthly">{language === 'en' ? 'Regular Monthly Plan' : 'नियमित मासिक प्लॅन'}</option>
                   <option value="token_bundle">{language === 'en' ? 'Prepaid Token Pack' : 'प्रीपेड टोकन बंडल'}</option>
@@ -566,15 +697,29 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {language === 'en' ? 'Plan Name *' : 'योजनेचे नाव *'}
+                  {language === 'en' ? 'Plan Name (Marathi) *' : 'योजनेचे नाव (मराठी) *'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={language === 'en' ? 'e.g. 15-Day Exam Pass, Sunday Special Pass' : 'उदा. 15-Day Exam Pass, Sunday Special Pass'}
+                  placeholder="उदा. १५-दिवस परीक्षा स्पेशल पास"
+                  value={formNameMr}
+                  onChange={(e) => setFormNameMr(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-bold focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'en' ? 'Plan Name (English) *' : 'इंग्रजी नाव *'}
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 15-Day Exam Pass"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
+                  className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none"
                 />
               </div>
 
@@ -586,7 +731,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder={language === 'en' ? 'e.g. EXAM PASS, TOKEN BUNDLE' : 'उदा. EXAM PASS, TOKEN BUNDLE'}
+                    placeholder="उदा. EXAM PASS"
                     value={formBadge}
                     onChange={(e) => setFormBadge(e.target.value)}
                     className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono font-bold focus:outline-none"
@@ -616,7 +761,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                 <textarea
                   rows={2}
                   required
-                  placeholder={language === 'en' ? 'e.g. 15 days unlimited lunch and dinner, special Sunday sweet...' : 'उदा. १५ दिवस दोन्ही वेळचे अमर्यादित जेवण, रविवारी विशेष गोड जेवण...'}
+                  placeholder="उदा. १५ दिवस दोन्ही वेळचे अमर्यादित जेवण, रविवारी विशेष गोड जेवण..."
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
@@ -633,47 +778,6 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Grandfathered Explanation Modal */}
-      {isGrandfatheredInfoOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 font-black text-sm sm:text-base">
-                <Sparkles className="w-5 h-5" />
-                <span>{language === 'en' ? 'What are Grandfathered Rates?' : 'ग्रँडफादर्ड दर म्हणजे काय?'}</span>
-              </div>
-              <button
-                onClick={() => setIsGrandfatheredInfoOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              {language === 'en'
-                ? 'When you increase mess rates (e.g. ₹3,000 to ₹4,200), members who joined earlier and are still active on the previous rate are highlighted as Grandfathered.'
-                : 'जेव्हा तुम्ही मेसचे दर वाढवता (उदा. ₹3,000 वरून ₹4,200), तेव्हा आधीपासून ॲक्टिव्ह असलेले जुने सभासद अजूनही जुन्या दराने जेवत असल्यास त्यांना Grandfathered म्हणून हायलाइट केले जाते.'}
-            </p>
-
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/50 rounded-xl border border-purple-200 dark:border-purple-800 text-xs text-purple-900 dark:text-purple-200">
-              💡 <strong>{language === 'en' ? 'Tip:' : 'टीप:'}</strong>{' '}
-              {language === 'en'
-                ? 'You can update any member to current rates with 1-click in the Member Directory.'
-                : 'तुम्ही हव्या त्या सभासदाला "सभासद यादी" मध्ये जाऊन १-क्लिकने नवीन दरावर अपडेट करू शकता.'}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setIsGrandfatheredInfoOpen(false)}
-              className="w-full py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-bold text-xs cursor-pointer"
-            >
-              {language === 'en' ? 'Got it' : 'समजले'}
-            </button>
           </div>
         </div>
       )}

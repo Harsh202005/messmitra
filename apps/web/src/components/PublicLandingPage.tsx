@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Mess } from '@messmitra/types';
+import { Mess, MessPricePlan } from '@messmitra/types';
 import { useI18n } from '../lib/i18n';
 import { useTheme } from '../lib/theme';
+import { getStoredPlans, fetchServerPlans } from '../lib/pricePlanService';
 import {
   Sparkles,
   UtensilsCrossed,
@@ -39,6 +40,19 @@ interface PublicLandingPageProps {
 export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOpenLogin }) => {
   const { language, setLanguage } = useI18n();
   const { theme, toggleTheme } = useTheme();
+  const [plans, setPlans] = React.useState<MessPricePlan[]>(() => getStoredPlans());
+
+  React.useEffect(() => {
+    fetchServerPlans().then((serverPlans) => {
+      setPlans(serverPlans);
+    });
+
+    const handlePlansUpdated = (e: any) => {
+      setPlans(getStoredPlans());
+    };
+    window.addEventListener('messmitra_plans_updated', handlePlansUpdated);
+    return () => window.removeEventListener('messmitra_plans_updated', handlePlansUpdated);
+  }, []);
 
   const messName = mess?.name || 'श्री बालाजी मेस';
   const ownerName = mess?.ownerName || 'शंकर गिरी';
@@ -310,89 +324,70 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
             </p>
           </div>
 
+          {/* Dynamic Active Price Plans */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                title: '१-वेळ शुद्ध शाकाहारी',
-                diet: 'Pure Veg',
-                slot: 'फक्त दुपार किंवा फक्त रात्र',
-                price: '₹२,४००',
-                unit: '/ महिना (~२८ जेवणे)',
-                badge: '1 Meal / Day',
-                color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
-                features: ['अमर्यादित चपात्या व २ भाजी', 'वरण-भात व सॅलड', 'सुट्टी वजावट लागू'],
-              },
-              {
-                title: '२-वेळ शुद्ध शाकाहारी',
-                diet: 'Pure Veg (Popular)',
-                slot: 'दुपार + रात्र दोन्ही वेळ',
-                price: '₹३,०००',
-                unit: '/ महिना (~५६ जेवणे)',
-                badge: 'सर्वात लोकप्रिय',
-                color: 'border-brand-400 dark:border-brand-600 bg-brand-50/50 dark:bg-brand-950/30 ring-2 ring-brand-500 shadow-md',
-                features: ['२ वेळ पूर्ण जेवण', 'रविवार स्पेशल गोड जेवण', 'किमान ३ दिवस सुट्टी वजावट'],
-              },
-              {
-                title: '२-वेळ मांसाहारी स्पेशल',
-                diet: 'Special Non-Veg',
-                slot: 'दुपार + रात्र (बुध/शुक्र/रवि)',
-                price: '₹३,२००',
-                unit: '/ महिना (~५६ जेवणे)',
-                badge: 'चिकन/अंडी स्पेशल',
-                color: 'border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/20',
-                features: ['आठवड्यातून ३ रात्री चिकन/अंडी', 'इतर वेळी शुद्ध शाकाहारी', 'पार्सल सुविधा उपलब्ध'],
-              },
-              {
-                title: 'विद्यार्थी कूपन पास',
-                diet: 'Flexible Pass',
-                slot: '१० जेवण कूपन पास',
-                price: '₹८५०',
-                unit: '/ १० टोकन्स (~₹८५/जेवण)',
-                badge: 'कूपन पास',
-                color: 'border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-950/20',
-                features: ['कधीही वापरा (४५ दिवस वैधता)', 'मित्र किंवा पाहुण्यांसाठी चालू', 'डिजिटल QR कूपन'],
-              },
-            ].map((plan, idx) => (
-              <div
-                key={idx}
-                className={`p-5 rounded-3xl border flex flex-col justify-between space-y-4 ${plan.color}`}
-              >
-                <div>
-                  <span className="px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase font-mono">
-                    {plan.badge}
-                  </span>
-                  <h3 className="font-black text-base text-slate-900 dark:text-white mt-2">
-                    {plan.title}
-                  </h3>
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    {plan.slot}
-                  </span>
+            {plans
+              .filter((p) => p.isActive !== false)
+              .map((plan, idx) => {
+                let badgeStyle = 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20';
+                if (plan.tags?.some((t) => t.type === 'nonveg')) {
+                  badgeStyle = 'border-rose-300 dark:border-rose-700 bg-rose-50/50 dark:bg-rose-950/20';
+                } else if (plan.tags?.some((t) => t.type === 'token')) {
+                  badgeStyle = 'border-purple-300 dark:border-purple-700 bg-purple-50/50 dark:bg-purple-950/20';
+                } else if (plan.id === 'plan-2meal-veg') {
+                  badgeStyle = 'border-brand-400 dark:border-brand-600 bg-brand-50/50 dark:bg-brand-950/30 ring-2 ring-brand-500 shadow-md';
+                }
 
-                  <div className="pt-3">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
-                      {plan.price}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block">{plan.unit}</span>
+                const inclusions = plan.descriptionMr
+                  ? plan.descriptionMr.split('.').filter((s) => s.trim().length > 0)
+                  : plan.description.split('.').filter((s) => s.trim().length > 0);
+
+                return (
+                  <div
+                    key={plan.id || idx}
+                    className={`p-5 rounded-3xl border flex flex-col justify-between space-y-4 ${badgeStyle}`}
+                  >
+                    <div>
+                      <span className="px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-[10px] font-black uppercase font-mono">
+                        {plan.badge}
+                      </span>
+                      <h3 className="font-black text-base text-slate-900 dark:text-white mt-2">
+                        {language === 'mr' ? plan.nameMr || plan.name : plan.name}
+                      </h3>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                        {plan.planCategory === 'token_bundle'
+                          ? `${plan.tokenCount || 10} जेवण कूपन पास`
+                          : plan.mealsPerDay === 1
+                          ? 'फक्त दुपार किंवा फक्त रात्र'
+                          : 'दुपार + रात्र दोन्ही वेळ'}
+                      </span>
+
+                      <div className="pt-3">
+                        <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono">
+                          ₹{plan.price.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block">{plan.priceUnit}</span>
+                      </div>
+
+                      <ul className="space-y-1.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300">
+                        {inclusions.slice(0, 3).map((f, i) => (
+                          <li key={i} className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{f.trim()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <a
+                      href="/register"
+                      className="w-full py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl text-center shadow-sm transition hover:opacity-90 cursor-pointer block"
+                    >
+                      नोंदणी करा →
+                    </a>
                   </div>
-
-                  <ul className="space-y-1.5 pt-3 border-t border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Link
-                  href="/register"
-                  className="w-full py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl text-center shadow-sm transition hover:opacity-90 cursor-pointer block"
-                >
-                  नोंदणी करा →
-                </Link>
-              </div>
-            ))}
+                );
+              })}
           </div>
         </div>
       </section>

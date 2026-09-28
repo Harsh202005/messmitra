@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { UserRole, DietPreference, PlanType } from '@messmitra/types';
 import { RegistrationStatusPopup } from './RegistrationStatusPopup';
+import { getDynamicRateForPlan, getStoredPlans } from '../lib/pricePlanService';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -103,8 +104,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      const rate = regDiet === 'veg' ? 3000 : 3200;
-      const calculatedRate = regPlan === 'both' ? rate : Math.round(rate / 2);
+      const calculatedRate = getDynamicRateForPlan(regPlan, regDiet);
       const regData = {
         messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
         name: regName.trim(),
@@ -443,7 +443,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                         }`}
                       >
-                        🟢 शाकाहारी (₹3,000)
+                        🟢 शाकाहारी (₹{getDynamicRateForPlan(regPlan, 'veg')})
                       </button>
                       <button
                         type="button"
@@ -454,7 +454,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                             : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                         }`}
                       >
-                        🔴 मांसाहारी (₹3,200)
+                        🔴 मांसाहारी (₹{getDynamicRateForPlan(regPlan, 'nonveg')})
                       </button>
                     </div>
                   </div>
