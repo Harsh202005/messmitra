@@ -6,7 +6,7 @@ import { MessPricePlan } from '@messmitra/types';
 const DATA_DIR = path.join(process.cwd(), '.data');
 const PLANS_FILE = path.join(DATA_DIR, 'plans.json');
 
-export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
+const INITIAL_PRICE_PLANS: MessPricePlan[] = [
   {
     id: 'plan-1meal-veg',
     badge: '1 MEAL / DAY',
