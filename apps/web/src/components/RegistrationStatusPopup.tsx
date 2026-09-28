@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -12,6 +13,7 @@ import {
   ArrowRight,
   ShieldCheck,
   UserCheck,
+  Home,
 } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
 
@@ -39,6 +41,35 @@ export const RegistrationStatusPopup: React.FC<RegistrationStatusPopupProps> = (
   onClose,
 }) => {
   const { language } = useI18n();
+  const router = useRouter();
+  const [countdown, setCountdown] = useState(4);
+
+  const handleRedirectToLanding = () => {
+    onClose();
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/') {
+        router.push('/');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen || !isSuccess) return;
+    setCountdown(4);
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleRedirectToLanding();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isOpen, isSuccess]);
 
   if (!isOpen) return null;
 
@@ -192,10 +223,31 @@ export const RegistrationStatusPopup: React.FC<RegistrationStatusPopupProps> = (
                   </a>
 
                   <button
-                    onClick={onClose}
-                    className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition"
+                    onClick={handleRedirectToLanding}
+                    className="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    {language === 'en' ? 'OK / Close' : 'ठीक आहे / बंद करा'}
+                    <Home className="w-3.5 h-3.5" />
+                    <span>{language === 'en' ? `Home (${countdown}s)` : `मुख्य पृष्ठ (${countdown}s)`}</span>
+                  </button>
+                </div>
+
+                {/* Auto Redirect Notice Banner */}
+                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-750 flex items-center justify-between text-[11px] font-bold text-amber-900 dark:text-amber-200">
+                  <div className="flex items-center gap-1.5">
+                    <Home className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>
+                      {language === 'en'
+                        ? `Redirecting to landing page in ${countdown}s...`
+                        : `${countdown} सेकंदात मुख्य लँडिंग पृष्ठावर पाठवले जात आहे...`}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRedirectToLanding}
+                    className="underline text-amber-700 dark:text-amber-300 hover:text-amber-900 cursor-pointer"
+                  >
+                    {language === 'en' ? 'Go now' : 'आत्ताच जा →'}
                   </button>
                 </div>
               </>

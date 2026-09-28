@@ -543,9 +543,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         errorMsg={statusPopup.errorMsg}
         registrationData={statusPopup.data}
         onClose={() => {
+          const wasSuccess = statusPopup.isSuccess;
           setStatusPopup({ isOpen: false, isSuccess: false });
-          if (statusPopup.isSuccess) {
+          if (wasSuccess) {
             onClose();
+            if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+              window.location.href = '/';
+            }
           }
         }}
       />

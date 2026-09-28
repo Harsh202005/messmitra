@@ -28,9 +28,11 @@ import {
 import { getDynamicRateForPlan, getStoredPlans, fetchServerPlans } from '../../lib/pricePlanService';
 import { useI18n } from '../../lib/i18n';
 import { useTheme } from '../../lib/theme';
+import { useRouter } from 'next/navigation';
 import { RegistrationStatusPopup } from '../../components/RegistrationStatusPopup';
 
 export default function RegisterPage() {
+  const router = useRouter();
   const { language } = useI18n();
   const { theme, toggleTheme } = useTheme();
 
@@ -472,7 +474,13 @@ export default function RegisterPage() {
         isSuccess={statusPopup.isSuccess}
         errorMsg={statusPopup.errorMsg}
         registrationData={statusPopup.data}
-        onClose={() => setStatusPopup({ isOpen: false, isSuccess: false })}
+        onClose={() => {
+          const wasSuccess = statusPopup.isSuccess;
+          setStatusPopup({ isOpen: false, isSuccess: false });
+          if (wasSuccess) {
+            router.push('/');
+          }
+        }}
       />
     </main>
   );
