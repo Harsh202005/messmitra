@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MealToken, Mess, Member, TokenStatus, TokenType, DietPreference } from '@messmitra/types';
+import { MessMitraApi } from '../lib/api';
 import QRCode from 'qrcode';
 import {
   Ticket,
@@ -29,10 +30,18 @@ import {
   Egg,
   Sun,
   Moon,
+  Volume2,
+  VolumeX,
+  RefreshCw,
+  FileSpreadsheet,
+  Trash2,
+  Plus,
+  Minus,
+  MessageSquare,
+  AlertCircle,
+  Filter,
 } from 'lucide-react';
 import { useI18n } from '../lib/i18n';
-
-export const DEFAULT_TOKENS: MealToken[] = [];
 
 interface MealTokenSystemProps {
   mess: Mess | null;
@@ -40,29 +49,100 @@ interface MealTokenSystemProps {
   onExportCsv?: () => void;
 }
 
+// Available Quick Add-ons for Meals
+interface AddOnOption {
+  id: string;
+  name: string;
+  nameMr: string;
+  price: number;
+  icon: string;
+}
+
+const AVAILABLE_ADDONS: AddOnOption[] = [
+  { id: 'taak', name: 'Fresh Masala Taak (Buttermilk)', nameMr: 'मसाला ताक', price: 15, icon: '🥛' },
+  { id: 'chapati_2', name: 'Extra 2 Chapati', nameMr: '२ चपाती', price: 20, icon: '🫓' },
+  { id: 'bhakri', name: 'Jowar Bhakri', nameMr: 'ज्वारी भाकरी', price: 20, icon: '🌾' },
+  { id: 'sweet', name: 'Special Sweet (Gulab Jamun)', nameMr: 'गुलाबजाम / गोड', price: 30, icon: '🍨' },
+  { id: 'egg', name: 'Extra Boiled / Curry Egg', nameMr: 'अतिरिक्त अंडे', price: 25, icon: '🥚' },
+  { id: 'chicken_bowl', name: 'Extra Chicken Rassa Bowl', nameMr: 'चिकन रस्सा वाटी', price: 40, icon: '🍗' },
+];
+
 export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members }) => {
   const { language } = useI18n();
-  const [tokens, setTokens] = useState<MealToken[]>(DEFAULT_TOKENS);
+  const [tokens, setTokens] = useState<MealToken[]>([]);
   const [activeTab, setActiveTab] = useState<'pos' | 'kitchen' | 'register'>('pos');
   const [statusFilter, setStatusFilter] = useState<'all' | 'issued' | 'redeemed'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // POS Form State
   const [tokenType, setTokenType] = useState<TokenType>('single_veg');
-  const [customName, setCustomName] = useState('१-वेळ शुद्ध शाकाहारी जेवण');
+  const [customName, setCustomName] = useState(language === 'en' ? '1-Time Pure Veg Meal' : '१-वेळ शुद्ध शाकाहारी जेवण');
   const [tokenPrice, setTokenPrice] = useState(90);
+  const [quantity, setQuantity] = useState<number>(1);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [selectedMemberId, setSelectedMemberId] = useState<string>('');
   const [dietPreference, setDietPreference] = useState<DietPreference>('veg');
   const [mealSlot, setMealSlot] = useState<'lunch' | 'dinner' | 'both'>('lunch');
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'prepaid_bundle'>('cash');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'prepaid_bundle' | 'member_wallet'>('cash');
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [tokenNotes, setTokenNotes] = useState('');
 
-  // Newly Issued Token Receipt Modal
-  const [latestIssuedToken, setLatestIssuedToken] = useState<MealToken | null>(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  // Kitchen Quick Punch input
+  const [kitchenScanInput, setKitchenScanInput] = useState('');
+  const [kitchenPunchToast, setKitchenPunchToast] = useState<{ msg: string; success: boolean } | null>(null);
 
-  // Load from localStorage
+  // Slip modal state
+  const [latestIssuedToken, setLatestIssuedToken] = useState<MealToken | null>(null);
+  const [batchIssuedTokens, setBatchIssuedTokens] = useState<MealToken[]>([]);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [isThermalReceiptMode, setIsThermalReceiptMode] = useState(false);
+
+  // Audio Beep Synthesizer using Web Audio API
+  const playChime = (type: 'success' | 'alert' | 'redeem' = 'success') => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const ctx = new AudioContextClass();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'success') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.08); // A5
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } else if (type === 'redeem') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.07); // E5
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.14); // G5
+        osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.21); // C6
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } else if (type === 'alert') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(350, ctx.currentTime);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      }
+    } catch {
+      // Audio context ignored if not allowed by browser policy
+    }
+  };
+
+  // Load tokens on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('messmitra_meal_tokens');
@@ -83,7 +163,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
     }
   };
 
-  // Preset token quick selections
+  // Preset Selection
   const handleSelectPreset = (
     type: TokenType,
     name: string,
@@ -96,37 +176,83 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
     setTokenPrice(price);
     setDietPreference(diet);
     setMealSlot(slot);
+    setSelectedAddOns([]);
   };
 
-  // Issue Token Action
+  // Toggle Add-on
+  const toggleAddOn = (addOnId: string) => {
+    setSelectedAddOns((prev) =>
+      prev.includes(addOnId) ? prev.filter((id) => id !== addOnId) : [...prev, addOnId]
+    );
+  };
+
+  // Add-ons subtotal
+  const addOnsTotal = selectedAddOns.reduce((sum, id) => {
+    const item = AVAILABLE_ADDONS.find((a) => a.id === id);
+    return sum + (item?.price || 0);
+  }, 0);
+
+  // Total amount per token and grand total
+  const singleTokenTotal = Number(tokenPrice) + addOnsTotal;
+  const grandTotal = singleTokenTotal * quantity;
+
+  // Handle Member Autocomplete
+  const handleMemberSelect = (memberId: string) => {
+    setSelectedMemberId(memberId);
+    if (!memberId) return;
+    const m = members.find((mem) => mem.id === memberId);
+    if (m) {
+      setCustomerName(m.name);
+      setCustomerPhone(m.phone || '');
+      setDietPreference(m.dietPreference || 'veg');
+      setPaymentMethod('member_wallet');
+    }
+  };
+
+  // Issue Token(s) Form Submit
   const handleIssueToken = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const tokenNum = `TKN-${Math.floor(100 + Math.random() * 900)}`;
-    const newToken: MealToken = {
-      id: `tkn-${Date.now()}`,
-      tokenNumber: tokenNum,
-      messId: mess?.id || 'balaji-mess',
-      customerName: customerName.trim() || (language === 'en' ? 'Walk-in Customer' : 'अनोळखी ग्राहक'),
-      customerPhone: customerPhone.trim() || undefined,
-      tokenType,
-      tokenName: customName,
-      amount: Number(tokenPrice),
-      dietPreference,
-      mealSlot,
-      paymentMethod,
-      status: 'issued',
-      issuedAt: new Date().toISOString(),
-      notes: tokenNotes.trim() || undefined,
-    };
+    const addOnNames = selectedAddOns
+      .map((id) => AVAILABLE_ADDONS.find((a) => a.id === id)?.nameMr || '')
+      .filter(Boolean);
 
-    const updated = [newToken, ...tokens];
+    const newTokensList: MealToken[] = [];
+    const count = Math.max(1, Math.min(20, quantity));
+
+    for (let i = 0; i < count; i++) {
+      const tokenNum = `TKN-${Math.floor(100 + Math.random() * 900)}`;
+      const newToken: MealToken = {
+        id: `tkn-${Date.now()}-${i}-${Math.floor(Math.random() * 1000)}`,
+        tokenNumber: tokenNum,
+        messId: mess?.id || 'balaji-mess',
+        customerName: customerName.trim() || (language === 'en' ? 'Walk-in Customer' : 'अनोळखी ग्राहक'),
+        customerPhone: customerPhone.trim() || undefined,
+        memberId: selectedMemberId || undefined,
+        tokenType,
+        tokenName: count > 1 ? `${customName} (${i + 1}/${count})` : customName,
+        amount: singleTokenTotal,
+        quantity: 1,
+        dietPreference,
+        mealSlot,
+        paymentMethod,
+        status: 'issued',
+        issuedAt: new Date().toISOString(),
+        notes: tokenNotes.trim() || undefined,
+        addOns: addOnNames.length > 0 ? addOnNames : undefined,
+      };
+      newTokensList.push(newToken);
+    }
+
+    const updated = [...newTokensList, ...tokens];
     saveTokens(updated);
 
-    // Generate QR code for receipt
+    const primaryToken = newTokensList[0];
+
+    // Generate QR Code
     try {
       const qrData = await QRCode.toDataURL(
-        `MESS_TOKEN:${newToken.tokenNumber}:${newToken.amount}:${newToken.dietPreference}:${newToken.mealSlot}:${newToken.status}`,
+        `MESS_TOKEN:${primaryToken.tokenNumber}:${primaryToken.amount}:${primaryToken.dietPreference}:${primaryToken.mealSlot}:${primaryToken.status}`,
         { width: 250, margin: 1 }
       );
       setQrCodeDataUrl(qrData);
@@ -134,29 +260,101 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
       console.error('QR generation failed:', err);
     }
 
-    setLatestIssuedToken(newToken);
+    setLatestIssuedToken(primaryToken);
+    setBatchIssuedTokens(newTokensList);
+    playChime('success');
 
     // Reset Form
     setCustomerName('');
     setCustomerPhone('');
+    setSelectedMemberId('');
+    setSelectedAddOns([]);
     setTokenNotes('');
+    setQuantity(1);
   };
 
   // Redeem token in Kitchen
-  const handleRedeemToken = (id: string) => {
-    const updated = tokens.map((t) =>
-      t.id === id
-        ? {
-            ...t,
-            status: 'redeemed' as TokenStatus,
-            redeemedAt: new Date().toISOString(),
-          }
-        : t
-    );
-    saveTokens(updated);
+  const handleRedeemToken = (idOrNum: string) => {
+    let found = false;
+    const updated = tokens.map((t) => {
+      if (t.id === idOrNum || t.tokenNumber.toUpperCase() === idOrNum.toUpperCase().trim()) {
+        found = true;
+        return {
+          ...t,
+          status: 'redeemed' as TokenStatus,
+          redeemedAt: new Date().toISOString(),
+        };
+      }
+      return t;
+    });
+
+    if (found) {
+      saveTokens(updated);
+      playChime('redeem');
+      return true;
+    }
+    return false;
   };
 
-  // Stats calculations
+  // Kitchen Direct Punch by input box
+  const handleKitchenPunchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = kitchenScanInput.trim();
+    if (!query) return;
+
+    let target = tokens.find(
+      (t) =>
+        t.status === 'issued' &&
+        (t.tokenNumber.toUpperCase() === query.toUpperCase() ||
+          t.tokenNumber.replace('TKN-', '').toUpperCase() === query.toUpperCase() ||
+          t.id === query)
+    );
+
+    if (target) {
+      handleRedeemToken(target.id);
+      setKitchenPunchToast({
+        msg: `टोकन #${target.tokenNumber} (${target.customerName}) पंच झाले! ✅`,
+        success: true,
+      });
+      setKitchenScanInput('');
+    } else {
+      playChime('alert');
+      setKitchenPunchToast({
+        msg: `टोकन "${query}" सापडले नाही किंवा आधीच जेवण दिले आहे!`,
+        success: false,
+      });
+    }
+
+    setTimeout(() => setKitchenPunchToast(null), 3000);
+  };
+
+  // Batch Redeem All Pending in Kitchen
+  const handleRedeemAllPending = () => {
+    const pendingCount = tokens.filter((t) => t.status === 'issued').length;
+    if (pendingCount === 0) return;
+    if (confirm(`सर्व ${pendingCount} प्रलंबित टोकन्सचे जेवण दिले असे नोंदवायचे आहे का?`)) {
+      const now = new Date().toISOString();
+      const updated = tokens.map((t) =>
+        t.status === 'issued' ? { ...t, status: 'redeemed' as TokenStatus, redeemedAt: now } : t
+      );
+      saveTokens(updated);
+      playChime('redeem');
+    }
+  };
+
+  // Clear all tokens
+  const handleClearTokens = () => {
+    if (confirm('सर्व जुनी टोकन नोंदवही पूर्णपणे रिकामी करायची आहे का?')) {
+      saveTokens([]);
+    }
+  };
+
+  // Export CSV
+  const handleExportCsv = () => {
+    MessMitraApi.downloadTokensCsv(tokens, new Date().toISOString().split('T')[0]);
+  };
+
+  // Stats Calculations
   const todayStr = new Date().toISOString().split('T')[0];
   const todayTokens = tokens.filter((t) => t.issuedAt.startsWith(todayStr));
   const todayTotalAmount = todayTokens.reduce((a, b) => a + b.amount, 0);
@@ -164,25 +362,56 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
   const todayRedeemedCount = todayTokens.filter((t) => t.status === 'redeemed').length;
   const cashTotal = todayTokens.filter((t) => t.paymentMethod === 'cash').reduce((a, b) => a + b.amount, 0);
   const upiTotal = todayTokens.filter((t) => t.paymentMethod === 'upi').reduce((a, b) => a + b.amount, 0);
+  const walletTotal = todayTokens
+    .filter((t) => t.paymentMethod === 'member_wallet' || t.paymentMethod === 'prepaid_bundle')
+    .reduce((a, b) => a + b.amount, 0);
+
+  const todayVegCount = todayTokens.filter((t) => (t.dietPreference || 'veg') === 'veg').length;
+  const todayNonVegCount = todayTokens.filter((t) => t.dietPreference === 'nonveg').length;
+  const todayLunchCount = todayTokens.filter((t) => t.mealSlot === 'lunch' || t.mealSlot === 'both').length;
+  const todayDinnerCount = todayTokens.filter((t) => t.mealSlot === 'dinner' || t.mealSlot === 'both').length;
 
   // Filtered tokens for register
-  const filteredTokens = tokens.filter((t) => {
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (
-        t.tokenNumber.toLowerCase().includes(q) ||
-        t.customerName.toLowerCase().includes(q) ||
-        t.tokenName.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const filteredTokens = useMemo(() => {
+    return tokens.filter((t) => {
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        return (
+          t.tokenNumber.toLowerCase().includes(q) ||
+          t.customerName.toLowerCase().includes(q) ||
+          t.tokenName.toLowerCase().includes(q) ||
+          (t.customerPhone && t.customerPhone.includes(q))
+        );
+      }
+      return true;
+    });
+  }, [tokens, statusFilter, searchQuery]);
 
-  const getSlotLabel = (slot: 'lunch' | 'dinner' | 'both') => {
-    if (slot === 'lunch') return language === 'en' ? 'Lunch' : 'दुपारचे जेवण';
-    if (slot === 'dinner') return language === 'en' ? 'Dinner' : 'रात्रीचे जेवण';
-    return language === 'en' ? 'Both (Lunch + Dinner)' : 'दोन्ही वेळ (दुपार+रात्र)';
+  // WhatsApp formatted share link
+  const getWhatsAppTokenLink = (token: MealToken) => {
+    let cleanPhone = (token.customerPhone || '').replace(/[^0-9]/g, '');
+    if (cleanPhone.length === 10) cleanPhone = `91${cleanPhone}`;
+
+    const dietEmoji = token.dietPreference === 'nonveg' ? '🔴 Non-Veg (चिकन/अंडी)' : '🟢 Pure Veg (शुद्ध शाकाहारी)';
+    const slotLabel =
+      token.mealSlot === 'both' ? 'दुपार + रात्र दोन्ही वेळ' : token.mealSlot === 'lunch' ? 'दुपारचे जेवण' : 'रात्रीचे जेवण';
+
+    const text =
+`🎫 *श्री बालाजी मेस — डिजिटल जेवण टोकन*
+━━━━━━━━━━━━━━━━━━━━
+🏷️ *टोकन नंबर:* \`#${token.tokenNumber}\`
+👤 *ग्राहक:* ${token.customerName}
+🍱 *तपशील:* ${token.tokenName}
+🥗 *आहार:* ${dietEmoji}
+⏰ *वेळ:* ${slotLabel}
+💰 *रक्कम:* ₹${token.amount} (${token.paymentMethod.toUpperCase()})
+${token.addOns && token.addOns.length > 0 ? `➕ *अतिरिक्त:* ${token.addOns.join(', ')}\n` : ''}📅 *तारीख:* ${new Date(token.issuedAt).toLocaleDateString('mr-IN')}
+━━━━━━━━━━━━━━━━━━━━
+📍 *श्री बालाजी मेस (पुणे)* • चालक: शंकर गिरी (९८२२३३८९७५)
+*कृपया हे टोकन किचन काउंटरवर दाखवून जेवण घ्या.* धन्यवाद! ✨`;
+
+    return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
   };
 
   return (
@@ -190,58 +419,78 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
       {/* Top Header Banner */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-600 to-amber-500 text-white flex items-center justify-center shadow-md shrink-0">
-            <Ticket className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-600 to-rose-600 text-white flex items-center justify-center shadow-md shrink-0">
+            <Ticket className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-              {language === 'en' ? 'Meal Token System' : 'जेवण टोकन सिस्टीम'}
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                {language === 'en' ? 'Smart Meal Token System' : 'स्मार्ट जेवण टोकन सिस्टीम'}
+              </h2>
+              <span className="px-2 py-0.5 text-[10px] font-black uppercase rounded-md bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                POS + KDS v2.0
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {language === 'en'
-                ? 'Single meals • Veg/Non-Veg • Lunch/Dinner/Both • Parcel Tiffin tokens'
-                : 'एकेरी जेवण • व्हेज/नॉनव्हेज • दुपार/रात्र/दोन्ही वेळ • पार्सल डबा टोकन्स'}
+                ? 'Multi-meal tokens • Veg/Non-Veg • WhatsApp slips • Live Kitchen KDS • Audio Chimes'
+                : 'एकेरी/ग्रुप टोकन्स • व्हेज/नॉनव्हेज • WhatsApp स्लिप्स • किचन KDS काउंटर • ऑडिओ बीप'}
             </p>
           </div>
         </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+        {/* View Switcher Tabs & Sound Toggle */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
-            onClick={() => setActiveTab('pos')}
-            className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'pos'
-                ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`p-2 rounded-xl border text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+              soundEnabled
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
+                : 'bg-slate-100 text-slate-500 border-slate-300 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
             }`}
+            title={soundEnabled ? 'ऑडिओ बीप चालू' : 'ऑडिओ बीप बंद'}
           >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Token POS' : 'टोकन काउंटर'}</span>
+            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
-          <button
-            onClick={() => setActiveTab('kitchen')}
-            className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'kitchen'
-                ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <ChefHat className="w-3.5 h-3.5" />
-            <span>किचन पंच ({todayPendingCount})</span>
-          </button>
+          <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-bold">
+            <button
+              onClick={() => setActiveTab('pos')}
+              className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'pos'
+                  ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>{language === 'en' ? 'Token POS' : 'टोकन काउंटर'}</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('register')}
-            className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'register'
-                ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>नोंदवही ({tokens.length})</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('kitchen')}
+              className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'kitchen'
+                  ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <ChefHat className="w-3.5 h-3.5" />
+              <span>किचन पंच ({todayPendingCount})</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('register')}
+              className={`px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'register'
+                  ? 'bg-white dark:bg-brand-600 text-brand-600 dark:text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>नोंदवही ({tokens.length})</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -251,10 +500,15 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
           <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">
             आजचे एकूण टोकन्स
           </span>
-          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono">
-            {todayTokens.length}
+          <div className="text-2xl font-black text-slate-900 dark:text-white font-mono flex items-center justify-between">
+            <span>{todayTokens.length}</span>
+            <span className="text-xs text-slate-400 font-normal">
+              🥗 {todayVegCount} • 🍗 {todayNonVegCount}
+            </span>
           </div>
-          <span className="text-[10px] text-slate-400">Issued Today</span>
+          <span className="text-[10px] text-slate-400 mt-0.5 block">
+            दुपार: {todayLunchCount} | रात्र: {todayDinnerCount}
+          </span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -264,38 +518,41 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
           <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
             ₹{todayTotalAmount.toLocaleString('en-IN')}
           </div>
-          <span className="text-[10px] text-slate-400">Total Revenue</span>
+          <span className="text-[10px] text-slate-400">Total Collection</span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">
             प्रलंबित / जेवण बाकी
           </span>
-          <div className="text-2xl font-black text-amber-500 font-mono">
-            {todayPendingCount}
+          <div className="text-2xl font-black text-amber-500 font-mono flex items-center gap-2">
+            <span>{todayPendingCount}</span>
+            {todayPendingCount > 0 && (
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping inline-block" />
+            )}
           </div>
-          <span className="text-[10px] text-slate-400">Ready in Kitchen</span>
+          <span className="text-[10px] text-slate-400">In Kitchen Queue</span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
           <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block mb-1">
-            रोख vs UPI
+            पेमेंट चॅनेल्स
           </span>
-          <div className="text-sm font-black text-slate-800 dark:text-slate-200 font-mono mt-1">
-            रोख: ₹{cashTotal} • UPI: ₹{upiTotal}
+          <div className="text-xs font-black text-slate-800 dark:text-slate-200 font-mono mt-1 space-y-0.5">
+            <div>रोख: ₹{cashTotal} • UPI: ₹{upiTotal}</div>
+            <div className="text-[10px] text-slate-400">पास/खाते: ₹{walletTotal}</div>
           </div>
-          <span className="text-[10px] text-slate-400">Payment Channels</span>
         </div>
       </div>
 
       {/* TAB 1: QUICK POS TOKEN COUNTER */}
       {activeTab === 'pos' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Left: Quick Presets */}
+          {/* Left: Quick Presets & Add-ons */}
           <div className="lg:col-span-2 space-y-4">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-500" />
-              <span>{language === 'en' ? 'Quick Token Presets:' : '१-क्लिक जलद टोकन निवडा:'}</span>
+              <span>{language === 'en' ? '1-Click Quick Token Presets:' : '१-क्लिक जलद टोकन निवडा:'}</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -315,7 +572,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   name: language === 'en' ? 'Special Chicken Thali' : '१-वेळ स्पेशल चिकन थाळी टोकन',
                   price: 150,
                   diet: 'nonveg' as DietPreference,
-                  tag: language === 'en' ? 'Special Non-Veg' : 'स्पेशल नॉनव्हेज',
+                  tag: language === 'en' ? 'Special Non-Veg' : 'स्पेशल चिकन',
                   desc: language === 'en' ? 'Chicken sukka/curry, bhakri, rice, soup' : 'चिकन सुक्का/रस्सा, भाकरी, भात, तांबडा-पांढरा रस्सा',
                   slot: 'dinner' as const,
                   color: 'border-rose-300 dark:border-rose-800 bg-rose-50/40 dark:bg-rose-950/20',
@@ -350,6 +607,16 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   slot: 'both' as const,
                   color: 'border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20',
                 },
+                {
+                  type: 'single_veg' as TokenType,
+                  name: language === 'en' ? 'Sunday Special Feast Thali' : 'रविवार स्पेशल गोड जेवण थाळी',
+                  price: 180,
+                  diet: 'veg' as DietPreference,
+                  tag: language === 'en' ? 'Sunday Feast' : 'रविवार स्पेशल',
+                  desc: language === 'en' ? 'Special sweet, puri, kurdaya, paneer' : 'श्रीखंड/गुलाबजाम, पुरी, पापड, पनीर भाजी, पुलाव',
+                  slot: 'lunch' as const,
+                  color: 'border-teal-300 dark:border-teal-800 bg-teal-50/40 dark:bg-teal-950/20',
+                },
               ].map((preset, idx) => (
                 <button
                   key={idx}
@@ -357,7 +624,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   onClick={() =>
                     handleSelectPreset(preset.type, preset.name, preset.price, preset.diet, preset.slot)
                   }
-                  className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer hover:scale-[1.01] hover:shadow-md ${preset.color} ${
+                  className={`p-3.5 rounded-2xl border text-left flex flex-col justify-between transition cursor-pointer hover:scale-[1.01] hover:shadow-md ${preset.color} ${
                     tokenType === preset.type && tokenPrice === preset.price && dietPreference === preset.diet
                       ? 'ring-2 ring-brand-500 shadow-md'
                       : ''
@@ -381,7 +648,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 mt-2 border-t border-slate-200/60 dark:border-slate-800">
+                  <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-200/60 dark:border-slate-800">
                     <span className="text-xl font-black text-slate-900 dark:text-white font-mono">
                       ₹{preset.price}
                     </span>
@@ -393,13 +660,59 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 </button>
               ))}
             </div>
+
+            {/* Quick Add-ons Section */}
+            <div className="bg-slate-50 dark:bg-slate-850 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <UtensilsCrossed className="w-3.5 h-3.5 text-amber-500" />
+                  <span>अतिरिक्त ॲड-ऑन्स निवडा (Add-ons):</span>
+                </label>
+                {selectedAddOns.length > 0 && (
+                  <span className="text-xs font-bold text-emerald-600 font-mono">
+                    + ₹{addOnsTotal} / टोकन
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {AVAILABLE_ADDONS.map((addon) => {
+                  const isSelected = selectedAddOns.includes(addon.id);
+                  return (
+                    <button
+                      key={addon.id}
+                      type="button"
+                      onClick={() => toggleAddOn(addon.id)}
+                      className={`p-2.5 rounded-xl border text-left text-xs transition cursor-pointer flex items-center justify-between gap-1.5 ${
+                        isSelected
+                          ? 'bg-amber-100 border-amber-400 text-amber-950 dark:bg-amber-950/60 dark:border-amber-700 dark:text-amber-200 shadow-xs'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span>{addon.icon}</span>
+                        <span className="font-bold truncate">{addon.nameMr}</span>
+                      </div>
+                      <span className="font-mono font-bold shrink-0 text-[11px]">
+                        +₹{addon.price}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {/* Right: Issue Form */}
           <div className="bg-white dark:bg-slate-900 p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md">
-            <h3 className="font-bold text-base text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-brand-500" />
-              <span>{language === 'en' ? 'Issue Meal Token' : 'टोकन बिलिंग फॉर्म'}</span>
+            <h3 className="font-bold text-base text-slate-900 dark:text-white pb-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Ticket className="w-4 h-4 text-brand-500" />
+                <span>{language === 'en' ? 'Issue Meal Token' : 'टोकन बिलिंग फॉर्म'}</span>
+              </div>
+              <span className="text-xs font-mono font-bold text-slate-400">
+                Live POS
+              </span>
             </h3>
 
             <form onSubmit={handleIssueToken} className="space-y-3.5 mt-4 text-xs">
@@ -465,11 +778,11 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 />
               </div>
 
-              {/* Price & Meal Slot (Lunch / Dinner / Both) */}
+              {/* Price & Quantity Counter */}
               <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {language === 'en' ? 'Price (₹) *' : 'रक्कम (₹) *'}
+                    {language === 'en' ? 'Base Price (₹) *' : 'दर (₹) *'}
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
@@ -489,51 +802,126 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
 
                 <div>
                   <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {language === 'en' ? 'Meal Slot *' : 'जेवणाची वेळ *'}
+                    {language === 'en' ? 'Quantity *' : 'नग (संख्या) *'}
+                  </label>
+                  <div className="flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(20, Number(e.target.value))))}
+                      className="w-full text-center py-2 bg-transparent font-mono font-black text-sm text-slate-900 dark:text-white focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.min(20, quantity + 1))}
+                      className="px-3 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Meal Slot (Lunch / Dinner / Both) */}
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'en' ? 'Meal Slot *' : 'जेवणाची वेळ *'}
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 font-bold">
+                  {[
+                    { id: 'lunch', label: language === 'en' ? 'Lunch' : 'दुपार' },
+                    { id: 'dinner', label: language === 'en' ? 'Dinner' : 'रात्र' },
+                    { id: 'both', label: language === 'en' ? 'Both' : 'दोन्ही वेळ' },
+                  ].map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setMealSlot(s.id as any)}
+                      className={`py-2 px-1 text-center rounded-xl border transition cursor-pointer text-xs ${
+                        mealSlot === s.id
+                          ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Member Linker (Optional search) */}
+              {members.length > 0 && (
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center justify-between">
+                    <span>{language === 'en' ? 'Link Member (Optional)' : 'मेस सदस्य जोडा (ऐच्छिक)'}</span>
+                    {selectedMemberId && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMemberId('')}
+                        className="text-[10px] text-rose-500 font-bold hover:underline"
+                      >
+                        काढून टाका
+                      </button>
+                    )}
                   </label>
                   <select
-                    value={mealSlot}
-                    onChange={(e) => setMealSlot(e.target.value as any)}
-                    className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none text-xs"
+                    value={selectedMemberId}
+                    onChange={(e) => handleMemberSelect(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none text-xs"
                   >
-                    <option value="lunch">{language === 'en' ? 'Lunch' : 'दुपारचे जेवण'}</option>
-                    <option value="dinner">{language === 'en' ? 'Dinner' : 'रात्रीचे जेवण'}</option>
-                    <option value="both">{language === 'en' ? 'Both (Lunch + Dinner)' : 'दोन्ही वेळ (दुपार+रात्र)'}</option>
+                    <option value="">-- अनोळखी / Walk-in ग्राहक --</option>
+                    {members
+                      .filter((m) => m.status === 'active')
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name} ({m.phone}) - {m.dietPreference === 'nonveg' ? '🔴 Non-Veg' : '🟢 Veg'}
+                        </option>
+                      ))}
                   </select>
                 </div>
-              </div>
+              )}
 
-              {/* Customer Name */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {language === 'en' ? 'Customer Name' : 'ग्राहकाचे नाव'}
-                </label>
-                <div className="relative">
-                  <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder={language === 'en' ? 'e.g. Rahul, Walk-in Guest' : 'उदा. राहुल, Walk-in ग्राहक'}
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none"
-                  />
+              {/* Customer Name & Phone */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'en' ? 'Customer Name' : 'ग्राहकाचे नाव'}
+                  </label>
+                  <div className="relative">
+                    <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder={language === 'en' ? 'Rahul, Guest' : 'उदा. राहुल'}
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full pl-7 pr-2 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none text-xs"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {language === 'en' ? 'WhatsApp Mobile' : 'मोबाईल नंबर'}
-                </label>
-                <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="tel"
-                    placeholder="9890123456"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none"
-                  />
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'en' ? 'WhatsApp Mobile' : 'मोबाईल'}
+                  </label>
+                  <div className="relative">
+                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="tel"
+                      placeholder="9890123456"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full pl-7 pr-2 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono focus:outline-none text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -542,11 +930,12 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {language === 'en' ? 'Payment Mode *' : 'पेमेंट पद्धत *'}
                 </label>
-                <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
+                <div className="grid grid-cols-4 gap-1 text-[11px] font-bold">
                   {[
                     { id: 'cash', label: language === 'en' ? 'Cash' : 'रोख' },
                     { id: 'upi', label: 'UPI QR' },
-                    { id: 'prepaid_bundle', label: language === 'en' ? 'Pass' : 'पास' },
+                    { id: 'prepaid_bundle', label: language === 'en' ? 'Pass' : 'कूपन पास' },
+                    { id: 'member_wallet', label: language === 'en' ? 'Member' : 'खात्यावर' },
                   ].map((mode) => (
                     <button
                       key={mode.id}
@@ -554,7 +943,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                       onClick={() => setPaymentMethod(mode.id as any)}
                       className={`py-2 px-1 rounded-xl border text-center transition cursor-pointer ${
                         paymentMethod === mode.id
-                          ? 'bg-emerald-600 border-emerald-500 text-white'
+                          ? 'bg-emerald-600 border-emerald-500 text-white shadow-xs'
                           : 'bg-slate-50 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
@@ -564,13 +953,29 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 </div>
               </div>
 
-              <div className="pt-2">
+              {/* Price Calculation Summary Callout */}
+              <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1 font-mono text-xs">
+                <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                  <span>दर प्रति टोकन:</span>
+                  <span>₹{singleTokenTotal} ({tokenPrice} + ॲडऑन्स {addOnsTotal})</span>
+                </div>
+                <div className="flex justify-between text-slate-900 dark:text-white font-black text-sm pt-1 border-t border-slate-200 dark:border-slate-700">
+                  <span>एकूण बिल ({quantity} टोकन्स):</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">₹{grandTotal}</span>
+                </div>
+              </div>
+
+              <div className="pt-1">
                 <button
                   type="submit"
-                  className="w-full py-3 min-h-[46px] bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold text-sm rounded-xl shadow-lg transition cursor-pointer flex items-center justify-center gap-1.5"
+                  className="w-full py-3 min-h-[48px] bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm rounded-2xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Ticket className="w-4 h-4" />
-                  <span>{language === 'en' ? `Issue Token (₹${tokenPrice})` : `टोकन जारी करा (₹${tokenPrice})`}</span>
+                  <span>
+                    {language === 'en'
+                      ? `Issue ${quantity} Token(s) • ₹${grandTotal}`
+                      : `${quantity} टोकन जारी करा • ₹${grandTotal}`}
+                  </span>
                 </button>
               </div>
             </form>
@@ -578,13 +983,61 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
         </div>
       )}
 
-      {/* TAB 2: KITCHEN COUNTER REDEMPTION VIEW */}
+      {/* TAB 2: KITCHEN COUNTER REDEMPTION VIEW & KDS */}
       {activeTab === 'kitchen' && (
         <div className="space-y-4">
+          {/* Quick Scanner & Punch Input Bar */}
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <form onSubmit={handleKitchenPunchSubmit} className="flex-1 flex items-center gap-2">
+              <div className="relative flex-1">
+                <QrCode className="w-4 h-4 text-amber-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="टोकन क्रमांक टाका (उदा. TKN-842 किंवा 842) व Enter दाबा..."
+                  value={kitchenScanInput}
+                  onChange={(e) => setKitchenScanInput(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-amber-400 dark:border-amber-600 rounded-2xl text-slate-900 dark:text-white font-mono font-bold text-sm focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-2xl shadow-md transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <Check className="w-4 h-4 stroke-[3]" />
+                <span>पंच करा</span>
+              </button>
+            </form>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleRedeemAllPending}
+                disabled={todayPendingCount === 0}
+                className="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-2xl border border-slate-200 dark:border-slate-700 transition cursor-pointer disabled:opacity-50"
+              >
+                सर्व टोकन्स पंच करा
+              </button>
+            </div>
+          </div>
+
+          {/* Toast feedback for Kitchen punch */}
+          {kitchenPunchToast && (
+            <div
+              className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 animate-bounce ${
+                kitchenPunchToast.success
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-rose-600 text-white'
+              }`}
+            >
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{kitchenPunchToast.msg}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
               <ChefHat className="w-5 h-5 text-amber-500" />
-              <span>{language === 'en' ? 'Live Kitchen Punch Screen' : 'स्वयंपाकघर टोकन काउंटर'}</span>
+              <span>{language === 'en' ? 'Live Kitchen Orders Screen' : 'स्वयंपाकघर टोकन काउंटर (KDS)'}</span>
             </h3>
             <span className="text-xs text-slate-500 font-mono">
               {language === 'en'
@@ -600,7 +1053,9 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                 <h4 className="font-bold text-base text-slate-800 dark:text-slate-200">
                   {language === 'en' ? 'All tokens served!' : 'सर्व टोकन्सचे जेवण दिले गेले आहे!'}
                 </h4>
-                <p className="text-xs">{language === 'en' ? 'No pending tokens in kitchen.' : 'कोणतेही टोकन प्रलंबित नाही.'}</p>
+                <p className="text-xs">
+                  {language === 'en' ? 'No pending tokens in kitchen queue.' : 'किचनमध्ये कोणतेही टोकन प्रलंबित नाही.'}
+                </p>
               </div>
             ) : (
               tokens
@@ -619,15 +1074,25 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                         }`}
                       >
                         {token.dietPreference === 'nonveg'
-                          ? (language === 'en' ? '🔴 Non-Veg' : '🔴 नॉनव्हेज')
-                          : (language === 'en' ? '🟢 Veg' : '🟢 व्हेज')}
+                          ? language === 'en'
+                            ? '🔴 Non-Veg'
+                            : '🔴 नॉनव्हेज'
+                          : language === 'en'
+                          ? '🟢 Veg'
+                          : '🟢 व्हेज'}
                       </span>
                       <span className="bg-amber-500 text-slate-950 font-mono font-bold text-[9px] px-2 py-0.5 uppercase">
                         {token.mealSlot === 'both'
-                          ? (language === 'en' ? 'Both' : 'दोन्ही वेळ')
+                          ? language === 'en'
+                            ? 'Both'
+                            : 'दोन्ही वेळ'
                           : token.mealSlot === 'lunch'
-                          ? (language === 'en' ? 'Lunch' : 'दुपार')
-                          : (language === 'en' ? 'Dinner' : 'रात्र')}
+                          ? language === 'en'
+                            ? 'Lunch'
+                            : 'दुपार'
+                          : language === 'en'
+                          ? 'Dinner'
+                          : 'रात्र'}
                       </span>
                     </div>
 
@@ -641,8 +1106,28 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                         {language === 'en' ? 'Customer:' : 'ग्राहक:'} <strong>{token.customerName}</strong>
                       </p>
-                      <div className="text-[11px] text-slate-400 font-mono mt-1">
-                        {language === 'en' ? 'Time:' : 'वेळ:'} {new Date(token.issuedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} • ₹{token.amount} ({token.paymentMethod.toUpperCase()})
+
+                      {/* Add-ons badges if any */}
+                      {token.addOns && token.addOns.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {token.addOns.map((add, i) => (
+                            <span
+                              key={i}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800"
+                            >
+                              ➕ {add}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="text-[11px] text-slate-400 font-mono mt-2">
+                        {language === 'en' ? 'Issued:' : 'वेळ:'}{' '}
+                        {new Date(token.issuedAt).toLocaleTimeString('en-IN', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        • ₹{token.amount} ({token.paymentMethod.toUpperCase()})
                       </div>
                     </div>
 
@@ -651,7 +1136,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                       className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm rounded-2xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Check className="w-5 h-5 stroke-[3]" />
-                      <span>{language === 'en' ? '✔️ Punch & Redeem' : '✔️ जेवण दिले'}</span>
+                      <span>{language === 'en' ? '✔️ Punch & Redeem' : '✔️ जेवण दिले (पंच)'}</span>
                     </button>
                   </div>
                 ))
@@ -665,7 +1150,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm space-y-3">
           {/* Header & Filter */}
           <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setStatusFilter('all')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer ${
@@ -698,91 +1183,159 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
               </button>
             </div>
 
-            <div className="relative min-w-[220px]">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="टोकन # किंवा नाव शोधा..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative min-w-[200px] flex-1 sm:flex-none">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="टोकन # किंवा नाव शोधा..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shrink-0"
+                title="CSV / Excel डाऊनलोड करा"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>CSV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleClearTokens}
+                className="p-1.5 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                title="नोंदवही साफ करा"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
           {/* Tokens List */}
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredTokens.map((t) => (
-              <div
-                key={t.id}
-                className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-850/50 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-black shrink-0 ${
-                      t.status === 'redeemed'
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                        : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse'
-                    }`}
-                  >
-                    <span className="text-[10px] font-bold">#{t.tokenNumber.split('-')[1]}</span>
-                    <span className="text-[8px] uppercase font-bold">
-                      {t.dietPreference === 'nonveg' ? '🔴 NV' : '🟢 VG'}
-                    </span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm text-slate-900 dark:text-white">{t.tokenName}</span>
-                      <span
-                        className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded border ${
-                          t.dietPreference === 'nonveg'
-                            ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
-                            : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
-                        }`}
-                      >
-                        {t.dietPreference === 'nonveg' ? 'नॉनव्हेज' : 'व्हेज'}
-                      </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        {t.mealSlot === 'both' ? 'दोन्ही वेळ' : t.mealSlot === 'lunch' ? 'दुपार' : 'रात्र'}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          t.status === 'redeemed'
-                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
-                        }`}
-                      >
-                        {t.status === 'redeemed' ? 'जेवण दिले' : 'प्रलंबित'}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 font-mono">
-                      <span>{t.customerName}</span>
-                      {t.customerPhone && <span>• {t.customerPhone}</span>}
-                      <span>• {new Date(t.issuedAt).toLocaleTimeString('mr-IN', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-3 font-mono">
-                  <div className="text-right">
-                    <span className="text-base font-black text-slate-900 dark:text-white block">
-                      ₹{t.amount}
-                    </span>
-                    <span className="text-[10px] text-slate-400 uppercase">{t.paymentMethod}</span>
-                  </div>
-
-                  {t.status === 'issued' && (
-                    <button
-                      onClick={() => handleRedeemToken(t.id)}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
-                    >
-                      Redeem
-                    </button>
-                  )}
-                </div>
+            {filteredTokens.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs">
+                कोणतेही टोकन नोंदी सापडल्या नाहीत.
               </div>
-            ))}
+            ) : (
+              filteredTokens.map((t) => (
+                <div
+                  key={t.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-850/50 transition"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-12 h-12 rounded-2xl flex flex-col items-center justify-center font-mono font-black shrink-0 ${
+                        t.status === 'redeemed'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : 'bg-amber-50 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse'
+                      }`}
+                    >
+                      <span className="text-[10px] font-bold">#{t.tokenNumber.split('-')[1]}</span>
+                      <span className="text-[8px] uppercase font-bold">
+                        {t.dietPreference === 'nonveg' ? '🔴 NV' : '🟢 VG'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-sm text-slate-900 dark:text-white">
+                          {t.tokenName}
+                        </span>
+                        <span
+                          className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded border ${
+                            t.dietPreference === 'nonveg'
+                              ? 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950 dark:text-rose-300'
+                              : 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300'
+                          }`}
+                        >
+                          {t.dietPreference === 'nonveg' ? 'नॉनव्हेज' : 'व्हेज'}
+                        </span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                          {t.mealSlot === 'both' ? 'दोन्ही वेळ' : t.mealSlot === 'lunch' ? 'दुपार' : 'रात्र'}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            t.status === 'redeemed'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                          }`}
+                        >
+                          {t.status === 'redeemed' ? 'जेवण दिले' : 'प्रलंबित'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 font-mono flex-wrap">
+                        <span>{t.customerName}</span>
+                        {t.customerPhone && <span>• {t.customerPhone}</span>}
+                        {t.addOns && t.addOns.length > 0 && (
+                          <span className="text-amber-600 font-bold">• ➕ {t.addOns.join(', ')}</span>
+                        )}
+                        <span>
+                          •{' '}
+                          {new Date(t.issuedAt).toLocaleTimeString('mr-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-2 font-mono">
+                    <div className="text-right mr-2">
+                      <span className="text-base font-black text-slate-900 dark:text-white block">
+                        ₹{t.amount}
+                      </span>
+                      <span className="text-[10px] text-slate-400 uppercase">{t.paymentMethod}</span>
+                    </div>
+
+                    {/* WhatsApp share action */}
+                    <a
+                      href={getWhatsAppTokenLink(t)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rounded-xl transition cursor-pointer"
+                      title="WhatsApp वर टोकन पाठवा"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                    </a>
+
+                    {/* Reprint slip */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const qr = await QRCode.toDataURL(
+                            `MESS_TOKEN:${t.tokenNumber}:${t.amount}:${t.dietPreference}:${t.mealSlot}:${t.status}`,
+                            { width: 250, margin: 1 }
+                          );
+                          setQrCodeDataUrl(qr);
+                        } catch {}
+                        setLatestIssuedToken(t);
+                      }}
+                      className="p-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-xl transition cursor-pointer"
+                      title="टोकन स्लिप पहा / प्रिंट करा"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                    </button>
+
+                    {t.status === 'issued' && (
+                      <button
+                        onClick={() => handleRedeemToken(t.id)}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        Redeem
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -792,22 +1345,37 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fadeIn">
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-4 text-center">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <span className="text-xs font-bold text-slate-400">डिजिटल जेवण टोकन स्लिप</span>
-              <button
-                onClick={() => setLatestIssuedToken(null)}
-                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <span className="text-xs font-bold text-slate-400">
+                {isThermalReceiptMode ? 'थर्मल POS प्रिंट स्लिप' : 'डिजिटल जेवण टोकन स्लिप'}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsThermalReceiptMode(!isThermalReceiptMode)}
+                  className="text-[10px] font-bold text-brand-600 hover:underline cursor-pointer"
+                >
+                  {isThermalReceiptMode ? 'रंगीत मोड' : 'थर्मल मोड'}
+                </button>
+                <button
+                  onClick={() => setLatestIssuedToken(null)}
+                  className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Token Printable Card */}
             <div
               id="token-print-slip"
-              className="bg-[#fbf9f4] dark:bg-slate-850 p-5 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 space-y-3"
+              className={`p-5 rounded-2xl border-2 space-y-3 ${
+                isThermalReceiptMode
+                  ? 'bg-white text-black border-black font-mono'
+                  : 'bg-[#fbf9f4] dark:bg-slate-850 border-dashed border-slate-300 dark:border-slate-700'
+              }`}
             >
               <div className="flex items-center justify-center gap-2">
-                <div className="w-7 h-7 rounded-lg overflow-hidden">
+                <div className="w-7 h-7 rounded-lg overflow-hidden shrink-0">
                   <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <h3 className="font-black text-sm text-slate-900 dark:text-white">
@@ -816,7 +1384,7 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
               </div>
 
               <div className="text-[10px] text-slate-500">
-                २१ वर्षांची अखंड परंपरा • चालक: शंकर गिरी
+                २१ वर्षांची अखंड परंपरा • चालक: शंकर गिरी (९८२२३३८९७५)
               </div>
 
               {/* Big Token Number */}
@@ -837,51 +1405,97 @@ export const MealTokenSystem: React.FC<MealTokenSystemProps> = ({ mess, members 
                   }`}
                 >
                   {latestIssuedToken.dietPreference === 'nonveg'
-                    ? (language === 'en' ? '🔴 Non-Veg' : '🔴 नॉनव्हेज')
-                    : (language === 'en' ? '🟢 Pure Veg' : '🟢 शुद्ध शाकाहारी')}
+                    ? language === 'en'
+                      ? '🔴 Non-Veg'
+                      : '🔴 नॉनव्हेज'
+                    : language === 'en'
+                    ? '🟢 Pure Veg'
+                    : '🟢 शुद्ध शाकाहारी'}
                 </span>
 
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
                   {latestIssuedToken.mealSlot === 'both'
-                    ? (language === 'en' ? 'Both (Lunch+Dinner)' : 'दोन्ही वेळ')
+                    ? language === 'en'
+                      ? 'Both (Lunch+Dinner)'
+                      : 'दोन्ही वेळ'
                     : latestIssuedToken.mealSlot === 'lunch'
-                    ? (language === 'en' ? 'Lunch' : 'दुपारचे जेवण')
-                    : (language === 'en' ? 'Dinner' : 'रात्रीचे जेवण')}
+                    ? language === 'en'
+                      ? 'Lunch'
+                      : 'दुपारचे जेवण'
+                    : language === 'en'
+                    ? 'Dinner'
+                    : 'रात्रीचे जेवण'}
                 </span>
               </div>
 
               {/* Token Details */}
               <div className="text-xs space-y-1 font-mono text-slate-700 dark:text-slate-300 pt-1 text-left bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                <div>{language === 'en' ? 'Title:' : 'तपशील:'} <strong>{latestIssuedToken.tokenName}</strong></div>
-                <div>{language === 'en' ? 'Customer:' : 'ग्राहक:'} <strong>{latestIssuedToken.customerName}</strong></div>
-                <div>{language === 'en' ? 'Amount:' : 'रक्कम:'} <strong className="text-emerald-600 font-bold">₹{latestIssuedToken.amount} ({latestIssuedToken.paymentMethod.toUpperCase()})</strong></div>
-                <div>{language === 'en' ? 'Date:' : 'तारीख:'} <strong>{new Date(latestIssuedToken.issuedAt).toLocaleDateString('en-IN')}</strong></div>
+                <div>
+                  {language === 'en' ? 'Title:' : 'तपशील:'} <strong>{latestIssuedToken.tokenName}</strong>
+                </div>
+                <div>
+                  {language === 'en' ? 'Customer:' : 'ग्राहक:'} <strong>{latestIssuedToken.customerName}</strong>
+                </div>
+                {latestIssuedToken.addOns && latestIssuedToken.addOns.length > 0 && (
+                  <div>
+                    {language === 'en' ? 'Add-ons:' : 'ॲड-ऑन्स:'}{' '}
+                    <strong className="text-amber-600">{latestIssuedToken.addOns.join(', ')}</strong>
+                  </div>
+                )}
+                <div>
+                  {language === 'en' ? 'Amount:' : 'रक्कम:'}{' '}
+                  <strong className="text-emerald-600 font-bold">
+                    ₹{latestIssuedToken.amount} ({latestIssuedToken.paymentMethod.toUpperCase()})
+                  </strong>
+                </div>
+                <div>
+                  {language === 'en' ? 'Date:' : 'तारीख:'}{' '}
+                  <strong>{new Date(latestIssuedToken.issuedAt).toLocaleDateString('en-IN')}</strong>
+                </div>
               </div>
 
               {/* QR Code */}
               {qrCodeDataUrl && (
                 <div className="flex flex-col items-center pt-1">
-                  <img src={qrCodeDataUrl} alt="Token QR" className="w-28 h-28 rounded-lg border border-slate-200" />
-                  <span className="text-[9px] text-slate-400 mt-1 font-mono">{language === 'en' ? 'Scan at kitchen counter' : 'किचन काउंटरवर स्कॅन करा'}</span>
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="Token QR"
+                    className="w-28 h-28 rounded-lg border border-slate-200 bg-white p-1"
+                  />
+                  <span className="text-[9px] text-slate-400 mt-1 font-mono">
+                    {language === 'en' ? 'Scan at kitchen counter' : 'किचन काउंटरवर स्कॅन करा'}
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Print & Close Actions */}
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>प्रिंट टोकन स्लिप</span>
-              </button>
+            {/* Print & Share Actions */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2">
+                <a
+                  href={getWhatsAppTokenLink(latestIssuedToken)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>WhatsApp स्लिप</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>प्रिंट स्लिप</span>
+                </button>
+              </div>
 
               <button
                 type="button"
                 onClick={() => setLatestIssuedToken(null)}
-                className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
+                className="w-full py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
               >
                 बंद करा
               </button>

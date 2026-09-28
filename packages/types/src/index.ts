@@ -578,7 +578,7 @@ export interface MessPricePlan {
 }
 
 export type TokenStatus = 'issued' | 'redeemed' | 'expired';
-export type TokenType = 'single_veg' | 'single_nonveg' | 'parcel_box' | 'bundle_pass' | 'custom';
+export type TokenType = 'single_veg' | 'single_nonveg' | 'parcel_box' | 'bundle_pass' | 'custom' | 'addon';
 
 export interface MealToken {
   id: string;
@@ -591,14 +591,37 @@ export interface MealToken {
   tokenType: TokenType;
   tokenName: string;
   amount: number;
+  quantity?: number;
   dietPreference?: DietPreference;
   mealSlot: 'lunch' | 'dinner' | 'both';
-  paymentMethod: 'cash' | 'upi' | 'prepaid_bundle';
+  paymentMethod: 'cash' | 'upi' | 'prepaid_bundle' | 'member_wallet';
   status: TokenStatus;
   issuedAt: string;
   redeemedAt?: string;
   expiresAt?: string;
   notes?: string;
+  addOns?: string[];
+}
+
+export function generateTokensCsv(tokens: MealToken[]): string {
+  const headers = ['Token #', 'Customer Name', 'Phone', 'Token Name', 'Diet', 'Slot', 'Quantity', 'Amount (INR)', 'Payment Mode', 'Status', 'Issued At', 'Redeemed At', 'Add-ons', 'Notes'];
+  const rows = tokens.map(t => [
+    `"${t.tokenNumber}"`,
+    `"${t.customerName || ''}"`,
+    `"${t.customerPhone || ''}"`,
+    `"${t.tokenName}"`,
+    `"${t.dietPreference || 'veg'}"`,
+    `"${t.mealSlot}"`,
+    t.quantity || 1,
+    t.amount,
+    `"${t.paymentMethod}"`,
+    `"${t.status}"`,
+    `"${t.issuedAt}"`,
+    `"${t.redeemedAt || '-'}"`,
+    `"${(t.addOns || []).join('; ')}"`,
+    `"${t.notes || ''}"`
+  ]);
+  return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
 }
 
 /**

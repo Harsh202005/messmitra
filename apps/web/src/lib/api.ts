@@ -24,6 +24,8 @@ import {
   isNonVegDay,
   generateBillingCsv,
   generateExpensesCsv,
+  MealToken,
+  generateTokensCsv,
 } from '@messmitra/types';
 import { getSupabase } from './supabaseClient';
 
@@ -1729,6 +1731,74 @@ export const MessMitraApi = {
     link.click();
     document.body.removeChild(link);
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+
+  downloadTokensCsv(tokens: MealToken[], dateFilterStr?: string) {
+    const csvContent = generateTokensCsv(tokens);
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `messmitra-meal-tokens-${dateFilterStr || 'all'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+
+  // -------------------------------------------------------------
+  // 8.1 MEAL TOKENS API
+  // -------------------------------------------------------------
+  async getMealTokens(): Promise<MealToken[]> {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('messmitra_meal_tokens');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
+    }
+    return [];
+  },
+
+  async issueMealToken(dto: Omit<MealToken, 'id' | 'tokenNumber' | 'issuedAt' | 'status' | 'messId'>): Promise<MealToken> {
+    const tokenNum = `TKN-${Math.floor(100 + Math.random() * 900)}`;
+    const newToken: MealToken = {
+      ...dto,
+      id: `tkn-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenNumber: tokenNum,
+      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+      status: 'issued',
+      issuedAt: new Date().toISOString(),
+    };
+    const current = await this.getMealTokens();
+    const updated = [newToken, ...current];
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_meal_tokens', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return newToken;
+  },
+
+  async redeemMealToken(id: string): Promise<MealToken | null> {
+    const current = await this.getMealTokens();
+    let redeemed: MealToken | null = null;
+    const updated = current.map((t) => {
+      if (t.id === id || t.tokenNumber.toUpperCase() === id.toUpperCase()) {
+        redeemed = {
+          ...t,
+          status: 'redeemed' as const,
+          redeemedAt: new Date().toISOString(),
+        };
+        return redeemed;
+      }
+      return t;
+    });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('messmitra_meal_tokens', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+    return redeemed;
   },
 
   // -------------------------------------------------------------
