@@ -608,7 +608,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                 </a>
               </div>
 
-              <div className="pt-1">
+              <div className="space-y-2 pt-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -620,6 +620,20 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({
                 >
                   <Edit2 className="w-4 h-4 text-brand-500" />
                   <span>{language === 'en' ? 'Edit Profile' : 'माहिती संपादित करा'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm(`तुम्हाला खात्री आहे का? "${selectedMemberModal.name}" हे सभासद खाते हटवायचे आहे का?`)) {
+                      const { MessMitraApi } = await import('../lib/api');
+                      await MessMitraApi.deleteMember(selectedMemberModal.id);
+                      setSelectedMemberModal(null);
+                    }
+                  }}
+                  className="w-full min-h-[40px] flex items-center justify-center gap-1.5 py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl text-xs font-bold border border-rose-200 dark:border-rose-800 transition cursor-pointer"
+                >
+                  <span>{language === 'en' ? 'Delete Member' : 'सभासद खाते हटवा (Delete)'}</span>
                 </button>
               </div>
             </div>

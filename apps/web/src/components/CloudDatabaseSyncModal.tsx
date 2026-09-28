@@ -438,31 +438,24 @@ END $$;`;
 
             <button
               onClick={async () => {
-                localStorage.removeItem('messmitra_members');
-                localStorage.removeItem('messmitra_leaves');
-                localStorage.removeItem('messmitra_expenses_recurring');
-                localStorage.removeItem('messmitra_expenses_oneoff');
-                localStorage.removeItem('messmitra_staff');
-                localStorage.removeItem('messmitra_payments');
-                localStorage.removeItem('messmitra_staff_salaries');
-                localStorage.removeItem('messmitra_staff_attendance');
-                localStorage.removeItem('messmitra_walkin_orders');
-                localStorage.removeItem('messmitra_meal_tokens');
-                localStorage.removeItem('messmitra_notifications');
-                await onReloadAllData();
-                setToast(language === 'en' ? 'Local storage wiped clean' : 'सर्व स्थानिक डेटा साफ झाला');
-                setTimeout(() => setToast(null), 3000);
+                if (confirm('तुम्हाला खात्री आहे का? स्थानिक ब्राउझर व क्लाऊड डेटाबेसमधील सर्व जुना डेटा साफ केला जाईल.')) {
+                  const { MessMitraApi } = await import('../lib/api');
+                  await MessMitraApi.clearDemoData();
+                  await onReloadAllData();
+                  setToast(language === 'en' ? 'All database & storage wiped clean' : 'सर्व डेटाबेस व स्थानिक डेटा साफ झाला');
+                  setTimeout(() => setToast(null), 3000);
+                }
               }}
               disabled={isSyncing}
-              className="flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 transition text-left cursor-pointer"
+              className="flex items-center justify-center gap-2 p-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-800 dark:text-rose-200 rounded-xl border border-rose-200 dark:border-rose-800 transition text-left cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-500" />
+              <Sparkles className="w-4 h-4 text-rose-500" />
               <div>
-                <strong className="block text-slate-800 dark:text-slate-200">
-                  {language === 'en' ? 'Reset Clean State' : 'डेटा साफ करा / रिसेट'}
+                <strong className="block text-rose-800 dark:text-rose-200">
+                  {language === 'en' ? 'Wipe All Demo Data' : 'सर्व डेटा साफ करा (Wipe)'}
                 </strong>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                  {language === 'en' ? 'Wipe temporary cache' : 'कॅश डेटा रिसेट करा'}
+                <span className="text-[10px] text-rose-600/80 dark:text-rose-400">
+                  {language === 'en' ? 'Clean empty state' : 'क्लीन स्टेट सुरू करा'}
                 </span>
               </div>
             </button>

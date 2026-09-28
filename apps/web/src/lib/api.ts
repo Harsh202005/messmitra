@@ -556,7 +556,46 @@ export const MessMitraApi = {
     return created;
   },
 
+  async deleteMember(id: string): Promise<void> {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        await supabase.from('leave_requests').delete().eq('member_id', id);
+        await supabase.from('billing_cycles').delete().eq('member_id', id);
+        await supabase.from('members').delete().eq('id', id);
+      } catch (e) {
+        console.warn('Supabase deleteMember error:', e);
+      }
+    }
+    if (typeof window !== 'undefined') {
+      const current = await this.getMembers();
+      const updated = current.filter((m) => m.id !== id);
+      localStorage.setItem('messmitra_members', JSON.stringify(updated));
+    }
+    notifyDataChanged();
+  },
+
   async clearDemoData(): Promise<void> {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        // Delete all child data first, then members & mess records
+        await supabase.from('leave_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('billing_cycles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('expense_recurring').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('expense_oneoff').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('staff_salary_payments').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('staff_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('staff').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('pending_registrations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        await supabase.from('meal_tokens').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      } catch (e) {
+        console.warn('Supabase clearDemoData error:', e);
+      }
+    }
+
     if (typeof window !== 'undefined') {
       localStorage.setItem('messmitra_members', JSON.stringify([]));
       localStorage.setItem('messmitra_leaves', JSON.stringify([]));
@@ -570,6 +609,14 @@ export const MessMitraApi = {
       localStorage.setItem('messmitra_walkin_orders', JSON.stringify([]));
       localStorage.setItem('messmitra_meal_tokens', JSON.stringify([]));
       localStorage.setItem('messmitra_notifications', JSON.stringify([]));
+
+      // Clear any billing caches
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('messmitra_billing_') || k.startsWith('messmitra_pnl_'))) {
+          localStorage.removeItem(k);
+        }
+      }
     }
     notifyDataChanged();
   },

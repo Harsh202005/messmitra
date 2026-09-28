@@ -310,6 +310,28 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
               <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300 dark:border-amber-700/50 text-amber-900 dark:text-amber-200 text-xs">
                 ✨ <strong>२१ वर्षांची अखंड परंपरा • चव हीच आमची ओळख</strong> — श्री बालाजी मेसची सर्व सेटिंग्ज सुरक्षितपणे जतन केली जातील.
               </div>
+
+              {/* Data Reset / Clear Danger Zone */}
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/50 flex items-center justify-between gap-2">
+                <div>
+                  <span className="font-bold text-rose-800 dark:text-rose-300 text-xs block">सर्व डेमो डेटा साफ करा</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">सर्व सभासद, सुट्ट्या, बिले व टोकन्स रिकामे करा</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm('तुम्हाला खात्री आहे का? सर्व जुना डेमो डेटा (सभासद, सुट्ट्या, बिले) पूर्णपणे हटवला जाईल.')) {
+                      const { MessMitraApi } = await import('../lib/api');
+                      await MessMitraApi.clearDemoData();
+                      alert('सर्व डेमो डेटा यशस्वीरित्या साफ केला गेला! पेज रिफ्रेश होत आहे.');
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer shrink-0"
+                >
+                  डेटा साफ करा
+                </button>
+              </div>
             </div>
           )}
 
