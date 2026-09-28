@@ -188,6 +188,32 @@ export const MessSetupWizardModal: React.FC<MessSetupWizardModalProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Instant Wipe Demo Data Box on Step 1 */}
+              <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-3">
+                <div>
+                  <span className="font-black text-rose-800 dark:text-rose-200 text-xs block">
+                    🗑️ सर्व जुना डेमो डेटा साफ करा (Wipe All Data)
+                  </span>
+                  <span className="text-[11px] text-rose-700/80 dark:text-rose-400">
+                    सर्व जुने सभासद, सुट्ट्या, बिले व टोकन्स रिकामे करा
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm('तुम्हाला खात्री आहे का? सर्व जुना डेमो डेटा (सभासद, सुट्ट्या, बिले) पूर्णपणे हटवला जाईल.')) {
+                      const { MessMitraApi } = await import('../lib/api');
+                      await MessMitraApi.clearDemoData();
+                      alert('सर्व डेमो डेटा यशस्वीरित्या साफ केला गेला! पेज रिफ्रेश होत आहे.');
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer shrink-0"
+                >
+                  डेटा साफ करा
+                </button>
+              </div>
             </div>
           )}
 

@@ -31,6 +31,7 @@ import {
   LayoutGrid,
   Tag,
   Ticket,
+  Trash2,
 } from 'lucide-react';
 import { Mess } from '@messmitra/types';
 import { NotificationBell } from './NotificationBell';
@@ -312,14 +313,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Desktop Quick Settings Button */}
               {role === 'owner' && (
-                <button
-                  onClick={onOpenSettings}
-                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700 cursor-pointer"
-                  title={t('editSettings')}
-                >
-                  <Settings className="w-3.5 h-3.5 text-brand-500" />
-                  <span className="hidden xl:inline">{t('setupWizard')}</span>
-                </button>
+                <>
+                  <button
+                    onClick={onOpenSettings}
+                    className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition border border-slate-200 dark:border-slate-700 cursor-pointer"
+                    title={t('editSettings')}
+                  >
+                    <Settings className="w-3.5 h-3.5 text-brand-500" />
+                    <span className="hidden xl:inline">{t('setupWizard')}</span>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      if (confirm('तुम्हाला खात्री आहे का? सर्व जुना डेमो डेटा (सभासद, सुट्ट्या, बिले, टोकन्स) पूर्णपणे हटवला जाईल.')) {
+                        const { MessMitraApi } = await import('../lib/api');
+                        await MessMitraApi.clearDemoData();
+                        alert('सर्व डेटा साफ झाला!');
+                        window.location.reload();
+                      }
+                    }}
+                    className="hidden md:flex items-center gap-1 px-2 py-1.5 text-xs font-bold rounded-xl text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition border border-rose-200 dark:border-rose-800 cursor-pointer"
+                    title="सर्व डेमो डेटा साफ करा (Wipe All Data)"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                    <span className="hidden xl:inline">डेटा साफ करा</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
