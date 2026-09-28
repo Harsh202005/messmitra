@@ -212,9 +212,22 @@ function DashboardContent() {
       loadAllData(selectedMonth);
     });
 
+    // 3. Multi-device background poll (ensures mobile scans appear within 4s on owner screen)
+    const pollInterval = setInterval(() => {
+      MessMitraApi.getPendingRegistrations().then((latest) => {
+        setRegistrations((prev) => {
+          if (prev.length !== latest.length || JSON.stringify(prev) !== JSON.stringify(latest)) {
+            return latest;
+          }
+          return prev;
+        });
+      }).catch(() => {});
+    }, 4000);
+
     return () => {
       window.removeEventListener('messmitra_data_changed', handleDataMutation);
       window.removeEventListener('storage', handleDataMutation);
+      clearInterval(pollInterval);
       unsubscribe();
     };
   }, [selectedMonth, mess?.id]);

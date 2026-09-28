@@ -617,6 +617,9 @@ export const MessMitraApi = {
           localStorage.removeItem(k);
         }
       }
+      try {
+        await fetch('/api/registrations', { method: 'DELETE' });
+      } catch {}
     }
     notifyDataChanged();
   },
@@ -1849,9 +1852,24 @@ export const MessMitraApi = {
   },
 
   // -------------------------------------------------------------
-  // 9. SELF-REGISTRATION & OWNER APPROVAL QUEUE
+  // 9. SELF-REGISTRATION & OWNER APPROVAL QUEUE (Multi-Device & Cloud Synced)
   // -------------------------------------------------------------
   async getPendingRegistrations(): Promise<PendingRegistration[]> {
+    // 1. Try Next.js Multi-Device Server API first (syncs mobile & desktop across network)
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/registrations', { cache: 'no-store' });
+        if (res.ok) {
+          const list: PendingRegistration[] = await res.json();
+          localStorage.setItem('messmitra_registrations', JSON.stringify(list));
+          return list;
+        }
+      } catch (e) {
+        // Fall through to Supabase or LocalStorage
+      }
+    }
+
+    // 2. Try Supabase cloud database if available
     const supabase = getSupabase();
     if (supabase) {
       try {
@@ -1886,6 +1904,7 @@ export const MessMitraApi = {
       }
     }
 
+    // 3. Fallback to LocalStorage
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_registrations');
       if (saved) {
@@ -1905,14 +1924,41 @@ export const MessMitraApi = {
     const mess = await this.getCurrentMess();
     const newRegId = `reg-${Date.now()}`;
     const submittedAt = new Date().toISOString();
-    const supabase = getSupabase();
 
+    const payload: PendingRegistration = {
+      ...data,
+      id: newRegId,
+      messId: mess.id,
+      submittedAt,
+      status: 'pending_approval',
+    };
+
+    let savedItem: PendingRegistration = payload;
+
+    // 1. Send to Next.js Multi-Device Server API route (persists on server file system)
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/registrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          savedItem = await res.json();
+        }
+      } catch (err) {
+        console.warn('Next.js API submitRegistration error:', err);
+      }
+    }
+
+    // 2. Sync to Supabase cloud database if available
+    const supabase = getSupabase();
     if (supabase) {
       try {
         const { data: row, error } = await supabase
           .from('pending_registrations')
           .insert({
-            id: newRegId,
+            id: savedItem.id,
             mess_id: mess.id,
             name: data.name,
             phone: data.phone,
@@ -1930,7 +1976,7 @@ export const MessMitraApi = {
           .single();
 
         if (!error && row) {
-          const res: PendingRegistration = {
+          savedItem = {
             id: row.id,
             messId: row.mess_id,
             name: row.name,
@@ -1944,79 +1990,55 @@ export const MessMitraApi = {
             submittedAt: row.submitted_at,
             status: row.status,
           };
-          if (typeof window !== 'undefined') {
-            const current = await this.getPendingRegistrations();
-            const updated = [res, ...current.filter((r) => r.id !== res.id)];
-            localStorage.setItem('messmitra_registrations', JSON.stringify(updated));
-          }
-          notifyDataChanged();
-          return res;
         }
       } catch (e) {
         console.warn('Supabase submitRegistration error:', e);
       }
     }
 
-    const current = await this.getPendingRegistrations();
-    const newReg: PendingRegistration = {
-      ...data,
-      id: newRegId,
-      messId: mess.id,
-      submittedAt,
-      status: 'pending_approval',
-    };
-    const updated = [newReg, ...current];
+    // 3. Update Local Storage for instant synchronous UI responsiveness
     if (typeof window !== 'undefined') {
+      const current = await this.getPendingRegistrations();
+      const updated = [savedItem, ...current.filter((r) => r.id !== savedItem.id)];
       localStorage.setItem('messmitra_registrations', JSON.stringify(updated));
     }
+
     notifyDataChanged();
-    return newReg;
+    return savedItem;
   },
 
   async reviewRegistration(
     id: string,
     status: 'approved' | 'rejected'
   ): Promise<PendingRegistration | null> {
-    const supabase = getSupabase();
     const reviewedAt = new Date().toISOString();
     const reviewedBy = 'शंकर गिरी';
 
+    // 1. Update Next.js Multi-Device Server API route
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/registrations', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, status, reviewedBy }),
+        });
+      } catch (err) {
+        console.warn('Next.js API reviewRegistration error:', err);
+      }
+    }
+
+    // 2. Update Supabase if available
+    const supabase = getSupabase();
     if (supabase) {
       try {
-        const { data: row, error } = await supabase
+        await supabase
           .from('pending_registrations')
           .update({
             status,
             reviewed_at: reviewedAt,
             reviewed_by: reviewedBy,
           })
-          .eq('id', id)
-          .select()
-          .single();
-
-        if (!error && row) {
-          if (status === 'approved') {
-            if (row.role === 'member') {
-              await this.createMember({
-                name: row.name,
-                phone: row.phone,
-                dietPreference: row.diet_preference || 'veg',
-                gender: 'male',
-                rate: Number(row.rate || 3000),
-                planType: row.plan_type || 'both',
-                joinDate: new Date().toISOString().split('T')[0],
-                status: 'active',
-              });
-            } else if (row.role === 'staff') {
-              await this.createStaff({
-                name: row.name,
-                phone: row.phone,
-                role: row.staff_role || 'सहाय्यक आचारी',
-                monthlySalary: Number(row.salary || 12000),
-              });
-            }
-          }
-        }
+          .eq('id', id);
       } catch (e) {
         console.warn('Supabase reviewRegistration error:', e);
       }
@@ -2030,9 +2052,9 @@ export const MessMitraApi = {
     target.reviewedAt = reviewedAt;
     target.reviewedBy = reviewedBy;
 
-    if (status === 'approved' && !supabase) {
+    // When approved, automatically create the active Member or Staff record
+    if (status === 'approved') {
       if (target.role === 'member') {
-        // Auto-create active Member in offline mode
         await this.createMember({
           name: target.name,
           phone: target.phone,
@@ -2044,7 +2066,6 @@ export const MessMitraApi = {
           status: 'active',
         });
       } else if (target.role === 'staff') {
-        // Auto-create active Staff in offline mode
         await this.createStaff({
           name: target.name,
           phone: target.phone,

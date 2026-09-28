@@ -24,6 +24,7 @@ import {
   LogIn,
 } from 'lucide-react';
 import { UserRole, DietPreference, PlanType } from '@messmitra/types';
+import { RegistrationStatusPopup } from './RegistrationStatusPopup';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -67,6 +68,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [regSuccessMsg, setRegSuccessMsg] = useState<string | null>(null);
 
+  // Status Popup State
+  const [statusPopup, setStatusPopup] = useState<{
+    isOpen: boolean;
+    isSuccess: boolean;
+    errorMsg?: string | null;
+    data?: any;
+  }>({
+    isOpen: false,
+    isSuccess: false,
+  });
+
   if (!isOpen) return null;
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -92,27 +104,37 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
     try {
       const rate = regDiet === 'veg' ? 3000 : 3200;
-      await MessMitraApi.submitRegistration({
+      const calculatedRate = regPlan === 'both' ? rate : Math.round(rate / 2);
+      const regData = {
         messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-        name: regName,
-        phone: regPhone,
+        name: regName.trim(),
+        phone: regPhone.trim(),
         role: registerRole,
         dietPreference: registerRole === 'member' ? regDiet : undefined,
         planType: registerRole === 'member' ? regPlan : undefined,
-        rate: registerRole === 'member' ? (regPlan === 'both' ? rate : Math.round(rate / 2)) : undefined,
+        rate: registerRole === 'member' ? calculatedRate : undefined,
         staffRole: registerRole === 'staff' ? regStaffRole : undefined,
         salary: registerRole === 'staff' ? regSalary : undefined,
         password: regPassword,
+      };
+
+      await MessMitraApi.submitRegistration(regData);
+
+      setStatusPopup({
+        isOpen: true,
+        isSuccess: true,
+        data: regData,
       });
 
-      setRegSuccessMsg(
-        `नोंदणी यशस्वी झाली! मेस चालक (शंकर गिरी - ९८२२३३८९७५) यांच्या मंजुरीनंतर तुमचे खाते सक्रिय होईल.`
-      );
       setRegName('');
       setRegPhone('');
       setRegPassword('');
     } catch (err: any) {
-      setErrorMsg(err.message || 'नोंदणी अयशस्वी. कृपया पुन्हा प्रयत्न करा.');
+      setStatusPopup({
+        isOpen: true,
+        isSuccess: false,
+        errorMsg: err.message || 'नोंदणी सबमिट करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -513,6 +535,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           )}
         </div>
       </div>
+
+      {/* Registration Success / Error Popup */}
+      <RegistrationStatusPopup
+        isOpen={statusPopup.isOpen}
+        isSuccess={statusPopup.isSuccess}
+        errorMsg={statusPopup.errorMsg}
+        registrationData={statusPopup.data}
+        onClose={() => {
+          setStatusPopup({ isOpen: false, isSuccess: false });
+          if (statusPopup.isSuccess) {
+            onClose();
+          }
+        }}
+      />
     </div>
   );
 };

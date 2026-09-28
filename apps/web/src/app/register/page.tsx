@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { getDynamicRateForPlan, getStoredPlans } from '../../lib/pricePlanService';
 import { useI18n } from '../../lib/i18n';
+import { RegistrationStatusPopup } from '../../components/RegistrationStatusPopup';
 
 export default function RegisterPage() {
   const { language } = useI18n();
@@ -38,6 +39,15 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [statusPopup, setStatusPopup] = useState<{
+    isOpen: boolean;
+    isSuccess: boolean;
+    errorMsg?: string | null;
+    data?: any;
+  }>({
+    isOpen: false,
+    isSuccess: false,
+  });
 
   // Dynamic rates from Owner's Plan Manager
   const veg1Rate = getDynamicRateForPlan('lunch', 'veg');
@@ -52,23 +62,36 @@ export default function RegisterPage() {
     setErrorMsg(null);
     setIsSubmitting(true);
 
+    const regData = {
+      messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+      name: regName.trim(),
+      phone: regPhone.trim(),
+      role: registerRole,
+      dietPreference: registerRole === 'member' ? regDiet : undefined,
+      planType: registerRole === 'member' ? regPlan : undefined,
+      rate: registerRole === 'member' ? calculatedRate : undefined,
+      staffRole: registerRole === 'staff' ? regStaffRole : undefined,
+      salary: registerRole === 'staff' ? regSalary : undefined,
+      password: regPassword.trim() || undefined,
+    };
+
     try {
-      await MessMitraApi.submitRegistration({
-        messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
-        name: regName.trim(),
-        phone: regPhone.trim(),
-        role: registerRole,
-        dietPreference: registerRole === 'member' ? regDiet : undefined,
-        planType: registerRole === 'member' ? regPlan : undefined,
-        rate: registerRole === 'member' ? calculatedRate : undefined,
-        staffRole: registerRole === 'staff' ? regStaffRole : undefined,
-        salary: registerRole === 'staff' ? regSalary : undefined,
-        password: regPassword.trim() || undefined,
-      });
+      await MessMitraApi.submitRegistration(regData);
 
       setIsSuccess(true);
+      setStatusPopup({
+        isOpen: true,
+        isSuccess: true,
+        data: regData,
+      });
     } catch (err: any) {
-      setErrorMsg(err.message || 'नोंदणी सबमिट करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.');
+      const msg = err.message || 'नोंदणी सबमिट करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.';
+      setErrorMsg(msg);
+      setStatusPopup({
+        isOpen: true,
+        isSuccess: false,
+        errorMsg: msg,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -411,6 +434,15 @@ export default function RegisterPage() {
           </Link>
         </div>
       </div>
+
+      {/* Registration Success / Failure Popup Modal */}
+      <RegistrationStatusPopup
+        isOpen={statusPopup.isOpen}
+        isSuccess={statusPopup.isSuccess}
+        errorMsg={statusPopup.errorMsg}
+        registrationData={statusPopup.data}
+        onClose={() => setStatusPopup({ isOpen: false, isSuccess: false })}
+      />
     </main>
   );
 }
