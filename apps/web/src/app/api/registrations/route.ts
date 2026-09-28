@@ -55,10 +55,60 @@ function writeRegistrations(data: PendingRegistration[]) {
   }
 }
 
+const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0e795dfc92f28';
+
+async function fetchFromCloud(): Promise<PendingRegistration[]> {
+  try {
+    const res = await fetch(CLOUD_SYNC_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.data?.registrations && Array.isArray(data.data.registrations)) {
+        return data.data.registrations;
+      }
+    }
+  } catch (e) {
+    // Ignore network error
+  }
+  return [];
+}
+
+async function syncToCloud(list: PendingRegistration[]): Promise<void> {
+  try {
+    await fetch(CLOUD_SYNC_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'balaji_mess_registrations_v1',
+        data: { registrations: list },
+      }),
+    });
+  } catch (e) {
+    // Ignore network error
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
-    const list = readRegistrations();
-    return NextResponse.json(list, {
+    const localList = readRegistrations();
+    const cloudList = await fetchFromCloud();
+
+    const map = new Map<string, PendingRegistration>();
+    for (const r of cloudList) {
+      map.set(r.id, r);
+    }
+    for (const r of localList) {
+      if (!map.has(r.id)) {
+        map.set(r.id, r);
+      }
+    }
+
+    const merged = Array.from(map.values()).sort(
+      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+
+    writeRegistrations(merged);
+
+    return NextResponse.json(merged, {
       headers: {
         'Cache-Control': 'no-store, max-age=0',
       },
@@ -80,6 +130,11 @@ export async function POST(req: NextRequest) {
     }
 
     const current = readRegistrations();
+    const cloudCurrent = await fetchFromCloud();
+    const map = new Map<string, PendingRegistration>();
+    for (const r of cloudCurrent) map.set(r.id, r);
+    for (const r of current) if (!map.has(r.id)) map.set(r.id, r);
+
     const newRegId = `reg-${Date.now()}`;
     const submittedAt = new Date().toISOString();
 
@@ -99,9 +154,13 @@ export async function POST(req: NextRequest) {
       status: 'pending_approval',
     };
 
-    // Prepend to top of queue
-    const updated = [newReg, ...current.filter((r) => r.id !== newReg.id)];
+    map.set(newReg.id, newReg);
+    const updated = Array.from(map.values()).sort(
+      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
+
     writeRegistrations(updated);
+    await syncToCloud(updated);
 
     return NextResponse.json(newReg, { status: 201 });
   } catch (err: any) {
@@ -119,19 +178,29 @@ export async function PATCH(req: NextRequest) {
     }
 
     const list = readRegistrations();
-    const index = list.findIndex((r) => r.id === id);
+    const cloudList = await fetchFromCloud();
+    const map = new Map<string, PendingRegistration>();
+    for (const r of cloudList) map.set(r.id, r);
+    for (const r of list) if (!map.has(r.id)) map.set(r.id, r);
 
-    if (index === -1) {
+    const target = map.get(id);
+    if (!target) {
       return NextResponse.json({ error: 'नोंदणी सापडली नाही (Registration not found)' }, { status: 404 });
     }
 
-    list[index].status = status;
-    list[index].reviewedAt = new Date().toISOString();
-    list[index].reviewedBy = reviewedBy;
+    target.status = status;
+    target.reviewedAt = new Date().toISOString();
+    target.reviewedBy = reviewedBy;
+    map.set(id, target);
 
-    writeRegistrations(list);
+    const updated = Array.from(map.values()).sort(
+      (a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
+    );
 
-    return NextResponse.json(list[index]);
+    writeRegistrations(updated);
+    await syncToCloud(updated);
+
+    return NextResponse.json(target);
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
   }
@@ -140,6 +209,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE() {
   try {
     writeRegistrations([]);
+    await syncToCloud([]);
     return NextResponse.json({ success: true, message: 'All registrations cleared' });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

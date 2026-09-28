@@ -1855,21 +1855,42 @@ export const MessMitraApi = {
   // 9. SELF-REGISTRATION & OWNER APPROVAL QUEUE (Multi-Device & Cloud Synced)
   // -------------------------------------------------------------
   async getPendingRegistrations(): Promise<PendingRegistration[]> {
+    const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0e795dfc92f28';
+
     // 1. Try Next.js Multi-Device Server API first (syncs mobile & desktop across network)
     if (typeof window !== 'undefined') {
       try {
         const res = await fetch('/api/registrations', { cache: 'no-store' });
         if (res.ok) {
           const list: PendingRegistration[] = await res.json();
-          localStorage.setItem('messmitra_registrations', JSON.stringify(list));
-          return list;
+          if (Array.isArray(list) && list.length > 0) {
+            localStorage.setItem('messmitra_registrations', JSON.stringify(list));
+            return list;
+          }
         }
       } catch (e) {
-        // Fall through to Supabase or LocalStorage
+        // Fall through to Cloud Sync or LocalStorage
       }
     }
 
-    // 2. Try Supabase cloud database if available
+    // 2. Direct Cloud KV backup sync (guarantees cross-device sync between Mobile and Laptop)
+    if (typeof window !== 'undefined') {
+      try {
+        const cloudRes = await fetch(CLOUD_SYNC_URL, { cache: 'no-store' });
+        if (cloudRes.ok) {
+          const cloudData = await cloudRes.json();
+          if (cloudData?.data?.registrations && Array.isArray(cloudData.data.registrations)) {
+            const list: PendingRegistration[] = cloudData.data.registrations;
+            localStorage.setItem('messmitra_registrations', JSON.stringify(list));
+            return list;
+          }
+        }
+      } catch (e) {
+        // Fall through
+      }
+    }
+
+    // 3. Try Supabase cloud database if available
     const supabase = getSupabase();
     if (supabase) {
       try {
@@ -1904,7 +1925,7 @@ export const MessMitraApi = {
       }
     }
 
-    // 3. Fallback to LocalStorage
+    // 4. Fallback to LocalStorage
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_registrations');
       if (saved) {
@@ -1924,6 +1945,7 @@ export const MessMitraApi = {
     const mess = await this.getCurrentMess();
     const newRegId = `reg-${Date.now()}`;
     const submittedAt = new Date().toISOString();
+    const CLOUD_SYNC_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0e795dfc92f28';
 
     const payload: PendingRegistration = {
       ...data,
@@ -1935,7 +1957,32 @@ export const MessMitraApi = {
 
     let savedItem: PendingRegistration = payload;
 
-    // 1. Send to Next.js Multi-Device Server API route (persists on server file system)
+    // 1. Direct Cloud KV update for instant cross-device mobile/laptop sync
+    if (typeof window !== 'undefined') {
+      try {
+        const cloudGet = await fetch(CLOUD_SYNC_URL, { cache: 'no-store' });
+        let existing: PendingRegistration[] = [];
+        if (cloudGet.ok) {
+          const json = await cloudGet.json();
+          if (json?.data?.registrations && Array.isArray(json.data.registrations)) {
+            existing = json.data.registrations;
+          }
+        }
+        const updatedCloud = [payload, ...existing.filter((r) => r.id !== payload.id)];
+        await fetch(CLOUD_SYNC_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'balaji_mess_registrations_v1',
+            data: { registrations: updatedCloud },
+          }),
+        });
+      } catch (cloudErr) {
+        console.warn('Cloud KV sync error:', cloudErr);
+      }
+    }
+
+    // 2. Send to Next.js Multi-Device Server API route (persists on server file system)
     if (typeof window !== 'undefined') {
       try {
         const res = await fetch('/api/registrations', {
@@ -2027,7 +2074,36 @@ export const MessMitraApi = {
       }
     }
 
-    // 2. Update Supabase if available
+    // 2. Update Cloud KV backup store
+    if (typeof window !== 'undefined') {
+      try {
+        const cloudGet = await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a0e795dfc92f28', { cache: 'no-store' });
+        if (cloudGet.ok) {
+          const json = await cloudGet.json();
+          if (json?.data?.registrations && Array.isArray(json.data.registrations)) {
+            const list: PendingRegistration[] = json.data.registrations;
+            const idx = list.findIndex((r) => r.id === id);
+            if (idx !== -1) {
+              list[idx].status = status;
+              list[idx].reviewedAt = reviewedAt;
+              list[idx].reviewedBy = reviewedBy;
+              await fetch('https://api.restful-api.dev/objects/ff808181a09d98f701a0e795dfc92f28', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: 'balaji_mess_registrations_v1',
+                  data: { registrations: list },
+                }),
+              });
+            }
+          }
+        }
+      } catch (cloudErr) {
+        console.warn('Cloud KV reviewRegistration error:', cloudErr);
+      }
+    }
+
+    // 3. Update Supabase if available
     const supabase = getSupabase();
     if (supabase) {
       try {
