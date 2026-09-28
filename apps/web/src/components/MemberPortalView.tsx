@@ -177,6 +177,60 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
   const isOneMeal = member.planType === 'lunch' || member.planType === 'dinner';
   const latestNotif = notifications[0] || null;
 
+  const [showIdCard, setShowIdCard] = useState(false);
+
+  // Time remaining to next cutoff calculation
+  const [timeToCutoff, setTimeToCutoff] = useState<{ slot: string; timeStr: string; isPast: boolean }>({
+    slot: 'lunch',
+    timeStr: '',
+    isPast: false,
+  });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMins = now.getMinutes();
+      const totalMinutesNow = currentHours * 60 + currentMins;
+
+      const [lH, lM] = (mess?.lunchCutoffTime || '09:00').split(':').map(Number);
+      const [dH, dM] = (mess?.dinnerCutoffTime || mess?.dailyCutoffTime || '18:00').split(':').map(Number);
+
+      const lunchTotalMins = (lH || 9) * 60 + (lM || 0);
+      const dinnerTotalMins = (dH || 18) * 60 + (dM || 0);
+
+      if (totalMinutesNow < lunchTotalMins) {
+        const diff = lunchTotalMins - totalMinutesNow;
+        const hrs = Math.floor(diff / 60);
+        const mins = diff % 60;
+        setTimeToCutoff({
+          slot: language === 'en' ? 'Lunch Cutoff' : 'दुपार कटऑफ',
+          timeStr: `${hrs > 0 ? `${hrs}h ` : ''}${mins}m remaining`,
+          isPast: false,
+        });
+      } else if (totalMinutesNow < dinnerTotalMins) {
+        const diff = dinnerTotalMins - totalMinutesNow;
+        const hrs = Math.floor(diff / 60);
+        const mins = diff % 60;
+        setTimeToCutoff({
+          slot: language === 'en' ? 'Dinner Cutoff' : 'रात्र कटऑफ',
+          timeStr: `${hrs > 0 ? `${hrs}h ` : ''}${mins}m remaining`,
+          isPast: false,
+        });
+      } else {
+        setTimeToCutoff({
+          slot: language === 'en' ? 'Today\'s Cutoffs' : 'आजचे कटऑफ संपले',
+          timeStr: language === 'en' ? 'Closed for today' : 'उद्याच्या जेवणासाठी सुट्टी नोंदवा',
+          isPast: true,
+        });
+      }
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 60000);
+    return () => clearInterval(timer);
+  }, [mess, language]);
+
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-fadeIn pb-6">
       {/* Toast Alert */}
@@ -248,13 +302,86 @@ export const MemberPortalView: React.FC<MemberPortalViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowIdCard(!showIdCard)}
+              className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/50 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-300 dark:border-brand-700 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>{showIdCard ? 'ओळखपत्र लपवा' : 'डिजिटल मेस पास'}</span>
+            </button>
+
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{language === 'en' ? 'Active Member' : 'सक्रिय सभासद'}</span>
             </span>
           </div>
         </div>
+
+        {/* Live Cutoff Countdown Ribbon */}
+        <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300 font-medium">
+            <Clock className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+            <span>
+              <strong>{timeToCutoff.slot}:</strong> {timeToCutoff.timeStr}
+            </span>
+          </div>
+          <div className="text-[11px] text-slate-400">
+            दुपार: {formattedLunchCutoff} • रात्र: {formattedDinnerCutoff}
+          </div>
+        </div>
+
+        {/* EXPANDABLE DIGITAL ID PASS */}
+        {showIdCard && (
+          <div className="mt-4 pt-4 border-t-2 border-dashed border-slate-200 dark:border-slate-700 animate-fadeIn">
+            <div className="max-w-md mx-auto bg-gradient-to-br from-amber-500 via-orange-600 to-rose-700 text-white rounded-3xl p-5 shadow-xl border-2 border-amber-300/40 relative overflow-hidden">
+              <div className="flex items-center justify-between pb-3 border-b border-white/20">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-white p-0.5 shadow-sm">
+                    <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover rounded-lg" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-sm tracking-tight text-white leading-tight">श्री बालाजी मेस</h3>
+                    <span className="text-[9px] text-amber-100">२१ वर्षांची अखंड परंपरा • पुणे</span>
+                  </div>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-white text-slate-900 font-mono font-black text-[10px] uppercase shadow-sm">
+                  PASS #BAL-{member.id.substring(0, 4).toUpperCase()}
+                </span>
+              </div>
+
+              <div className="py-3 flex items-center justify-between gap-3">
+                <div className="space-y-1 text-xs">
+                  <div className="text-base font-black text-white">{member.name}</div>
+                  <div className="text-[11px] text-amber-100 font-mono">{member.phone || 'N/A'}</div>
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <span className="px-2 py-0.5 rounded-md bg-white/20 text-white font-bold text-[10px]">
+                      {isVeg ? '🟢 शाकाहारी (Veg)' : '🔴 मांसाहारी (Non-Veg)'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-white/20 text-white font-bold text-[10px]">
+                      {member.planType === 'both' ? '२-वेळ जेवण' : '१-वेळ जेवण'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-1.5 rounded-xl shrink-0 shadow-md">
+                  <UpiQrCode
+                    upiId={currentUpiId}
+                    name={mess?.name || 'श्री बालाजी मेस'}
+                    amount={amountDue > 0 ? amountDue : member.rate}
+                    size={75}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-white/20 flex items-center justify-between text-[10px] text-amber-100">
+                <span>चालक: <strong>शंकर गिरी (९८२२३३८९७५)</strong></span>
+                <span className="font-mono">सक्रिय सभासद • Verified</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. LIVE MESS NOTICE / ANNOUNCEMENT BOARD */}

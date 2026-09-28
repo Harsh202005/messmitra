@@ -38,6 +38,17 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   const formattedLunchCutoff = formatTime12Hour(effectiveLunchCutoff, '09:00 AM');
   const formattedDinnerCutoff = formatTime12Hour(effectiveDinnerCutoff, '06:00 PM');
 
+  const [showGroceryEstimates, setShowGroceryEstimates] = React.useState(false);
+
+  // Grocery estimates
+  const estimatedRiceKg = (forecast.cookForCount * 0.12).toFixed(1);
+  const estimatedDalKg = (forecast.cookForCount * 0.045).toFixed(1);
+  const estimatedChapatiCount = forecast.cookForCount * 4;
+  const estimatedVegetablesKg = (forecast.cookForCount * 0.15).toFixed(1);
+  const actualNonVegHeads = isNonVegToday ? (forecast.nonVegCount ?? 0) : 0;
+  const estimatedEggsCount = actualNonVegHeads * 2;
+  const estimatedChickenKg = (actualNonVegHeads * 0.2).toFixed(1);
+
   return (
     <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 sm:p-6 shadow-md border border-slate-200 dark:border-slate-800">
       {/* Background glowing ambient light */}
@@ -119,7 +130,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
         </div>
       </div>
 
-      {/* Main KPI Stats Grid (Compact 2-col grid on mobile) */}
+      {/* Main KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 my-3 sm:my-4">
         {/* Total Active */}
         <div className="bg-slate-50 dark:bg-slate-800/50 backdrop-blur rounded-2xl p-3 sm:p-4 border border-slate-200 dark:border-slate-700/50">
@@ -145,7 +156,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
           <span className="text-[10px] text-amber-700/80 dark:text-amber-400/80">सुट्टीमुळे जेवण नाही</span>
         </div>
 
-        {/* Cook For (Net Count - Spans 2 cols on mobile) */}
+        {/* Cook For */}
         <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-brand-50 to-amber-100/70 dark:from-brand-950/60 dark:to-brand-900/40 rounded-2xl p-3.5 sm:p-4 border border-brand-300 dark:border-brand-500/40 relative">
           <div className="flex items-center justify-between text-brand-800 dark:text-brand-300 mb-1">
             <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider">{t('cookFor')}</span>
@@ -158,7 +169,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
         </div>
       </div>
 
-      {/* Meal breakdown pills & Veg/Non-Veg split - 2 cols on phone, flex wrap on tablet/desktop */}
+      {/* Meal breakdown pills & Veg/Non-Veg split */}
       <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-slate-150 dark:border-slate-800/80 text-xs">
         {/* Lunch */}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -190,7 +201,7 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
           </div>
         </div>
 
-        {/* 🔴 Non-Veg Count (Only on Wed / Fri / Sun) */}
+        {/* 🔴 Non-Veg Count */}
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-xl border font-semibold transition-all ${
             isNonVegToday
@@ -207,7 +218,48 @@ export const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
             </strong>
           </div>
         </div>
+
+        {/* Toggle Raw Grocery Button */}
+        <button
+          type="button"
+          onClick={() => setShowGroceryEstimates(!showGroceryEstimates)}
+          className="ml-auto text-xs font-bold text-brand-600 hover:text-brand-700 dark:text-brand-400 flex items-center gap-1 cursor-pointer py-1 px-2.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-brand-200 dark:border-brand-800"
+        >
+          <UtensilsCrossed className="w-3.5 h-3.5 text-amber-500" />
+          <span>{showGroceryEstimates ? 'किराणा अंदाज लपवा' : 'धान्य व किराणा अंदाज'}</span>
+        </button>
       </div>
+
+      {/* Expandable Raw Grocery Breakdown */}
+      {showGroceryEstimates && (
+        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/80 animate-fadeIn">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-500 text-[10px] block font-semibold">तांदूळ (भात)</span>
+              <strong className="text-slate-900 dark:text-white font-mono font-black text-base">~ {estimatedRiceKg} kg</strong>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-500 text-[10px] block font-semibold">डाळ (वरण/आमटी)</span>
+              <strong className="text-slate-900 dark:text-white font-mono font-black text-base">~ {estimatedDalKg} kg</strong>
+            </div>
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <span className="text-slate-500 text-[10px] block font-semibold">पोळी / चपात्या</span>
+              <strong className="text-slate-900 dark:text-white font-mono font-black text-base">~ {estimatedChapatiCount} नग</strong>
+            </div>
+            {isNonVegToday ? (
+              <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800">
+                <span className="text-rose-700 dark:text-rose-300 text-[10px] block font-bold">🍗 चिकन / अंडी</span>
+                <strong className="text-rose-700 dark:text-rose-300 font-mono font-black text-sm">~ {estimatedChickenKg}kg / {estimatedEggsCount} अंडी</strong>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                <span className="text-slate-500 text-[10px] block font-semibold">भाजीपाला</span>
+                <strong className="text-slate-900 dark:text-white font-mono font-black text-base">~ {estimatedVegetablesKg} kg</strong>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
