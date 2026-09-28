@@ -1852,9 +1852,47 @@ export const MessMitraApi = {
   // 9. SELF-REGISTRATION & OWNER APPROVAL QUEUE
   // -------------------------------------------------------------
   async getPendingRegistrations(): Promise<PendingRegistration[]> {
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('pending_registrations')
+          .select('*')
+          .order('submitted_at', { ascending: false });
+        if (!error && data) {
+          const list: PendingRegistration[] = data.map((r: any) => ({
+            id: r.id,
+            messId: r.mess_id,
+            name: r.name,
+            phone: r.phone,
+            role: r.role,
+            dietPreference: r.diet_preference || 'veg',
+            planType: r.plan_type || 'both',
+            rate: Number(r.rate || 3000),
+            staffRole: r.staff_role,
+            salary: Number(r.salary || 0),
+            submittedAt: r.submitted_at,
+            status: r.status,
+            reviewedAt: r.reviewed_at,
+            reviewedBy: r.reviewed_by,
+          }));
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('messmitra_registrations', JSON.stringify(list));
+          }
+          return list;
+        }
+      } catch (e) {
+        console.warn('Supabase getPendingRegistrations error:', e);
+      }
+    }
+
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_registrations');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {}
+      }
       localStorage.setItem('messmitra_registrations', JSON.stringify(DEFAULT_REGISTRATIONS));
       return DEFAULT_REGISTRATIONS;
     }
@@ -1864,11 +1902,67 @@ export const MessMitraApi = {
   async submitRegistration(
     data: Omit<PendingRegistration, 'id' | 'submittedAt' | 'status'>
   ): Promise<PendingRegistration> {
+    const mess = await this.getCurrentMess();
+    const newRegId = `reg-${Date.now()}`;
+    const submittedAt = new Date().toISOString();
+    const supabase = getSupabase();
+
+    if (supabase) {
+      try {
+        const { data: row, error } = await supabase
+          .from('pending_registrations')
+          .insert({
+            id: newRegId,
+            mess_id: mess.id,
+            name: data.name,
+            phone: data.phone,
+            role: data.role,
+            diet_preference: data.dietPreference || 'veg',
+            plan_type: data.planType || 'both',
+            rate: data.rate || (data.dietPreference === 'veg' ? 3000 : 3200),
+            staff_role: data.staffRole,
+            salary: data.salary,
+            password: data.password,
+            submitted_at: submittedAt,
+            status: 'pending_approval',
+          })
+          .select()
+          .single();
+
+        if (!error && row) {
+          const res: PendingRegistration = {
+            id: row.id,
+            messId: row.mess_id,
+            name: row.name,
+            phone: row.phone,
+            role: row.role,
+            dietPreference: row.diet_preference || 'veg',
+            planType: row.plan_type || 'both',
+            rate: Number(row.rate || 3000),
+            staffRole: row.staff_role,
+            salary: Number(row.salary || 0),
+            submittedAt: row.submitted_at,
+            status: row.status,
+          };
+          if (typeof window !== 'undefined') {
+            const current = await this.getPendingRegistrations();
+            const updated = [res, ...current.filter((r) => r.id !== res.id)];
+            localStorage.setItem('messmitra_registrations', JSON.stringify(updated));
+          }
+          notifyDataChanged();
+          return res;
+        }
+      } catch (e) {
+        console.warn('Supabase submitRegistration error:', e);
+      }
+    }
+
     const current = await this.getPendingRegistrations();
     const newReg: PendingRegistration = {
       ...data,
-      id: `reg-${Date.now()}`,
-      submittedAt: new Date().toISOString(),
+      id: newRegId,
+      messId: mess.id,
+      submittedAt,
       status: 'pending_approval',
     };
     const updated = [newReg, ...current];
@@ -1883,17 +1977,62 @@ export const MessMitraApi = {
     id: string,
     status: 'approved' | 'rejected'
   ): Promise<PendingRegistration | null> {
+    const supabase = getSupabase();
+    const reviewedAt = new Date().toISOString();
+    const reviewedBy = 'शंकर गिरी';
+
+    if (supabase) {
+      try {
+        const { data: row, error } = await supabase
+          .from('pending_registrations')
+          .update({
+            status,
+            reviewed_at: reviewedAt,
+            reviewed_by: reviewedBy,
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (!error && row) {
+          if (status === 'approved') {
+            if (row.role === 'member') {
+              await this.createMember({
+                name: row.name,
+                phone: row.phone,
+                dietPreference: row.diet_preference || 'veg',
+                gender: 'male',
+                rate: Number(row.rate || 3000),
+                planType: row.plan_type || 'both',
+                joinDate: new Date().toISOString().split('T')[0],
+                status: 'active',
+              });
+            } else if (row.role === 'staff') {
+              await this.createStaff({
+                name: row.name,
+                phone: row.phone,
+                role: row.staff_role || 'सहाय्यक आचारी',
+                monthlySalary: Number(row.salary || 12000),
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Supabase reviewRegistration error:', e);
+      }
+    }
+
     const current = await this.getPendingRegistrations();
     const target = current.find((r) => r.id === id);
     if (!target) return null;
 
     target.status = status;
-    target.reviewedAt = new Date().toISOString();
-    target.reviewedBy = 'शंकर गिरी';
+    target.reviewedAt = reviewedAt;
+    target.reviewedBy = reviewedBy;
 
-    if (status === 'approved') {
+    if (status === 'approved' && !supabase) {
       if (target.role === 'member') {
-        // Auto-create active Member
+        // Auto-create active Member in offline mode
         await this.createMember({
           name: target.name,
           phone: target.phone,
@@ -1905,7 +2044,7 @@ export const MessMitraApi = {
           status: 'active',
         });
       } else if (target.role === 'staff') {
-        // Auto-create active Staff
+        // Auto-create active Staff in offline mode
         await this.createStaff({
           name: target.name,
           phone: target.phone,
