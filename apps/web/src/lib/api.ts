@@ -394,11 +394,27 @@ export const MessMitraApi = {
       if (res.ok) return await res.json();
     } catch { }
 
-    let members = DEFAULT_MEMBERS;
+    let members: Member[] = [];
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_members');
-      if (saved) members = JSON.parse(saved);
-      else localStorage.setItem('messmitra_members', JSON.stringify(DEFAULT_MEMBERS));
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            members = parsed.filter(
+              (m: any) =>
+                !String(m.id || '').includes('1111') &&
+                !String(m.id || '').includes('2222') &&
+                !String(m.id || '').includes('3333') &&
+                m.name !== 'Rahul Deshmukh' &&
+                m.name !== 'Priya Patil' &&
+                m.name !== 'Amit Shinde'
+            );
+          }
+        } catch {
+          members = [];
+        }
+      }
     }
 
     if (status) members = members.filter((m) => m.status === status);
@@ -1348,10 +1364,18 @@ export const MessMitraApi = {
 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('messmitra_staff');
-      if (saved) return JSON.parse(saved);
-      localStorage.setItem('messmitra_staff', JSON.stringify(DEFAULT_STAFF));
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            return parsed.filter((s: any) => !String(s.id || '').includes('aa1111') && s.name !== 'Mahadev Mama');
+          }
+        } catch {
+          return [];
+        }
+      }
     }
-    return DEFAULT_STAFF;
+    return [];
   },
 
   async createStaff(dto: {
@@ -1930,13 +1954,19 @@ export const MessMitraApi = {
       const saved = localStorage.getItem('messmitra_registrations');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            return parsed.filter(
+              (r: any) =>
+                r.id !== 'reg-001' &&
+                r.id !== 'reg-002' &&
+                !String(r.name || '').includes('Aniket Pawar')
+            );
+          }
         } catch {}
       }
-      localStorage.setItem('messmitra_registrations', JSON.stringify(DEFAULT_REGISTRATIONS));
-      return DEFAULT_REGISTRATIONS;
     }
-    return DEFAULT_REGISTRATIONS;
+    return [];
   },
 
   async submitRegistration(

@@ -89,6 +89,20 @@ export const getStoredPlans = (): MessPricePlan[] => {
     }
     const parsed = JSON.parse(data);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // Purge any stale legacy dummy plans if present
+      const hasDummyPlans = parsed.some(
+        (p) =>
+          p.id === 'plan-30token-flexi' ||
+          p.id === 'plan-20token-pack' ||
+          p.id === 'plan-student-female-concession' ||
+          p.id === 'plan-1meal-nonveg' ||
+          p.price === 1700 ||
+          p.price === 3950
+      );
+      if (hasDummyPlans) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PRICE_PLANS));
+        return DEFAULT_PRICE_PLANS;
+      }
       return parsed;
     }
     return DEFAULT_PRICE_PLANS;
