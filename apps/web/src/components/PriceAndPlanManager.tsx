@@ -191,27 +191,35 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     }
   };
 
-  // Helper to compute subscriber counts dynamically
+  // Helper to compute subscriber counts dynamically from real active members
   const getPlanSubscriberStats = (plan: MessPricePlan) => {
     const activeMembers = members.filter((m) => m.status === 'active');
 
-    if (plan.id === 'plan-1meal-veg') {
-      const matching = activeMembers.filter((m) => m.planType !== 'both' && m.dietPreference === 'veg');
-      return { count: matching.length, grandfathered: matching.filter((m) => m.rate < plan.price).length };
+    if (plan.planCategory === 'token_bundle') {
+      return { count: 0, grandfathered: 0 };
     }
-    if (plan.id === 'plan-1meal-nonveg') {
-      const matching = activeMembers.filter((m) => m.planType !== 'both' && m.dietPreference === 'nonveg');
-      return { count: Math.max(0, matching.length), grandfathered: 0 };
-    }
-    if (plan.id === 'plan-2meal-veg') {
-      const matching = activeMembers.filter((m) => m.planType === 'both' && m.dietPreference === 'veg');
-      return { count: matching.length, grandfathered: matching.filter((m) => m.rate < plan.price).length };
-    }
-    if (plan.id === 'plan-2meal-special') {
-      const matching = activeMembers.filter((m) => m.planType === 'both' && m.dietPreference === 'nonveg');
-      return { count: matching.length, grandfathered: 0 };
-    }
-    return { count: 0, grandfathered: 0 };
+
+    const isOneMeal =
+      plan.mealsPerDay === 1 ||
+      plan.id.includes('1meal') ||
+      plan.name.toLowerCase().includes('1-meal') ||
+      Boolean(plan.nameMr && plan.nameMr.includes('१-वेळ'));
+
+    const isNonVeg =
+      plan.tags?.some((t: any) => t.type === 'nonveg') ||
+      plan.name.toLowerCase().includes('non-veg') ||
+      Boolean(plan.nameMr && (plan.nameMr.includes('मांसाहारी') || plan.nameMr.includes('अंडी')));
+
+    const matching = activeMembers.filter((m) => {
+      const isMemberOneMeal = m.planType === 'lunch' || m.planType === 'dinner';
+      const mealMatch = isOneMeal ? isMemberOneMeal : m.planType === 'both';
+      const isMemberNonVeg = m.dietPreference === 'nonveg';
+      const dietMatch = isNonVeg ? isMemberNonVeg : !isMemberNonVeg;
+      return mealMatch && dietMatch;
+    });
+
+    const grandfathered = matching.filter((m) => m.rate < plan.price).length;
+    return { count: matching.length, grandfathered };
   };
 
   const filteredPlans = plans.filter((p) => {
