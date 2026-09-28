@@ -140,6 +140,14 @@ export const updatePlanDetails = async (planId: string, updates: Partial<MessPri
   await saveStoredPlans(updated);
 };
 
+// Delete a plan by ID
+export const deleteStoredPlan = async (planId: string) => {
+  const current = getStoredPlans();
+  const updated = current.filter((p) => p.id !== planId);
+  await saveStoredPlans(updated);
+  return updated;
+};
+
 // Dynamically compute the rate for a given plan selection based on Owner's configured rates
 export const getDynamicRateForPlan = (
   planType: PlanType,
