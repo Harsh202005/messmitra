@@ -610,22 +610,25 @@ function DashboardContent() {
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
                   }, 100);
                 }}
-                className="p-4 rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-xl flex items-center justify-between gap-4 cursor-pointer hover:shadow-2xl transition border-2 border-amber-300 dark:border-amber-400 animate-pulse"
+                className="p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-xl flex items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:shadow-2xl transition border-2 border-amber-300 dark:border-amber-400 animate-pulse"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-white shrink-0 border border-white/30 shadow-inner">
-                    <ShieldCheck className="w-6 h-6 text-white" />
+                <div className="flex items-center gap-2.5 sm:gap-3">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-white shrink-0 border border-white/30 shadow-inner">
+                    <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div>
-                    <div className="font-black text-sm sm:text-base flex items-center gap-2 flex-wrap">
-                      <span>🔔 नवीन नोंदणी अर्ज: {registrations.filter((r) => r.status === 'pending_approval').length} सदस्य/कर्मचारी मंजुरीच्या प्रतीक्षेत आहेत!</span>
-                      <span className="px-2.5 py-0.5 bg-white text-amber-900 rounded-full text-[11px] font-black uppercase tracking-wide">
+                    <div className="font-black text-xs sm:text-base flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <span>🔔 नवीन नोंदणी अर्ज: {registrations.filter((r) => r.status === 'pending_approval').length} अर्ज प्रलंबित आहेत!</span>
+                      <span className="px-2 py-0.5 bg-white text-amber-900 rounded-full text-[10px] font-black uppercase tracking-wide">
                         Action Required
                       </span>
                     </div>
-                    <p className="text-xs text-white/95 mt-0.5">
-                      मोबाईलवरून किंवा QR स्कॅन करून नवीन नोंदणी आलेली आहे. खाते सक्रिय करण्यासाठी येथे क्लिक करा.
+                    <p className="text-[11px] sm:text-xs text-white/95 mt-0.5 line-clamp-2 sm:line-clamp-none">
+                      मोबाईलवरून किंवा QR स्कॅन करून नवीन नोंदणी आलेली आहे. खाते सक्रिय करण्यासाठी येथे टॅप करा.
                     </p>
+                    <span className="sm:hidden text-[11px] font-black underline text-amber-100 mt-0.5 block">
+                      तपासा व मंजूर करा →
+                    </span>
                   </div>
                 </div>
 

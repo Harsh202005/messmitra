@@ -60,7 +60,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
   const cleanPhone = phone.replace(/[^0-9]/g, '') || '9822338975';
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-brand-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col pb-20 md:pb-0 selection:bg-brand-500 selection:text-white">
       {/* 1. TOP PUBLIC NAVIGATION BAR */}
       <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -473,6 +473,36 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
           श्री बालाजी मेस — २१ वर्षांची अखंड परंपरा • चालक: <strong>शंकर गिरी ({phone})</strong> • MessMitra Platform
         </p>
       </footer>
+
+      {/* MOBILE STICKY FLOATING QUICK ACTION BAR (Thumb-friendly on Phones) */}
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-2.5 px-3 flex items-center justify-between gap-2 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] safe-area-inset-bottom">
+        <a
+          href={`tel:${cleanPhone}`}
+          className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-750 flex items-center justify-center gap-1.5 transition cursor-pointer"
+        >
+          <Phone className="w-3.5 h-3.5 text-brand-500" />
+          <span>कॉल करा</span>
+        </a>
+
+        <a
+          href={`https://wa.me/91${cleanPhone}?text=${encodeURIComponent('नमस्ते शंकर गिरी सर, मला श्री बालाजी मेस बद्दल माहिती हवी आहे.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
+        >
+          <MessageCircle className="w-3.5 h-3.5" />
+          <span>WhatsApp</span>
+        </a>
+
+        <button
+          type="button"
+          onClick={() => onOpenLogin('register')}
+          className="flex-1 py-2.5 bg-gradient-to-r from-brand-600 to-amber-600 text-white font-black text-xs rounded-xl shadow-md flex items-center justify-center gap-1 transition cursor-pointer"
+        >
+          <UserPlus className="w-3.5 h-3.5" />
+          <span>नोंदणी करा</span>
+        </button>
+      </div>
     </div>
   );
 };

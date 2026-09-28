@@ -747,14 +747,14 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                 />
               </div>
 
-              <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => {
                     handleDeletePlan(editingPlan.id, editingPlan.nameMr || editingPlan.name);
                     setEditingPlan(null);
                   }}
-                  className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 font-bold text-xs rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80 font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
                   title="योजना कायमची काढून टाका"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -765,13 +765,13 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   <button
                     type="button"
                     onClick={() => setEditingPlan(null)}
-                    className="px-4 py-2.5 min-h-[42px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer"
+                    className="flex-1 sm:flex-none px-4 py-2.5 min-h-[42px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition cursor-pointer text-center"
                   >
                     {language === 'en' ? 'Cancel' : 'रद्द करा'}
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 min-h-[42px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+                    className="flex-1 sm:flex-none px-5 py-2.5 min-h-[42px] bg-gradient-to-r from-brand-600 to-amber-600 hover:from-brand-500 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Check className="w-4 h-4" />
                     <span>{language === 'en' ? 'Save Changes' : 'बदल सेव्ह करा'}</span>
