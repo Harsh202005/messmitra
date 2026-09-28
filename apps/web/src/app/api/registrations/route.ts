@@ -3,31 +3,56 @@ import fs from 'fs';
 import path from 'path';
 import { PendingRegistration } from '@messmitra/types';
 
-const DATA_DIR = path.join(process.cwd(), '.data');
-const REG_FILE = path.join(DATA_DIR, 'registrations.json');
+import os from 'os';
+
+let inMemoryRegistrations: PendingRegistration[] = [];
+
+function getRegFilePath(): string {
+  try {
+    const localDir = path.join(process.cwd(), '.data');
+    if (!fs.existsSync(localDir)) {
+      fs.mkdirSync(localDir, { recursive: true });
+    }
+    return path.join(localDir, 'registrations.json');
+  } catch {
+    const tmpDir = os.tmpdir();
+    return path.join(tmpDir, 'messmitra_registrations.json');
+  }
+}
 
 function ensureDataFile() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(REG_FILE)) {
-    fs.writeFileSync(REG_FILE, JSON.stringify([]), 'utf-8');
+  try {
+    const filePath = getRegFilePath();
+    if (!fs.existsSync(filePath)) {
+      fs.writeFileSync(filePath, JSON.stringify(inMemoryRegistrations), 'utf-8');
+    }
+  } catch {
+    // Ignore read-only filesystem errors
   }
 }
 
 function readRegistrations(): PendingRegistration[] {
   ensureDataFile();
   try {
-    const raw = fs.readFileSync(REG_FILE, 'utf-8');
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
+    const filePath = getRegFilePath();
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      inMemoryRegistrations = parsed;
+      return parsed;
+    }
+  } catch {}
+  return inMemoryRegistrations;
 }
 
 function writeRegistrations(data: PendingRegistration[]) {
-  ensureDataFile();
-  fs.writeFileSync(REG_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  inMemoryRegistrations = data;
+  try {
+    const filePath = getRegFilePath();
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch {
+    // Falls back to inMemoryRegistrations
+  }
 }
 
 export async function GET(req: NextRequest) {
