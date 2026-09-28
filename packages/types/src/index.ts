@@ -574,6 +574,7 @@ export interface MessPricePlan {
   tokenCount?: number;
   validityDays?: number;
   isActive: boolean;
+  showOnLanding?: boolean; // Controls whether this plan appears on public landing page (Max 4 plans allowed)
   createdAt: string;
 }
 

@@ -21,6 +21,7 @@ export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 1,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -37,6 +38,7 @@ export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 2,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -53,6 +55,7 @@ export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 2,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -70,6 +73,7 @@ export const INITIAL_PRICE_PLANS: MessPricePlan[] = [
     tokenCount: 10,
     validityDays: 45,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
 ];

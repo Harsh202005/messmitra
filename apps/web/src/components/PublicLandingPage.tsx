@@ -325,10 +325,11 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
             </p>
           </div>
 
-          {/* Dynamic Active Price Plans */}
+          {/* Dynamic Active Price Plans (Max 4 real plans configured by mess owner) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {plans
-              .filter((p) => p.isActive !== false)
+              .filter((p) => p.isActive !== false && p.showOnLanding !== false)
+              .slice(0, 4)
               .map((plan, idx) => {
                 let badgeStyle = 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20';
                 if (plan.tags?.some((t) => t.type === 'nonveg')) {

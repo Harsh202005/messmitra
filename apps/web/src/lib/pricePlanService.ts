@@ -19,6 +19,7 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 1,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -35,6 +36,7 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 2,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -51,6 +53,7 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
     planCategory: 'monthly',
     mealsPerDay: 2,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
   {
@@ -68,6 +71,7 @@ export const DEFAULT_PRICE_PLANS: MessPricePlan[] = [
     tokenCount: 10,
     validityDays: 45,
     isActive: true,
+    showOnLanding: true,
     createdAt: '2026-06-01T00:00:00Z',
   },
 ];
@@ -131,6 +135,31 @@ export const togglePlanActive = async (planId: string, isActive: boolean) => {
   const current = getStoredPlans();
   const updated = current.map((p) => (p.id === planId ? { ...p, isActive } : p));
   await saveStoredPlans(updated);
+};
+
+// Toggle Show on Landing Page (enforcing Max 4 allowed)
+export const toggleShowOnLanding = async (
+  planId: string,
+  showOnLanding: boolean
+): Promise<{ success: boolean; message?: string }> => {
+  const current = getStoredPlans();
+  if (showOnLanding) {
+    const currentlyOnLanding = current.filter(
+      (p) => p.id !== planId && p.isActive !== false && p.showOnLanding !== false
+    );
+    if (currentlyOnLanding.length >= 4) {
+      return {
+        success: false,
+        message: 'कमाल ४ योजनाच लँडिंग पेजवर दाखवल्या जाऊ शकतात. कृपया प्रथम दुसरी एखादी योजना बंद करा.',
+      };
+    }
+  }
+
+  const updated = current.map((p) =>
+    p.id === planId ? { ...p, showOnLanding } : p
+  );
+  await saveStoredPlans(updated);
+  return { success: true };
 };
 
 // Update details/price of a specific plan

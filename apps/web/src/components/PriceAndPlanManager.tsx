@@ -27,6 +27,7 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Globe,
 } from 'lucide-react';
 
 import {
@@ -34,6 +35,7 @@ import {
   getStoredPlans,
   saveStoredPlans,
   togglePlanActive,
+  toggleShowOnLanding,
 } from '../lib/pricePlanService';
 import { useI18n } from '../lib/i18n';
 
@@ -70,6 +72,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
   const [formTokenCount, setFormTokenCount] = useState(30);
   const [formValidityDays, setFormValidityDays] = useState(45);
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formShowOnLanding, setFormShowOnLanding] = useState(true);
 
   // Load persisted plans from service
   useEffect(() => {
@@ -93,8 +96,23 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     savePlans(updated);
   };
 
+  const handleToggleLanding = (planId: string, currentShow?: boolean) => {
+    const nextShow = currentShow === false ? true : false;
+    if (nextShow) {
+      const activeLanding = plans.filter(
+        (p) => p.id !== planId && p.isActive !== false && p.showOnLanding !== false
+      );
+      if (activeLanding.length >= 4) {
+        alert('⚠️ लँडिंग पेजवर कमाल ४ योजनाच दाखवल्या जाऊ शकतात. कृपया प्रथम दुसरी एखादी योजना लँडिंगवरून बंद करा.');
+        return;
+      }
+    }
+    const updated = plans.map((p) => (p.id === planId ? { ...p, showOnLanding: nextShow } : p));
+    savePlans(updated);
+  };
+
   const handleDeletePlan = (planId: string, planName: string) => {
-    if (confirm(`तुम्हाला "${planName}" ही योजना काढून टाकायची आहे का?`)) {
+    if (confirm(`तुम्हाला "${planName}" ही योजना कायमची काढून टाकायची आहे का?`)) {
       const updated = plans.filter((p) => p.id !== planId);
       savePlans(updated);
     }
@@ -113,11 +131,22 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
     setFormTokenCount(plan.tokenCount || 30);
     setFormValidityDays(plan.validityDays || 45);
     setFormIsActive(plan.isActive !== false);
+    setFormShowOnLanding(plan.showOnLanding !== false);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingPlan) return;
+
+    if (formShowOnLanding) {
+      const otherLanding = plans.filter(
+        (p) => p.id !== editingPlan.id && p.isActive !== false && p.showOnLanding !== false
+      );
+      if (otherLanding.length >= 4) {
+        alert('⚠️ लँडिंग पेजवर कमाल ४ योजनाच दाखवल्या जाऊ शकतात. कृपया प्रथम दुसरी एखादी योजना लँडिंगवरून बंद करा.');
+        return;
+      }
+    }
 
     const updated = plans.map((p) => {
       if (p.id === editingPlan.id) {
@@ -134,6 +163,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
           tokenCount: formCategory === 'token_bundle' ? Number(formTokenCount) : undefined,
           validityDays: formCategory === 'token_bundle' ? Number(formValidityDays) : undefined,
           isActive: formIsActive,
+          showOnLanding: formShowOnLanding,
           tags: [
             formVegNonveg === 'nonveg'
               ? { label: 'Non-Veg / Special', type: 'nonveg' as const }
@@ -156,6 +186,17 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
   const handleCreatePlan = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (formShowOnLanding) {
+      const currentLanding = plans.filter((p) => p.isActive !== false && p.showOnLanding !== false);
+      if (currentLanding.length >= 4) {
+        alert('⚠️ लँडिंग पेजवर कमाल ४ योजनाच दाखवल्या जाऊ शकतात. नवीन योजना तयार झाली आहे पण ती लँडिंगवर बंद राहील.');
+      }
+    }
+
+    const currentLandingCount = plans.filter((p) => p.isActive !== false && p.showOnLanding !== false).length;
+    const canShow = formShowOnLanding && currentLandingCount < 4;
+
     const newPlan: MessPricePlan = {
       id: `plan-${Date.now()}`,
       badge: formBadge.trim() || 'CUSTOM PLAN',
@@ -178,6 +219,7 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
       tokenCount: formCategory === 'token_bundle' ? Number(formTokenCount) : undefined,
       validityDays: formCategory === 'token_bundle' ? Number(formValidityDays) : undefined,
       isActive: formIsActive,
+      showOnLanding: canShow,
       createdAt: new Date().toISOString(),
     };
 
@@ -251,14 +293,24 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {language === 'en'
-                  ? 'Customize rates, create new plans, and toggle plans ON/OFF on public website'
-                  : 'सर्व दर बदला, नवीन योजना जोडा व वेबसाइटवर योजना चालू/बंद (ON/OFF) करा'}
+                  ? 'Customize rates, create new plans, and toggle plans ON/OFF on public website (Max 4 on landing page)'
+                  : 'सर्व दर बदला, नवीन योजना जोडा व वेबसाइटवर योजना चालू/बंद (ON/OFF) करा (कमाल ४ योजना लँडिंगवर)'}
               </p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Landing page plans counter badge */}
+          <div className="px-3 py-2 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-xl flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+            <Globe className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>
+              {language === 'en'
+                ? `Landing: ${plans.filter((p) => p.isActive !== false && p.showOnLanding !== false).length}/4 active`
+                : `लँडिंगवर: ${plans.filter((p) => p.isActive !== false && p.showOnLanding !== false).length}/४ सक्रिय`}
+            </span>
+          </div>
+
           {onOpenTokenCounter && (
             <button
               onClick={onOpenTokenCounter}
@@ -418,11 +470,44 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
                   </span>
                 </div>
 
+                {/* Show on Landing Page Toggle Button (YES / NO) */}
+                <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-750 text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-300">
+                    <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>{language === 'en' ? 'Show on Landing:' : 'लँडिंगवर दाखवा:'}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleToggleLanding(plan.id, plan.showOnLanding)}
+                    className={`px-3 py-1 rounded-lg font-black text-xs transition cursor-pointer flex items-center gap-1.5 ${
+                      plan.showOnLanding !== false
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'
+                        : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-300'
+                    }`}
+                    title={
+                      plan.showOnLanding !== false
+                        ? 'सध्या लँडिंग पेजवर दाखवत आहे (क्लिक करून लपवा)'
+                        : 'लँडिंग पेजवर बंद आहे (क्लिक करून चालू करा - कमाल ४)'
+                    }
+                  >
+                    <span>{plan.showOnLanding !== false ? 'होय (YES)' : 'नाही (NO)'}</span>
+                  </button>
+                </div>
+
                 {/* Inactive Notice Banner if turned OFF */}
                 {!isPlanActive && (
+                  <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 text-[11px] font-bold flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                    <span>योजना पूर्णपणे बंद आहे (Disabled)</span>
+                  </div>
+                )}
+
+                {/* Hidden from Landing Notice Banner */}
+                {isPlanActive && plan.showOnLanding === false && (
                   <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-[11px] font-bold flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-600" />
-                    <span>वेबसाइटवर लपवला आहे (Hidden from Public Page)</span>
+                    <span>लँडिंग पेजवरून लपवला आहे (Hidden from Landing)</span>
                   </div>
                 )}
 
@@ -527,28 +612,56 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
 
             <form onSubmit={handleSaveEdit} className="p-6 space-y-4 text-xs overflow-y-auto">
               {/* ON/OFF Status Switch */}
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-slate-900 dark:text-white text-xs">
-                    वेबसाइटवर योजना चालू ठेवावी का?
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs">
+                      योजना स्थिती (Status)
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {formIsActive ? 'चालू (Active)' : 'बंद (Disabled)'}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500">
-                    {formIsActive ? 'योजना चालू आहे (Website व ॲपवर दिसेल)' : 'योजना बंद आहे (वेबसाइटवर दिसणार नाही)'}
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormIsActive(!formIsActive)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      formIsActive
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-rose-600 text-white'
+                    }`}
+                  >
+                    {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                    <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setFormIsActive(!formIsActive)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    formIsActive
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-rose-600 text-white'
-                  }`}
-                >
-                  {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
-                </button>
+                {/* Show on Landing Page Switch (Max 4) */}
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>लँडिंगवर दाखवा (Max 4)</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {formShowOnLanding ? 'होय (Landing: YES)' : 'नाही (Landing: NO)'}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormShowOnLanding(!formShowOnLanding)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      formShowOnLanding
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>{formShowOnLanding ? 'होय (YES)' : 'नाही (NO)'}</span>
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -690,28 +803,55 @@ export const PriceAndPlanManager: React.FC<PriceAndPlanManagerProps> = ({
             </div>
 
             <form onSubmit={handleCreatePlan} className="p-6 space-y-4 text-xs overflow-y-auto">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-slate-900 dark:text-white text-xs">
-                    वेबसाइटवर योजना चालू ठेवावी का?
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs">
+                      योजना स्थिती (Status)
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {formIsActive ? 'चालू (Active)' : 'बंद (Disabled)'}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500">
-                    {formIsActive ? 'योजना लगेच लाइव्ह होईल' : 'योजना सध्या बंद राहील'}
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormIsActive(!formIsActive)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      formIsActive
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-rose-600 text-white'
+                    }`}
+                  >
+                    {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+                    <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
+                  </button>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setFormIsActive(!formIsActive)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    formIsActive
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-rose-600 text-white'
-                  }`}
-                >
-                  {formIsActive ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <span>{formIsActive ? 'चालू (ON)' : 'बंद (OFF)'}</span>
-                </button>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900 dark:text-white text-xs flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>लँडिंगवर दाखवा (Max 4)</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500">
+                      {formShowOnLanding ? 'होय (Landing: YES)' : 'नाही (Landing: NO)'}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormShowOnLanding(!formShowOnLanding)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      formShowOnLanding
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>{formShowOnLanding ? 'होय (YES)' : 'नाही (NO)'}</span>
+                  </button>
+                </div>
               </div>
 
               <div>
