@@ -302,6 +302,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </button>
 
+              {/* Logout Button (Desktop & Tablet) */}
+              <button
+                onClick={() => {
+                  if (confirm(language === 'en' ? 'Do you want to log out and return to Home page?' : 'तुम्हाला लॉगआउट करून मुख्य पानावर जायचे आहे का?')) {
+                    logout();
+                  }
+                }}
+                className="hidden sm:flex items-center gap-1 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/50 px-2.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800/60 cursor-pointer transition text-xs font-semibold"
+                title={language === 'en' ? 'Logout to Public Home' : 'लॉगआउट करा'}
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                <span className="hidden lg:inline">{language === 'en' ? 'Logout' : 'लॉगआउट'}</span>
+              </button>
+
               {/* Mobile "More" Drawer Trigger */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -584,6 +598,19 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <LogIn className="w-5 h-5 text-brand-600" />
                 <span>खाते / रोल बदला</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  if (confirm(language === 'en' ? 'Do you want to log out and return to Home page?' : 'तुम्हाला लॉगआउट करून मुख्य पानावर जायचे आहे का?')) {
+                    logout();
+                  }
+                }}
+                className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 font-bold flex flex-col items-center justify-center gap-1.5 text-center cursor-pointer min-h-[52px]"
+              >
+                <LogOut className="w-5 h-5 text-rose-600" />
+                <span>लॉगआउट / मुख्य पान</span>
               </button>
             </div>
           </div>

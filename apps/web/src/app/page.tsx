@@ -32,6 +32,7 @@ import { WalkInQuickPosCounter } from '../components/WalkInQuickPosCounter';
 import { MemberPortalView } from '../components/MemberPortalView';
 import { KitchenDisplayView } from '../components/KitchenDisplayView';
 import { RegistrationApprovalsQueue } from '../components/RegistrationApprovalsQueue';
+import { PublicLandingPage } from '../components/PublicLandingPage';
 import { LoginModal } from '../components/LoginModal';
 import { MessSetupWizardModal } from '../components/MessSetupWizardModal';
 import { AddEditMemberModal } from '../components/AddEditMemberModal';
@@ -372,6 +373,44 @@ function DashboardContent() {
   const activeMemberBilling = activeMember
     ? billingData.cycles.find((c) => c.memberId === activeMember.id) || null
     : null;
+
+  // Unauthenticated Visitors: ONLY show the Public Landing Page with full restrictions on internal app
+  if (!user) {
+    return (
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+        {/* Toast Alert */}
+        {toastMessage && (
+          <div className="fixed top-20 right-4 sm:right-6 z-50 flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-emerald-400/30 text-xs font-bold animate-bounce">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Public Homepage for Visitors */}
+        <PublicLandingPage
+          mess={mess}
+          onOpenLogin={(mode) => {
+            setLoginModalMode(mode || 'login');
+            setIsLoginModalOpen(true);
+          }}
+        />
+
+        {/* Auth / Register Modal */}
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          initialMode={loginModalMode}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSuccess={() => {
+            showToast('लॉगिन यशस्वी! भूमिकेनुसार डॅशबोर्ड लोड झाला.');
+            loadAllData();
+          }}
+        />
+
+        {/* PWA Mobile Install Banner */}
+        <PwaInstallPrompt />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">

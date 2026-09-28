@@ -82,7 +82,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(DEFAULT_OWNER_USER);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -93,8 +93,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           setUser(JSON.parse(savedUser));
         } catch {
-          setUser(DEFAULT_OWNER_USER);
+          setUser(null);
         }
+      } else {
+        setUser(null);
       }
       setIsLoading(false);
     }
