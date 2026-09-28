@@ -166,14 +166,15 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
 
           {/* Action Callouts */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link
-              href="/register"
+            <button
+              type="button"
+              onClick={() => onOpenLogin('register')}
               className="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-brand-600 via-amber-600 to-brand-700 hover:from-brand-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-brand-500/20 transition flex items-center justify-center gap-2 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>{language === 'en' ? 'Join as New Member' : 'नवीन सभासद नोंदणी करा'}</span>
               <ChevronRight className="w-4 h-4" />
-            </Link>
+            </button>
 
             <button
               type="button"
@@ -379,12 +380,13 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ mess, onOp
                       </ul>
                     </div>
 
-                    <a
-                      href="/register"
+                    <button
+                      type="button"
+                      onClick={() => onOpenLogin('register')}
                       className="w-full py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold text-xs rounded-xl text-center shadow-sm transition hover:opacity-90 cursor-pointer block"
                     >
                       नोंदणी करा →
-                    </a>
+                    </button>
                   </div>
                 );
               })}

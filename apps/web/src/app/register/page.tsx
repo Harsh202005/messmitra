@@ -21,13 +21,19 @@ import {
   ChevronRight,
   ExternalLink,
   Tag,
+  Sun,
+  Moon,
+  Home,
 } from 'lucide-react';
-import { getDynamicRateForPlan, getStoredPlans } from '../../lib/pricePlanService';
+import { getDynamicRateForPlan, getStoredPlans, fetchServerPlans } from '../../lib/pricePlanService';
 import { useI18n } from '../../lib/i18n';
+import { useTheme } from '../../lib/theme';
 import { RegistrationStatusPopup } from '../../components/RegistrationStatusPopup';
 
 export default function RegisterPage() {
   const { language } = useI18n();
+  const { theme, toggleTheme } = useTheme();
+
   const [registerRole, setRegisterRole] = useState<'member' | 'staff'>('member');
   const [regName, setRegName] = useState('');
   const [regPhone, setRegPhone] = useState('');
@@ -48,6 +54,10 @@ export default function RegisterPage() {
     isOpen: false,
     isSuccess: false,
   });
+
+  useEffect(() => {
+    fetchServerPlans();
+  }, []);
 
   // Dynamic rates from Owner's Plan Manager
   const veg1Rate = getDynamicRateForPlan('lunch', 'veg');
@@ -98,14 +108,35 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-3 sm:p-6 text-white selection:bg-brand-500 selection:text-white">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center p-3 sm:p-6 transition-colors duration-200 selection:bg-brand-500 selection:text-white">
       {/* Background Ambience */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-brand-600/15 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-amber-600/10 blur-[100px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-brand-500/10 dark:bg-brand-600/15 blur-[120px] rounded-full" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[300px] bg-amber-500/10 dark:bg-amber-600/10 blur-[100px] rounded-full" />
       </div>
 
-      <div className="w-full max-w-lg bg-slate-850/90 border border-slate-750 backdrop-blur-xl rounded-3xl p-5 sm:p-8 shadow-2xl space-y-6 animate-fadeIn">
+      {/* Top Bar with Home & Theme Toggle */}
+      <div className="w-full max-w-lg flex items-center justify-between mb-3 px-1">
+        <Link
+          href="/"
+          className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+        >
+          <Home className="w-3.5 h-3.5" />
+          <span>{language === 'en' ? 'Back to Home' : 'मुख्य पृष्ठावर जा'}</span>
+        </Link>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 shadow-xs transition cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+          <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+        </button>
+      </div>
+
+      <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-8 shadow-xl space-y-6 animate-fadeIn">
         {/* Header with Logo */}
         <div className="flex flex-col items-center text-center space-y-2">
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-brand-500/50 shadow-xl bg-white p-0.5">
@@ -117,14 +148,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-700 dark:text-amber-300 text-xs font-bold mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
               <span>२१ वर्षांची अखंड परंपरा • पुणे</span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               श्री बालाजी मेस — नवीन सभासद नोंदणी
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Online Member & Staff Joining Portal
             </p>
           </div>
@@ -132,25 +163,25 @@ export default function RegisterPage() {
 
         {isSuccess ? (
           /* SUCCESS SCREEN */
-          <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-6 text-center space-y-4 animate-scaleUp">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 rounded-2xl p-6 text-center space-y-4 animate-scaleUp">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg font-bold text-emerald-300">
+              <h3 className="text-lg font-bold text-emerald-800 dark:text-emerald-300">
                 नोंदणी अर्ज यशस्वीरित्या सादर झाला! 🎉
               </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                 तुमचा अर्ज मेस चालक <strong>श्री. शंकर गिरी (९८२२३३८९७५)</strong> यांच्याकडे मंजुरीसाठी पाठवण्यात आला आहे.
               </p>
             </div>
 
-            <div className="bg-slate-900/80 rounded-xl p-3.5 text-left text-xs space-y-1 font-mono border border-slate-800">
-              <div className="text-slate-400">नोंदणी नाव: <span className="text-white font-bold">{regName}</span></div>
-              <div className="text-slate-400">मोबाईल: <span className="text-white font-bold">{regPhone}</span></div>
-              <div className="text-slate-400">
-                प्रकार: <span className="text-emerald-400 font-bold">{registerRole === 'member' ? `सभासद (${regDiet.toUpperCase()} - ₹${calculatedRate}/महिना)` : `कर्मचारी (${regStaffRole})`}</span>
+            <div className="bg-white dark:bg-slate-900/80 rounded-xl p-3.5 text-left text-xs space-y-1 font-mono border border-slate-200 dark:border-slate-800">
+              <div className="text-slate-600 dark:text-slate-400">नोंदणी नाव: <span className="text-slate-900 dark:text-white font-bold">{regName}</span></div>
+              <div className="text-slate-600 dark:text-slate-400">मोबाईल: <span className="text-slate-900 dark:text-white font-bold">{regPhone}</span></div>
+              <div className="text-slate-600 dark:text-slate-400">
+                प्रकार: <span className="text-emerald-600 dark:text-emerald-400 font-bold">{registerRole === 'member' ? `सभासद (${regDiet.toUpperCase()} - ₹${calculatedRate}/महिना)` : `कर्मचारी (${regStaffRole})`}</span>
               </div>
             </div>
 
@@ -168,14 +199,14 @@ export default function RegisterPage() {
           /* REGISTRATION FORM */
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             {errorMsg && (
-              <div className="p-3 bg-red-950/50 border border-red-500/40 rounded-xl text-red-300 text-xs">
+              <div className="p-3 bg-rose-50 dark:bg-red-950/50 border border-rose-300 dark:border-red-500/40 rounded-xl text-rose-700 dark:text-red-300 text-xs font-medium">
                 {errorMsg}
               </div>
             )}
 
             {/* Role Switcher */}
             <div>
-              <label className="block font-bold text-slate-300 mb-1.5">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 {language === 'en' ? 'Select Joining Role:' : 'नोंदणी प्रकार निवडा:'}
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -184,11 +215,11 @@ export default function RegisterPage() {
                   onClick={() => setRegisterRole('member')}
                   className={`p-3 rounded-xl border font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
                     registerRole === 'member'
-                      ? 'bg-brand-600/20 border-brand-500 text-brand-300 shadow-sm'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                      ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-500 text-blue-700 dark:text-blue-300 shadow-sm'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                   }`}
                 >
-                  <UserPlus className="w-5 h-5" />
+                  <UserPlus className="w-5 h-5 text-blue-500" />
                   <span>{language === 'en' ? 'Mess Member' : 'मेस सभासद'}</span>
                 </button>
 
@@ -197,11 +228,11 @@ export default function RegisterPage() {
                   onClick={() => setRegisterRole('staff')}
                   className={`p-3 rounded-xl border font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
                     registerRole === 'staff'
-                      ? 'bg-amber-600/20 border-amber-500 text-amber-300 shadow-sm'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100'
                   }`}
                 >
-                  <ChefHat className="w-5 h-5" />
+                  <ChefHat className="w-5 h-5 text-emerald-500" />
                   <span>{language === 'en' ? 'Mess Staff' : 'मेस कर्मचारी'}</span>
                 </button>
               </div>
@@ -209,29 +240,29 @@ export default function RegisterPage() {
 
             {/* Name */}
             <div>
-              <label className="block font-bold text-slate-300 mb-1">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {language === 'en' ? 'Full Name *' : 'पूर्ण नाव *'}
               </label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   required
                   placeholder="उदा. राहुल देशमुख"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white placeholder:text-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block font-bold text-slate-300 mb-1">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {language === 'en' ? 'WhatsApp Mobile Number *' : 'मोबाईल नंबर *'}
               </label>
               <div className="relative">
-                <Phone className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="tel"
                   inputMode="numeric"
@@ -239,17 +270,17 @@ export default function RegisterPage() {
                   placeholder="उदा. 9890123456"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono placeholder:text-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono placeholder:text-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
 
             {/* Member-specific fields */}
             {registerRole === 'member' && (
-              <div className="space-y-3 p-3.5 bg-slate-900/60 rounded-2xl border border-slate-800">
+              <div className="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800">
                 {/* Diet */}
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {language === 'en' ? 'Diet Preference *' : 'आहार प्रकार *'}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -258,15 +289,15 @@ export default function RegisterPage() {
                       onClick={() => setRegDiet('veg')}
                       className={`p-2.5 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition cursor-pointer text-xs ${
                         regDiet === 'veg'
-                          ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300'
-                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
-                        <Salad className="w-4 h-4 text-emerald-400" />
+                        <Salad className="w-4 h-4 text-emerald-500" />
                         <span>शुद्ध शाकाहारी</span>
                       </div>
-                      <span className="text-[10px] opacity-90 font-mono text-emerald-400">
+                      <span className="text-[10px] opacity-90 font-mono text-emerald-700 dark:text-emerald-400">
                         १ वेळ: ₹{veg1Rate} | २ वेळ: ₹{veg2Rate}
                       </span>
                     </button>
@@ -276,27 +307,27 @@ export default function RegisterPage() {
                       onClick={() => setRegDiet('nonveg')}
                       className={`p-2.5 rounded-xl border font-bold flex flex-col items-center justify-center gap-1 transition cursor-pointer text-xs ${
                         regDiet === 'nonveg'
-                          ? 'bg-amber-950/60 border-amber-500 text-amber-300'
-                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                          ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-800 dark:text-rose-300 ring-1 ring-rose-500'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <div className="flex items-center gap-1.5">
-                        <Egg className="w-4 h-4 text-amber-400" />
+                        <Egg className="w-4 h-4 text-rose-500" />
                         <span>मांसाहारी / अंडी</span>
                       </div>
-                      <span className="text-[10px] opacity-90 font-mono text-amber-400">
+                      <span className="text-[10px] opacity-90 font-mono text-rose-700 dark:text-rose-400">
                         १ वेळ: ₹{nonveg1Rate} | २ वेळ: ₹{nonveg2Rate}
                       </span>
                     </button>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                     * मांसाहारी/अंडी विशेष जेवण बुध, शुक्र, रविवारी रात्री असते. दुपारचे जेवण १००% शाकाहारी असते.
                   </p>
                 </div>
 
                 {/* Plan (1-meal vs 2-meals) */}
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {language === 'en' ? 'Meal Plan *' : 'जेवणाची वेळ *'}
                   </label>
                   <div className="grid grid-cols-3 gap-1.5 text-xs font-semibold">
@@ -305,12 +336,12 @@ export default function RegisterPage() {
                       onClick={() => setRegPlan('both')}
                       className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                         regPlan === 'both'
-                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
-                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                          ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-800 dark:text-brand-300 font-bold ring-1 ring-brand-500'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <span>{language === 'en' ? '2-Meals' : '२-वेळ दोन्ही'}</span>
-                      <span className="text-[10px] font-mono text-amber-400">
+                      <span className="text-[10px] font-mono text-brand-600 dark:text-amber-400 font-bold">
                         ₹{regDiet === 'veg' ? veg2Rate : nonveg2Rate}
                       </span>
                     </button>
@@ -320,12 +351,12 @@ export default function RegisterPage() {
                       onClick={() => setRegPlan('lunch')}
                       className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                         regPlan === 'lunch'
-                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
-                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                          ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-800 dark:text-brand-300 font-bold ring-1 ring-brand-500'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <span>{language === 'en' ? '1-Meal Lunch' : '१-वेळ दुपार'}</span>
-                      <span className="text-[10px] font-mono text-amber-400">
+                      <span className="text-[10px] font-mono text-brand-600 dark:text-amber-400 font-bold">
                         ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
                       </span>
                     </button>
@@ -335,12 +366,12 @@ export default function RegisterPage() {
                       onClick={() => setRegPlan('dinner')}
                       className={`p-2 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-center ${
                         regPlan === 'dinner'
-                          ? 'bg-brand-600/30 border-brand-500 text-white font-bold ring-1 ring-brand-500'
-                          : 'bg-slate-800 border-slate-700 text-slate-400'
+                          ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-800 dark:text-brand-300 font-bold ring-1 ring-brand-500'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <span>{language === 'en' ? '1-Meal Dinner' : '१-वेळ रात्र'}</span>
-                      <span className="text-[10px] font-mono text-amber-400">
+                      <span className="text-[10px] font-mono text-brand-600 dark:text-amber-400 font-bold">
                         ₹{regDiet === 'veg' ? veg1Rate : nonveg1Rate}
                       </span>
                     </button>
@@ -348,9 +379,9 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Estimated Rate display */}
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/80 border border-slate-700">
-                  <span className="text-slate-400 font-medium">{language === 'en' ? 'Monthly Fee:' : 'मासिक शुल्क:'}</span>
-                  <span className="text-sm font-black text-emerald-400 font-mono">
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">{language === 'en' ? 'Monthly Fee:' : 'मासिक शुल्क:'}</span>
+                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">
                     ₹{calculatedRate.toLocaleString('en-IN')}{language === 'en' ? '/mo' : '/महिना'}
                   </span>
                 </div>
@@ -359,15 +390,15 @@ export default function RegisterPage() {
 
             {/* Staff-specific fields */}
             {registerRole === 'staff' && (
-              <div className="space-y-3 p-3.5 bg-slate-900/60 rounded-2xl border border-slate-800">
+              <div className="space-y-3 p-3.5 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800">
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {language === 'en' ? 'Role / Designation *' : 'पद / काम *'}
                   </label>
                   <select
                     value={regStaffRole}
                     onChange={(e) => setRegStaffRole(e.target.value)}
-                    className="w-full px-3 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:outline-none"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none"
                   >
                     <option value="मुख्य आचारी">{language === 'en' ? 'Head Cook' : 'मुख्य आचारी'}</option>
                     <option value="मदतनीस">{language === 'en' ? 'Kitchen Helper' : 'मदतनीस'}</option>
@@ -377,7 +408,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {language === 'en' ? 'Expected Monthly Salary (₹)' : 'अपेक्षित मासिक मानधन (₹)'}
                   </label>
                   <input
@@ -386,7 +417,7 @@ export default function RegisterPage() {
                     step={500}
                     value={regSalary}
                     onChange={(e) => setRegSalary(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono text-xs focus:outline-none"
+                    className="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-mono text-xs focus:outline-none"
                   />
                 </div>
               </div>
@@ -394,18 +425,18 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div>
-              <label className="block font-bold text-slate-300 mb-1">
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {language === 'en' ? 'Set Password for App Login *' : 'पासवर्ड तयार करा *'}
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="password"
                   required
                   placeholder="उदा. balaji@123"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
@@ -427,10 +458,10 @@ export default function RegisterPage() {
         <div className="text-center pt-2">
           <Link
             href="/"
-            className="text-xs text-slate-400 hover:text-white transition inline-flex items-center gap-1"
+            className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center gap-1 font-bold"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{language === 'en' ? 'Back to Home' : 'परत जा'}</span>
+            <span>{language === 'en' ? 'Back to Home' : 'मुख्य पृष्ठावर जा'}</span>
           </Link>
         </div>
       </div>
