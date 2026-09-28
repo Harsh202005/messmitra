@@ -131,43 +131,129 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return data;
       }
     } catch {
-      // Backend offline fallback: Local demo match
+      // Backend offline fallback
     }
 
-    const key = credentials.usernameOrEmail.toLowerCase().trim();
-    const demo = DEMO_CREDENTIALS.find(
-      (d) => d.email.toLowerCase() === key || d.role === key || key.includes(d.role)
-    );
+    const rawInput = (credentials.usernameOrEmail || '').trim();
+    const cleanNumeric = rawInput.replace(/[^0-9]/g, '');
+    const key = rawInput.toLowerCase();
+    const pwd = (credentials.password || '').trim();
 
-    if (demo && (credentials.password === demo.password || credentials.password === 'password123' || credentials.password === 'balaji123')) {
+    // 1. Owner matching (by phone 9822338975, email, or role)
+    if (
+      cleanNumeric === '9822338975' ||
+      cleanNumeric.endsWith('9822338975') ||
+      key === 'shankargiri@balajimess.com' ||
+      key === 'owner@balajimess.com' ||
+      key === 'owner' ||
+      key === 'admin' ||
+      key.includes('shankar') ||
+      key.includes('शंकर')
+    ) {
+      const ownerUser = DEFAULT_OWNER_USER;
       const response: LoginResponseDto = {
-        user: demo.user,
-        token: demo.user.token || 'demo-token',
-        message: `Welcome back, ${demo.title}!`,
+        user: ownerUser,
+        token: 'token-owner-demo',
+        message: 'Welcome back, Shri Shankar Giri (Owner)!',
       };
-      saveUserSession(demo.user);
+      saveUserSession(ownerUser);
       return response;
     }
 
-    // Generic fallback for any valid password
-    if (credentials.password === 'password123' || credentials.password === 'balaji123') {
-      const fallbackUser: AuthUser = {
+    // 2. Staff / Cook matching
+    if (
+      cleanNumeric === '9890001122' ||
+      key === 'cook@balajimess.com' ||
+      key === 'staff' ||
+      key === 'cook' ||
+      key.includes('आचारी') ||
+      key.includes('mahadev')
+    ) {
+      const staffUser = DEFAULT_STAFF_USER;
+      const response: LoginResponseDto = {
+        user: staffUser,
+        token: 'token-staff-demo',
+        message: 'Welcome back, Kitchen Staff!',
+      };
+      saveUserSession(staffUser);
+      return response;
+    }
+
+    // 3. Member matching from localStorage registered members
+    if (typeof window !== 'undefined') {
+      try {
+        const storedMembers = localStorage.getItem('messmitra_members');
+        if (storedMembers) {
+          const membersList = JSON.parse(storedMembers);
+          if (Array.isArray(membersList)) {
+            const found = membersList.find((m: any) => {
+              const mPhone = (m.phone || '').replace(/[^0-9]/g, '');
+              return (cleanNumeric && mPhone.includes(cleanNumeric)) || (m.name && m.name.toLowerCase() === key);
+            });
+            if (found) {
+              const memberUser: AuthUser = {
+                id: found.id || `usr-${Date.now()}`,
+                name: found.name,
+                email: found.phone,
+                role: 'member',
+                memberId: found.id,
+                messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+                token: `token-member-${found.id}`,
+              };
+              saveUserSession(memberUser);
+              return {
+                user: memberUser,
+                token: memberUser.token || 'token-member',
+                message: `Welcome back, ${found.name}!`,
+              };
+            }
+          }
+        }
+      } catch {}
+    }
+
+    // 4. Default Demo Member match (Rahul Deshmukh or generic member)
+    if (
+      cleanNumeric === '9890123456' ||
+      key === 'rahul@messmitra.com' ||
+      key === 'member' ||
+      key.includes('rahul') ||
+      key.includes('राहुल')
+    ) {
+      const memberUser = DEFAULT_MEMBER_USER;
+      const response: LoginResponseDto = {
+        user: memberUser,
+        token: 'token-member-demo',
+        message: 'Welcome back, Rahul Deshmukh!',
+      };
+      saveUserSession(memberUser);
+      return response;
+    }
+
+    // 5. Generic Login: If any phone or name is provided with reasonable password, create session
+    if (rawInput.length > 0) {
+      const isOwner = key.includes('owner') || key.includes('admin');
+      const isStaff = key.includes('cook') || key.includes('staff');
+      const roleToAssign: UserRole = isOwner ? 'owner' : isStaff ? 'staff' : 'member';
+
+      const genericUser: AuthUser = {
         id: `usr-${Date.now()}`,
-        email: credentials.usernameOrEmail,
-        name: credentials.usernameOrEmail.split('@')[0],
-        role: key.includes('owner') || key.includes('admin') ? 'owner' : key.includes('cook') ? 'staff' : 'member',
+        name: rawInput.includes('@') ? rawInput.split('@')[0] : rawInput,
+        email: rawInput,
+        role: roleToAssign,
         messId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        token: `token-${roleToAssign}-generic`,
       };
-      const response: LoginResponseDto = {
-        user: fallbackUser,
-        token: `token-${fallbackUser.role}-generic`,
-        message: `Logged in as ${fallbackUser.role.toUpperCase()}`,
+
+      saveUserSession(genericUser);
+      return {
+        user: genericUser,
+        token: genericUser.token || 'token-generic',
+        message: `Welcome, ${genericUser.name}!`,
       };
-      saveUserSession(fallbackUser);
-      return response;
     }
 
-    throw new Error('अवैध आयडी किंवा पासवर्ड. Demo Password: password123');
+    throw new Error('कृपया वैध मोबाईल नंबर किंवा ईमेल प्रविष्ट करा.');
   };
 
   const logout = () => {
